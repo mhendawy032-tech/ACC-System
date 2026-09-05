@@ -350,13 +350,13 @@ function loadState(){
   db.ref('ledger_state').on('value', (snapshot) => {
     const data = snapshot.val();
     
-    // دمج البيانات المستلمة مع الحالة الافتراضية للتعامل مع أي حقول مفقودة
+    // دمج البيانات المستلمة مع الحالة الافتراضية
     const initial = newState();
     state = Object.assign({}, initial, data || {});
 
     storageMode = 'firebase';
 
-    // الحماية من القيم الفارغة أو غير المعرفة لجميع المصفوفات المحورية
+    // حماية كافة المصفوفات الأساسية والنظام المحاسبي
     if(!Array.isArray(state.journal)) state.journal = [];
     if(!Array.isArray(state.products)) state.products = [];
     if(!Array.isArray(state.accounts)) state.accounts = Array.isArray(DEFAULT_STATE.accounts) ? JSON.parse(JSON.stringify(DEFAULT_STATE.accounts)) : [];
@@ -365,6 +365,7 @@ function loadState(){
     if(!Array.isArray(state.users)) state.users = [];
     if(!Array.isArray(state.sales)) state.sales = [];
     if(!Array.isArray(state.purchases)) state.purchases = [];
+    if(!Array.isArray(state.parties)) state.parties = []; // حل مشكلة الخطأ الحالي
     if(!Array.isArray(state.currencies)) state.currencies = Array.isArray(DEFAULT_STATE.currencies) ? JSON.parse(JSON.stringify(DEFAULT_STATE.currencies)) : [];
     if(!state.companyCurrencyCode) state.companyCurrencyCode = state.currencies[0] ? state.currencies[0].code : null;
     if(!state.journalSeq || typeof state.journalSeq !== 'object') state.journalSeq = {};
@@ -379,7 +380,7 @@ function loadState(){
 
     if(typeof sortAccounts === 'function') sortAccounts();
 
-    // إزالة تكرارات معرفات الدفاتر بحماية من المصفوفات الفارغة
+    // إزالة تكرارات معرفات الدفاتر
     (function dedupeJournalIds(){
       const seen = new Set();
       state.journalsConfig.forEach(j => {
@@ -391,7 +392,6 @@ function loadState(){
     render();
   });
 }
-
 function nextJournalConfigId(){
   let maxN = 0;
   (state.journalsConfig || []).forEach(j => {
