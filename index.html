@@ -349,69 +349,62 @@ function newState(){ return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
 function loadState(){
   db.ref('ledger_state').on('value', (snapshot) => {
     const data = snapshot.val();
-    if (data) {
-      state = data;
-    } else {
-      state = newState();
-      saveState();
-    }
+    
+    // دمج البيانات المستلمة مع الحالة الافتراضية للتعامل مع أي حقول مفقودة
+    const initial = newState();
+    state = Object.assign({}, initial, data || {});
 
     storageMode = 'firebase';
 
-    // حماية النظام في حالة كانت الحقول فارغة في Firebase
+    // الحماية من القيم الفارغة أو غير المعرفة لجميع المصفوفات المحورية
     if(!Array.isArray(state.journal)) state.journal = [];
     if(!Array.isArray(state.products)) state.products = [];
-    if(!Array.isArray(state.accounts)) state.accounts = JSON.parse(JSON.stringify(DEFAULT_STATE.accounts || []));
-    if(!Array.isArray(state.journalsConfig)) state.journalsConfig = JSON.parse(JSON.stringify(DEFAULT_STATE.journalsConfig || []));
+    if(!Array.isArray(state.accounts)) state.accounts = Array.isArray(DEFAULT_STATE.accounts) ? JSON.parse(JSON.stringify(DEFAULT_STATE.accounts)) : [];
+    if(!Array.isArray(state.journalsConfig)) state.journalsConfig = Array.isArray(DEFAULT_STATE.journalsConfig) ? JSON.parse(JSON.stringify(DEFAULT_STATE.journalsConfig)) : [];
     if(!Array.isArray(state.posSessions)) state.posSessions = [];
     if(!Array.isArray(state.users)) state.users = [];
     if(!Array.isArray(state.sales)) state.sales = [];
     if(!Array.isArray(state.purchases)) state.purchases = [];
-    if(!Array.isArray(state.currencies)) state.currencies = JSON.parse(JSON.stringify(DEFAULT_STATE.currencies || []));
+    if(!Array.isArray(state.currencies)) state.currencies = Array.isArray(DEFAULT_STATE.currencies) ? JSON.parse(JSON.stringify(DEFAULT_STATE.currencies)) : [];
     if(!state.companyCurrencyCode) state.companyCurrencyCode = state.currencies[0] ? state.currencies[0].code : null;
-    if(!state.journalSeq || typeof state.journalSeq!=='object') state.journalSeq = {};
+    if(!state.journalSeq || typeof state.journalSeq !== 'object') state.journalSeq = {};
 
-    // recover opening inventory entry match
-    if(Array.isArray(state.products)){
-      state.products.forEach(p=>{
-        if(p.kind==='product' && p.openingEntryId===undefined){
-          const match = (state.journal || []).find(e=>e.source==='manual' && e.desc==='Opening inventory balance: '+p.name);
-          p.openingEntryId = match ? match.id : null;
-        }
-      });
-    }
+    // معالجة أرصدة المخزون الافتتاحية بشكل آمن
+    state.products.forEach(p => {
+      if(p && p.kind === 'product' && p.openingEntryId === undefined){
+        const match = state.journal.find(e => e && e.source === 'manual' && e.desc === 'Opening inventory balance: ' + p.name);
+        p.openingEntryId = match ? match.id : null;
+      }
+    });
 
-    if(Array.isArray(state.accounts)) sortAccounts();
+    if(typeof sortAccounts === 'function') sortAccounts();
 
-    // self-repair duplicate journal ids
+    // إزالة تكرارات معرفات الدفاتر بحماية من المصفوفات الفارغة
     (function dedupeJournalIds(){
       const seen = new Set();
-      if(Array.isArray(state.journalsConfig)){
-        state.journalsConfig.forEach(j=>{
-          if(seen.has(j.id)) j.id = nextJournalConfigId();
-          seen.add(j.id);
-        });
-      }
+      state.journalsConfig.forEach(j => {
+        if(j && seen.has(j.id)) j.id = nextJournalConfigId();
+        if(j && j.id) seen.add(j.id);
+      });
     })();
 
     render();
   });
 }
-/* Generates a journal id that's guaranteed unique against whatever is currently
-   in state.journalsConfig — deliberately NOT based on the shared uid() counter,
-   since the five built-in journals ship with fixed ids (J-0001..J-0005) that the
-   counter starts at zero, ready to collide with. */
+
 function nextJournalConfigId(){
   let maxN = 0;
-  (state.journalsConfig||[]).forEach(j=>{
-    const m = /^J-(\d+)$/.exec(j.id||'');
-    if(m) maxN = Math.max(maxN, parseInt(m[1],10));
+  (state.journalsConfig || []).forEach(j => {
+    if(j){
+      const m = /^J-(\d+)$/.exec(j.id || '');
+      if(m) maxN = Math.max(maxN, parseInt(m[1], 10));
+    }
   });
-  return 'J-' + String(maxN+1).padStart(4,'0');
+  return 'J-' + String(maxN + 1).padStart(4, '0');
 }
 
 function saveState(){
-  if(db && state){
+  if(typeof db !== 'undefined' && db && state){
     db.ref('ledger_state').set(state, (error) => {
       if(error){
         console.error('Firebase save error:', error);
