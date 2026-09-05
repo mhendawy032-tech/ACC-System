@@ -1,0 +1,3397 @@
+<!DOCTYPE html>
+<!-- saved from url=(0059)file:///C:/Users/Hindawy/Downloads/Accounting%20System.html -->
+<html lang="en" dir="ltr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accounting System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="file:///C:/Users/Hindawy/Downloads/Ledger%20%E2%80%94%20Accounting%20System_files/css2" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF0EA;
+    --paper-raised:#F7F8F3;
+    --ink:#152925;
+    --ink-2:#1E3833;
+    --teal:#1F6F64;
+    --teal-dark:#154F47;
+    --azure:#2E6DA4;
+    --amber:#B8862F;
+    --amber-light:#E9D8AE;
+    --debit:#A23B2E;
+    --credit:#2E7D4F;
+    --line:#D6D2C0;
+    --text:#22292A;
+    --text-soft:#5B655F;
+    --white:#FFFFFF;
+    --radius:10px;
+    --shadow: 0 2px 10px rgba(21,41,37,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  .mono{font-family:'IBM Plex Mono','Inter',monospace;}
+  h1,h2,h3{font-family:'Fraunces',serif; margin:0;}
+  #app{display:flex; flex-direction:column; height:100vh;}
+  #app-body{display:flex; flex:1; min-height:0;}
+
+  /* ===== Sidebar — dark app-launcher style ===== */
+  .sidebar{
+    width:220px; flex-shrink:0;
+    background:#111111;
+    color:#fff;
+    padding:16px 10px;
+    display:flex; flex-direction:column; gap:2px;
+    height:100%; overflow-y:auto;
+  }
+  .brand{
+    font-family:'Fraunces',serif; color:var(--white);
+    font-size:20px; padding:4px 10px 14px;
+    margin-bottom:6px;
+  }
+  .brand small{display:block; font-family:'Inter',sans-serif; font-size:11px; color:rgba(255,255,255,0.5); font-weight:400; margin-top:3px; letter-spacing:.5px;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px;
+    padding:7px 10px; border-radius:6px; cursor:pointer;
+    color:rgba(255,255,255,0.82); font-size:13.5px; font-weight:500;
+    transition:background .15s;
+  }
+  .nav-icon{
+    width:24px; height:24px; border-radius:5px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; flex-shrink:0; color:#fff;
+  }
+  .nav-item:hover{background:rgba(255,255,255,0.08);}
+  .nav-item.active{background:rgba(255,255,255,0.14); color:#fff; font-weight:700;}
+  .sidebar-foot{margin-top:auto; font-size:11px; color:rgba(255,255,255,0.38); padding:10px 12px;}
+
+  /* ===== Main ===== */
+  .content{flex:1; padding:26px 32px; max-width:1180px; overflow-y:auto;}
+  .topbar{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:10px;}
+  .topbar h2{font-size:26px; color:var(--ink);}
+  .topbar .sub{color:var(--text-soft); font-size:13px; margin-top:4px;}
+
+  .banner{
+    background:#FBF3DD; border:1px solid var(--amber); color:#6B4E15;
+    border-radius:8px; padding:10px 14px; font-size:12.5px; margin-bottom:18px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .banner.error{background:#F7E3DE; border-color:var(--debit); color:#7d2c22;}
+
+  .card{background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; margin-bottom:20px;}
+  .card h3{font-size:18px; color:var(--ink); margin-bottom:14px; display:flex; align-items:center; gap:8px;}
+  .grid{display:grid; gap:16px;}
+  .grid.g4{grid-template-columns:repeat(4,1fr);}
+  .grid.g3{grid-template-columns:repeat(3,1fr);}
+  .grid.g2{grid-template-columns:repeat(2,1fr);}
+  @media(max-width:900px){.grid.g4,.grid.g3,.grid.g2{grid-template-columns:1fr 1fr;}}
+
+  .stat{background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow);}
+  .stat .label{font-size:12px; color:var(--text-soft); font-weight:600;}
+  .stat .value{font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:600; color:var(--ink); margin-top:6px;}
+  .stat.debit .value{color:var(--debit);}
+  .stat.credit .value{color:var(--credit);}
+  .stat.amber .value{color:var(--amber);}
+
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  th,td{padding:9px 10px; text-align:left; border-bottom:1px solid var(--line);}
+  th{color:var(--text-soft); font-weight:700; font-size:12.5px; border-bottom:2px solid var(--ink);}
+  tbody tr:hover{background:rgba(31,111,100,0.05);}
+  td.num, th.num{font-family:'IBM Plex Mono',monospace; text-align:right;}
+  .badge{display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700;}
+  .badge.asset{background:#DCEDE7; color:var(--teal-dark);}
+  .badge.liability{background:#F3E1D8; color:#8A4426;}
+  .badge.equity{background:#EDE6D8; color:#7A5E1E;}
+  .badge.revenue{background:#DFF0E1; color:var(--credit);}
+  .badge.expense{background:#F3DCD7; color:var(--debit);}
+  .badge.manual{background:#E7E4DA; color:#57544A;}
+  .badge.sale{background:#DFF0E1; color:var(--credit);}
+  .badge.purchase{background:#F3E1D8; color:#8A4426;}
+  .badge.receipt{background:#DCEDE7; color:var(--teal-dark);}
+  .badge.payment{background:#F3DCD7; color:var(--debit);}
+  .badge.reversal{background:#e9e2c8; color:#8a6d1e;}
+
+  /* Simple on/off toggle switch (used on the Currencies "Active" column, etc.) */
+  .toggle-switch{
+    position:relative; display:inline-block; width:38px; height:20px;
+    background:#C7CDD6; border-radius:20px; cursor:pointer;
+    transition:background .15s; flex-shrink:0; border:none; padding:0;
+  }
+  .toggle-switch.on{background:var(--azure);}
+  .toggle-switch::after{
+    content:''; position:absolute; top:2px; left:2px; width:16px; height:16px;
+    background:#fff; border-radius:50%; transition:left .15s; box-shadow:0 1px 2px rgba(0,0,0,.25);
+  }
+  .toggle-switch.on::after{left:20px;}
+
+  label{display:block; font-size:12.5px; font-weight:700; color:var(--text-soft); margin-bottom:5px;}
+  input,select,textarea{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px;
+    background:#fff; font-family:'Inter',sans-serif; font-size:14px; color:var(--text);
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--teal); outline-offset:1px; border-color:var(--teal);}
+  .field{margin-bottom:14px;}
+  .row{display:flex; gap:10px; flex-wrap:wrap;}
+  .row > *{flex:1; min-width:140px;}
+
+  button{
+    font-family:'Inter',sans-serif; font-weight:700; font-size:14px;
+    padding:10px 18px; border-radius:8px; border:none; cursor:pointer;
+    background:var(--teal); color:#fff; transition:background .15s;
+  }
+  button:hover{background:var(--teal-dark);}
+  button.secondary{background:transparent; color:var(--ink); border:1px solid var(--line);}
+  button.secondary:hover{background:#e9e6da;}
+  button.danger{background:var(--debit);}
+  button.danger:hover{background:#7d2c22;}
+  button.small{padding:5px 11px; font-size:12.5px; border-radius:6px;}
+  button:disabled{opacity:.45; cursor:not-allowed;}
+
+  .line-item{display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:8px; align-items:end; margin-bottom:8px; padding-bottom:8px; border-bottom:1px dashed var(--line);}
+  @media(max-width:900px){.line-item{grid-template-columns:1fr 1fr;}}
+  .total-line{display:flex; justify-content:flex-end; gap:22px; margin-top:10px; padding-top:10px; border-top:2px solid var(--ink); font-weight:700;}
+  .total-line .amt{font-family:'IBM Plex Mono',monospace;}
+  .balanced{color:var(--credit);}
+  .unbalanced{color:var(--debit);}
+  .trend{font-weight:700; font-family:'IBM Plex Mono',monospace; font-size:12.5px;}
+  .trend.up{color:var(--credit);}
+  .trend.down{color:var(--debit);}
+  .trend.flat{color:var(--text-soft);}
+
+  .empty{text-align:center; color:var(--text-soft); padding:30px 10px; font-size:14px;}
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; padding:11px 22px; border-radius:30px;
+    font-size:13.5px; font-weight:600; box-shadow:var(--shadow); z-index:99;
+    opacity:0; pointer-events:none; transition:opacity .25s, bottom .25s;
+  }
+  .toast.show{opacity:1; bottom:34px;}
+  .journal-entry{border:1px solid var(--line); border-radius:8px; margin-bottom:12px; overflow:hidden;}
+  .journal-entry .je-head{display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#F1EFE4; flex-wrap:wrap; gap:8px;}
+  .journal-entry table{background:#fff;}
+  .je-id{font-family:'IBM Plex Mono',monospace; font-weight:700; color:var(--ink);}
+  .party-tag{font-size:11px; color:var(--text-soft);}
+  .hint{font-size:12px; color:var(--text-soft); margin-top:4px;}
+  ::selection{background:var(--amber-light);}
+
+  /* ===== Top navbar — Odoo-style app internal menu ===== */
+  .main-col{flex:1; display:flex; flex-direction:column; min-width:0; height:100%; overflow:hidden;}
+  .topnav{
+    display:flex; gap:26px; align-items:center;
+    background:#232B3B;
+    padding:0 24px 0 0; height:44px; flex-shrink:0;
+    font-family:'Inter',sans-serif; font-size:14px;
+    overflow-x:auto; cursor:grab; scrollbar-width:none; -ms-overflow-style:none;
+  }
+  .topnav::-webkit-scrollbar{display:none;}
+  .topnav.dragging{cursor:grabbing;}
+  .topnav-item{
+    color:#AEB8C7; font-weight:600; cursor:pointer; white-space:nowrap;
+    height:100%; display:flex; align-items:center;
+    border-bottom:3px solid transparent;
+    transition:color .15s, border-color .15s;
+  }
+  .topnav-item:hover{color:#fff;}
+  .topnav-item.active{color:#fff; border-bottom-color:var(--debit); font-weight:700;}
+  .topnav-item.has-dropdown{position:relative;}
+  .topnav-dropdown{
+    position:absolute; top:100%; left:0; width:260px; max-height:70vh;
+    background:var(--white); border-radius:0 0 8px 8px; box-shadow:var(--shadow);
+    z-index:500; padding:8px 0; border:1px solid var(--line); border-top:none;
+    overflow-y:auto;
+  }
+  .dropdown-group-label{
+    font-size:11px; font-weight:700; letter-spacing:.4px; text-transform:uppercase;
+    color:#9AA5B1; padding:12px 18px 4px;
+  }
+  .dropdown-group-label:first-child{padding-top:8px;}
+  .dropdown-item{
+    padding:8px 18px; cursor:pointer;
+    color:#37517E; font-size:13.5px; font-weight:500;
+  }
+  .dropdown-item:hover{background:#F1F3F6;}
+  .dropdown-item.current{background:#EDEEF1; font-weight:700;}
+  .topnav-title{
+    background:var(--paper); color:var(--text-soft);
+    font-family:'Inter',sans-serif; font-size:15px; font-weight:700;
+    padding:11px 32px; border-bottom:1px solid var(--line); flex-shrink:0;
+  }
+  /* The app-name badge is sized to exactly match the sidebar's width (220px,
+     see .sidebar) and sits flush against the screen's left edge (the .topnav
+     container's own left padding is removed above, for the same reason) — so
+     it lines up as a single block directly above the dark sidebar. */
+  .topnav-app{
+    display:flex; align-items:center; gap:10px;
+    color:#fff; font-weight:700; font-size:17px;
+    width:220px; box-sizing:border-box; flex-shrink:0;
+    padding:0 20px;
+    border-right:1px solid rgba(255,255,255,0.18);
+    white-space:nowrap; height:100%;
+    cursor:pointer;
+  }
+  .topnav-app-icon{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:20px; height:20px; font-size:16px; opacity:.9; line-height:1;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- The top navbar now spans the FULL width of the screen (above the sidebar
+       too), so the app-name badge (grid icon + "Accounting"/"Settings") sits at
+       the very top-left — the same way clicking an app in Odoo takes over the
+       whole top bar, not just the area beside the sidebar. -->
+  <div id="topnav" class="topnav" onmousedown="topnavMouseDown(event)" style="display:none;"></div>
+  <div id="app-body">
+    <aside class="sidebar">
+      <div class="brand"><small>Accounting System</small></div>
+      <div id="nav"></div>
+    </aside>
+    <div class="main-col">
+      <div id="topnav-title" class="topnav-title" style="display:none;">Dashboard</div>
+      <main class="content">
+      <div id="view"></div>
+    </main>
+    </div>
+  </div>
+</div>
+<div class="topnav-dropdown" id="topnav-dropdown-portal" style="position:fixed; display:none;" onclick="event.stopPropagation()"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================= ERROR SAFETY NET ============================= */
+window.addEventListener('error', function(e){
+  const detail = (e && e.error && (e.error.stack || e.error.message)) || e.message || 'Unknown error';
+  showFatalError(detail);
+});
+function showFatalError(detail){
+  let box = document.getElementById('fatal-error-box');
+  if(!box){
+    box = document.createElement('div');
+    box.id = 'fatal-error-box';
+    box.style.cssText = 'position:fixed; bottom:0; left:0; right:0; background:#7d2c22; color:#fff; padding:12px 18px; font:12px monospace; z-index:9999; max-height:35vh; overflow:auto; white-space:pre-wrap;';
+    document.body.appendChild(box);
+  }
+  box.textContent = 'Something went wrong: ' + detail;
+}
+
+/* ============================= STATE ============================= */
+const STORAGE_KEY = 'ledger-state-v1';
+let state = null;
+let currentTab = 'dashboard';
+let storageMode = 'localStorage'; // 'localStorage' | 'memory'
+
+const DEFAULT_STATE = {
+  currency: 'LE',
+  accounts: [
+    {code:'1000', name:'Cash', type:'asset', system:true},
+    {code:'1100', name:'Accounts Receivable', type:'asset', system:true},
+    {code:'1200', name:'Inventory', type:'asset', system:true},
+    {code:'2000', name:'Accounts Payable', type:'liability', system:true},
+    {code:'3000', name:"Owner's Capital", type:'equity', system:true},
+    {code:'4000', name:'Sales Revenue', type:'revenue', system:true},
+    {code:'4100', name:'Service Revenue', type:'revenue', system:true},
+    {code:'5000', name:'Cost of Goods Sold', type:'expense', system:true},
+    {code:'5100', name:'General & Admin Expenses', type:'expense', system:true},
+  ],
+  journal: [],
+  journalsConfig: [
+    {id:'J-0001', name:'Sales Journal', code:'SALES', type:'sale'},
+    {id:'J-0002', name:'Purchase Journal', code:'PURCHASE', type:'purchase'},
+    {id:'J-0003', name:'Cash', code:'CASH', type:'cash'},
+    {id:'J-0004', name:'Bank', code:'BANK', type:'bank'},
+    {id:'J-0005', name:'Miscellaneous Operations', code:'MISC', type:'general'},
+  ],
+  journalSeq: {}, // running per-journal, per-month sequence — see nextJournalSerial()
+  currencies: [
+    {code:'EGP', symbol:'LE', name:'Egyptian pound', rate:1, active:true, lastUpdate:null},
+    {code:'EUR', symbol:'€', name:'Euro', rate:1, active:true, lastUpdate:null},
+    {code:'SAR', symbol:'SR', name:'Saudi riyal', rate:1, active:true, lastUpdate:null},
+  ],
+  companyCurrencyCode: 'EGP',
+  products: [],
+  customers: [],
+  suppliers: [],
+  sales: [],
+  purchases: [],
+  posSessions: [],
+  users: [],
+  counters: {journal:0, product:0, customer:0, supplier:0, sale:0, purchase:0}
+};
+
+function newState(){ return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
+
+function loadState(){
+  try{
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    state = raw ? JSON.parse(raw) : newState();
+    storageMode = 'localStorage';
+  }catch(e){
+    storageMode = 'memory';
+    state = newState();
+  }
+  // backward-compat: fill in any fields introduced after this state was first saved
+  if(!Array.isArray(state.journalsConfig)) state.journalsConfig = JSON.parse(JSON.stringify(DEFAULT_STATE.journalsConfig));
+  if(!Array.isArray(state.posSessions)) state.posSessions = [];
+  if(!Array.isArray(state.users)) state.users = [];
+  if(!Array.isArray(state.sales)) state.sales = [];
+  if(!Array.isArray(state.purchases)) state.purchases = [];
+  if(!Array.isArray(state.currencies)) state.currencies = JSON.parse(JSON.stringify(DEFAULT_STATE.currencies));
+  if(!state.companyCurrencyCode) state.companyCurrencyCode = state.currencies[0] ? state.currencies[0].code : null;
+  if(!state.journalSeq || typeof state.journalSeq!=='object') state.journalSeq = {};
+  // backward-compat: earlier saved states don't track which journal entry
+  // recorded a product's opening inventory balance, which editing needs in order
+  // to keep the Inventory account in sync — recover it by its description.
+  state.products.forEach(p=>{
+    if(p.kind==='product' && p.openingEntryId===undefined){
+      const match = state.journal.find(e=>e.source==='manual' && e.desc==='Opening inventory balance: '+p.name);
+      p.openingEntryId = match ? match.id : null;
+    }
+  });
+  if(Array.isArray(state.accounts)) sortAccounts(); // keep the chart of accounts ordered by code
+  // self-repair: a custom journal (e.g. "CIBRV") could previously be assigned the
+  // same internal id as one of the five built-in journals (both "J-0001"), which
+  // silently made entries post through — and take the serial of — the built-in
+  // journal instead of the one actually selected. Give any later duplicate its
+  // own fresh id; the first occurrence (and anything already posted against that
+  // id) is left untouched.
+  (function dedupeJournalIds(){
+    const seen = new Set();
+    state.journalsConfig.forEach(j=>{
+      if(seen.has(j.id)) j.id = nextJournalConfigId();
+      seen.add(j.id);
+    });
+  })();
+  render();
+}
+/* Generates a journal id that's guaranteed unique against whatever is currently
+   in state.journalsConfig — deliberately NOT based on the shared uid() counter,
+   since the five built-in journals ship with fixed ids (J-0001..J-0005) that the
+   counter starts at zero, ready to collide with. */
+function nextJournalConfigId(){
+  let maxN = 0;
+  (state.journalsConfig||[]).forEach(j=>{
+    const m = /^J-(\d+)$/.exec(j.id||'');
+    if(m) maxN = Math.max(maxN, parseInt(m[1],10));
+  });
+  return 'J-' + String(maxN+1).padStart(4,'0');
+}
+function saveState(){
+  try{
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    storageMode = 'localStorage';
+  }catch(e){
+    storageMode = 'memory';
+    console.error('storage error', e);
+  }
+}
+
+/* ============================= HELPERS ============================= */
+function fmt(n){
+  n = Number(n)||0;
+  return n.toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window.__toastT);
+  window.__toastT = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function uid(prefix, key){
+  state.counters[key] = (state.counters[key]||0)+1;
+  return prefix + '-' + String(state.counters[key]).padStart(4,'0');
+}
+function accountByCode(code){ return state.accounts.find(a=>a.code===code); }
+function typeLabel(t){
+  return {asset:'Asset', liability:'Liability', equity:'Equity', revenue:'Revenue', expense:'Expense'}[t]||t;
+}
+
+/* Each configured Journal (Configuration → Journals) has its own running serial,
+   formatted CODE/YYYY/MM/#### and reset every month — e.g. the Cash journal's
+   first entry in Jan 2026 is CASH/2026/01/0001, its first in Feb 2026 is
+   CASH/2026/02/0001. Falls back to the plain JV-#### id if no journals exist. */
+function defaultJournalForType(type){
+  return state.journalsConfig.find(j=>j.type===type) || state.journalsConfig[0] || null;
+}
+function defaultJournalForSource(source){
+  const typeMap = {sale:'sale', purchase:'purchase', receipt:'cash', payment:'cash', manual:'general', reversal:'general'};
+  return defaultJournalForType(typeMap[source] || 'general');
+}
+function nextJournalSerial(journal, date){
+  const d = new Date((date||todayISO())+'T00:00:00');
+  const year = d.getFullYear();
+  const month = String(d.getMonth()+1).padStart(2,'0');
+  const key = journal.code+'-'+year+'-'+month;
+  state.journalSeq[key] = (state.journalSeq[key]||0)+1;
+  const serial = String(state.journalSeq[key]).padStart(4,'0');
+  return `${journal.code}/${year}/${month}/${serial}`;
+}
+
+/* Post a balanced journal entry. lines: [{code, debit, credit, partyType, partyId}].
+   journalId picks which configured Journal this posts through (and therefore whose
+   serial it consumes) — if omitted, it's resolved automatically from `source`. */
+function postEntry(date, desc, source, lines, journalId){
+  const totalD = lines.reduce((s,l)=>s+(Number(l.debit)||0),0);
+  const totalC = lines.reduce((s,l)=>s+(Number(l.credit)||0),0);
+  if(Math.round(totalD*100) !== Math.round(totalC*100)){
+    throw new Error('Entry is not balanced: debit does not equal credit');
+  }
+  const journal = (journalId && state.journalsConfig.find(j=>j.id===journalId)) || defaultJournalForSource(source);
+  const ref = journal ? nextJournalSerial(journal, date) : uid('JV','journal');
+  const entry = {
+    id: ref,
+    journalId: journal ? journal.id : null,
+    date, desc, source,
+    lines: lines.map(l=>({code:l.code, debit:Number(l.debit)||0, credit:Number(l.credit)||0, partyType:l.partyType||null, partyId:l.partyId||null})),
+    reversed:false
+  };
+  state.journal.push(entry);
+  return entry;
+}
+
+function accountTotals(code){
+  let debit=0, credit=0;
+  state.journal.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.code===code){ debit+=l.debit; credit+=l.credit; }
+    });
+  });
+  return {debit,credit};
+}
+function partyBalance(type, id){
+  // customer: AR(1100) debit - credit ; supplier: AP(2000) credit - debit
+  let debit=0, credit=0;
+  state.journal.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.partyType===type && l.partyId===id){ debit+=l.debit; credit+=l.credit; }
+    });
+  });
+  return type==='customer' ? (debit-credit) : (credit-debit);
+}
+function addDays(dateStr, days){
+  const d = new Date((dateStr||todayISO())+'T00:00:00');
+  d.setDate(d.getDate()+Number(days||0));
+  return d.toISOString().slice(0,10);
+}
+/* ---- Invoice aging (FIFO allocation of receipts/payments against invoices) ---- */
+function invoicesForParty(partyType, partyId, asOfISO){
+  const isCustomer = partyType==='customer';
+  const entries = [];
+  state.journal.forEach(e=>{
+    if(e.reversed) return;
+    if(asOfISO && e.date > asOfISO) return; // only applied when an explicit cutoff is requested
+    e.lines.forEach(l=>{
+      if(l.partyType===partyType && l.partyId===partyId) entries.push({e,l});
+    });
+  });
+  entries.sort((a,b)=> a.e.date===b.e.date ? String(a.e.id).localeCompare(b.e.id) : a.e.date.localeCompare(b.e.date));
+  const invoices = [];
+  entries.forEach(({e,l})=>{
+    const increase = isCustomer ? l.debit : l.credit;
+    const decrease = isCustomer ? l.credit : l.debit;
+    if(increase>0){
+      invoices.push({entryId:e.id, date:e.date, dueDate:e.dueDate||e.date, amount:increase, remaining:increase});
+    }
+    if(decrease>0){
+      let amt = decrease;
+      for(const inv of invoices){
+        if(amt<=0.004) break;
+        if(inv.remaining<=0.004) continue;
+        const applied = Math.min(inv.remaining, amt);
+        inv.remaining -= applied; amt -= applied;
+      }
+    }
+  });
+  return invoices.filter(inv=>inv.remaining>0.004);
+}
+function agingBucket(dueDate, asOfISO){
+  const due = new Date((dueDate||todayISO())+'T00:00:00');
+  const asOf = new Date((asOfISO||todayISO())+'T00:00:00');
+  const days = Math.floor((asOf-due)/86400000);
+  if(days<=0) return 'current';
+  if(days<=30) return 'b1';
+  if(days<=60) return 'b2';
+  if(days<=90) return 'b3';
+  return 'b4';
+}
+/* Per-invoice breakdown across a set of parties — this is the source of truth for
+   the aging buckets AND lets the UI show the overdue amount at the individual-invoice
+   level (which invoice, whose it is, and how many days overdue) instead of only a
+   lump total. Pass asOfISO to get a historical snapshot (e.g. for the Dashboard's
+   date-range filter); omit it to use today, exactly as before. */
+function invoiceRowsForParties(partyType, parties, asOfISO){
+  const asOf = asOfISO || todayISO();
+  const asOfDate = new Date(asOf+'T00:00:00');
+  const rows = [];
+  parties.forEach(p=>{
+    invoicesForParty(partyType, p.id, asOfISO).forEach(inv=>{
+      const dueDate = inv.dueDate || asOf;
+      const daysOverdue = Math.max(0, Math.floor((asOfDate - new Date(dueDate+'T00:00:00'))/86400000));
+      rows.push({
+        partyName: p.name,
+        entryId: inv.entryId,
+        date: inv.date,
+        dueDate,
+        remaining: inv.remaining,
+        bucket: agingBucket(dueDate, asOf),
+        daysOverdue
+      });
+    });
+  });
+  rows.sort((a,b)=> b.daysOverdue - a.daysOverdue || a.dueDate.localeCompare(b.dueDate));
+  return rows;
+}
+function agingForParties(partyType, parties, asOfISO){
+  const rows = invoiceRowsForParties(partyType, parties, asOfISO);
+  const buckets = {current:0,b1:0,b2:0,b3:0,b4:0};
+  let total = 0;
+  rows.forEach(r=>{ buckets[r.bucket] += r.remaining; total += r.remaining; });
+  const overdueTotal = buckets.b1+buckets.b2+buckets.b3+buckets.b4;
+  return {buckets, total, overdueTotal, rows};
+}
+function unpaidInvoicesAging(asOfISO){ return agingForParties('customer', state.customers, asOfISO); }
+function unpaidBillsAging(asOfISO){ return agingForParties('supplier', state.suppliers, asOfISO); }
+function cashBalance(){ const t = accountTotals('1000'); return t.debit - t.credit; }
+function inventoryValue(){
+  return state.products.filter(p=>p.kind==='product').reduce((s,p)=>s+p.qty*p.cost,0);
+}
+function totalRevenue(){
+  const t1=accountTotals('4000'), t2=accountTotals('4100');
+  return (t1.credit-t1.debit)+(t2.credit-t2.debit);
+}
+function totalCOGS(){ const t=accountTotals('5000'); return t.debit-t.credit; }
+function totalExpenses(){ const t=accountTotals('5100'); return t.debit-t.credit; }
+function netProfit(){ return totalRevenue()-totalCOGS()-totalExpenses(); }
+
+/* ---- Dashboard date-range filter (Odoo-style) ----
+   Everything on the Dashboard — balances, revenue/expense flows, receivables/
+   payables aging, and the trend charts — is computed relative to a selected
+   [dashRangeStart, dashRangeEnd] window instead of hardcoded "today"/"this
+   month". Comparison ("previous period") automatically matches the selected
+   granularity: a day compares to the day before, a week to the week before,
+   a month to the month before, and so on; a custom range compares to the
+   same-length period immediately before it. */
+let dashRangePreset = 'this_month';
+let dashRangeStart = null;
+let dashRangeEnd = null;
+let dashRangeOpen = false;
+const DASH_RANGE_PRESETS = [
+  {key:'today', label:'Today'},
+  {key:'yesterday', label:'Yesterday'},
+  {key:'this_week', label:'This Week'},
+  {key:'last_week', label:'Last Week'},
+  {key:'this_month', label:'This Month'},
+  {key:'last_month', label:'Last Month'},
+  {key:'this_quarter', label:'This Quarter'},
+  {key:'last_quarter', label:'Last Quarter'},
+  {key:'this_year', label:'This Year'},
+  {key:'last_year', label:'Last Year'},
+];
+function pad2(n){ return String(n).padStart(2,'0'); }
+function dateToISO(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function isoToDate(s){ return new Date(s+'T00:00:00'); }
+function addDaysToDate(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function startOfWeekDate(d){ const r=new Date(d); const day=r.getDay(); r.setDate(r.getDate()+(day===0?-6:1-day)); return r; } // Monday-start
+function startOfMonthDate(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function endOfMonthDate(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+function startOfQuarterDate(d){ const q=Math.floor(d.getMonth()/3); return new Date(d.getFullYear(), q*3, 1); }
+function endOfQuarterDate(d){ const q=Math.floor(d.getMonth()/3); return new Date(d.getFullYear(), q*3+3, 0); }
+function startOfYearDate(d){ return new Date(d.getFullYear(),0,1); }
+function endOfYearDate(d){ return new Date(d.getFullYear(),11,31); }
+function dashPresetRange(preset){
+  const today = isoToDate(todayISO());
+  let s,e;
+  switch(preset){
+    case 'today': s=today; e=today; break;
+    case 'yesterday': s=addDaysToDate(today,-1); e=s; break;
+    case 'this_week': s=startOfWeekDate(today); e=addDaysToDate(s,6); break;
+    case 'last_week': s=addDaysToDate(startOfWeekDate(today),-7); e=addDaysToDate(s,6); break;
+    case 'this_month': s=startOfMonthDate(today); e=endOfMonthDate(today); break;
+    case 'last_month': { const m=new Date(today.getFullYear(),today.getMonth()-1,1); s=startOfMonthDate(m); e=endOfMonthDate(m); break; }
+    case 'this_quarter': s=startOfQuarterDate(today); e=endOfQuarterDate(today); break;
+    case 'last_quarter': { const q=new Date(today.getFullYear(),today.getMonth()-3,1); s=startOfQuarterDate(q); e=endOfQuarterDate(q); break; }
+    case 'this_year': s=startOfYearDate(today); e=endOfYearDate(today); break;
+    case 'last_year': { const y=new Date(today.getFullYear()-1,0,1); s=startOfYearDate(y); e=endOfYearDate(y); break; }
+    default: s=startOfMonthDate(today); e=endOfMonthDate(today);
+  }
+  return [dateToISO(s), dateToISO(e)];
+}
+function dashPreviousRange(preset, startISO, endISO){
+  const start = isoToDate(startISO), end = isoToDate(endISO);
+  let s,e;
+  switch(preset){
+    case 'today': case 'yesterday': s=addDaysToDate(start,-1); e=s; break;
+    case 'this_week': case 'last_week': s=addDaysToDate(start,-7); e=addDaysToDate(end,-7); break;
+    case 'this_month': case 'last_month': { const m=new Date(start.getFullYear(),start.getMonth()-1,1); s=startOfMonthDate(m); e=endOfMonthDate(m); break; }
+    case 'this_quarter': case 'last_quarter': { const q=new Date(start.getFullYear(),start.getMonth()-3,1); s=startOfQuarterDate(q); e=endOfQuarterDate(q); break; }
+    case 'this_year': case 'last_year': { const y=new Date(start.getFullYear()-1,0,1); s=startOfYearDate(y); e=endOfYearDate(y); break; }
+    default: { // custom range: same-length period immediately before
+      const lengthDays = Math.round((end-start)/86400000)+1;
+      e = addDaysToDate(start,-1);
+      s = addDaysToDate(e, -(lengthDays-1));
+    }
+  }
+  return [dateToISO(s), dateToISO(e)];
+}
+function ensureDashRangeInit(){
+  if(!dashRangeStart || !dashRangeEnd){
+    const [s,e] = dashPresetRange(dashRangePreset);
+    dashRangeStart = s; dashRangeEnd = e;
+  }
+}
+function toggleDashRangeMenu(){ dashRangeOpen = !dashRangeOpen; render(); }
+function selectDashRangePreset(preset){
+  dashRangePreset = preset;
+  const [s,e] = dashPresetRange(preset);
+  dashRangeStart = s; dashRangeEnd = e;
+  dashRangeOpen = false;
+  render();
+}
+function applyDashCustomRange(){
+  const s = document.getElementById('dash-range-start').value;
+  const e = document.getElementById('dash-range-end').value;
+  if(!s || !e){ toast('Please choose both a start and end date'); return; }
+  if(s>e){ toast('The start date must be before the end date'); return; }
+  dashRangeStart = s; dashRangeEnd = e; dashRangePreset = 'custom';
+  dashRangeOpen = false;
+  render();
+}
+function formatDateDisplay(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${m}/${d}/${y}`;
+}
+function dashRangeButtonLabel(){
+  const preset = DASH_RANGE_PRESETS.find(p=>p.key===dashRangePreset);
+  if(preset) return preset.label;
+  return formatDateDisplay(dashRangeStart)+' – '+formatDateDisplay(dashRangeEnd);
+}
+function renderDashRangePicker(){
+  ensureDashRangeInit();
+  return `
+  <div style="position:relative; display:inline-block;">
+    <button class="secondary" style="display:flex; align-items:center; gap:8px;" onclick="toggleDashRangeMenu()">
+      📅 ${dashRangeButtonLabel()} <span style="font-size:11px;">▾</span>
+    </button>
+    ${dashRangeOpen?`
+    <div style="position:absolute; top:calc(100% + 6px); right:0; z-index:50; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); display:flex; min-width:480px;">
+      <div style="width:150px; border-right:1px solid var(--line); padding:8px 0; flex-shrink:0;">
+        ${DASH_RANGE_PRESETS.map(p=>`
+          <div style="padding:10px 16px; cursor:pointer; font-size:14px; ${dashRangePreset===p.key?'color:var(--azure); font-weight:700;':'color:var(--ink);'}" onclick="selectDashRangePreset('${p.key}')">${p.label}</div>
+        `).join('')}
+      </div>
+      <div style="flex:1; padding:16px;">
+        <div class="hint" style="margin-top:0; margin-bottom:10px;">Or pick a custom range:</div>
+        <div style="display:flex; gap:10px; margin-bottom:14px;">
+          <input type="date" id="dash-range-start" value="${dashRangeStart}" style="flex:1;">
+          <input type="date" id="dash-range-end" value="${dashRangeEnd}" style="flex:1;">
+        </div>
+        <div style="display:flex; justify-content:flex-end;">
+          <button onclick="applyDashCustomRange()">Apply</button>
+        </div>
+      </div>
+    </div>`:''}
+  </div>`;
+}
+
+/* ---- Range-based figures (flow items: activity WITHIN the range; balance-sheet
+   items: balance AS OF the range's end date) ---- */
+function accountTotalsForRange(code, startISO, endISO){
+  let debit=0, credit=0;
+  state.journal.forEach(e=>{
+    if(e.date<startISO || e.date>endISO) return;
+    e.lines.forEach(l=>{ if(l.code===code){ debit+=l.debit; credit+=l.credit; } });
+  });
+  return {debit,credit};
+}
+function revenueForRange(startISO,endISO){
+  const s=accountTotalsForRange('4000',startISO,endISO), sv=accountTotalsForRange('4100',startISO,endISO);
+  const sales=s.credit-s.debit, service=sv.credit-sv.debit;
+  return {sales, service, total: sales+service};
+}
+function cogsExpensesForRange(startISO,endISO){
+  const c=accountTotalsForRange('5000',startISO,endISO), e=accountTotalsForRange('5100',startISO,endISO);
+  return (c.debit-c.credit)+(e.debit-e.credit);
+}
+function netProfitForRange(startISO,endISO){ return revenueForRange(startISO,endISO).total - cogsExpensesForRange(startISO,endISO); }
+function accountBalanceAsOfDate(code, asOfISO){
+  let debit=0, credit=0;
+  state.journal.forEach(e=>{
+    if(e.date > asOfISO) return;
+    e.lines.forEach(l=>{ if(l.code===code){ debit+=l.debit; credit+=l.credit; } });
+  });
+  return {debit,credit};
+}
+function cashBalanceAsOfDate(asOfISO){ const t=accountBalanceAsOfDate('1000',asOfISO); return t.debit-t.credit; }
+function inventoryValueAsOfDate(asOfISO){ const t=accountBalanceAsOfDate('1200',asOfISO); return t.debit-t.credit; }
+
+/* ---- Monthly series for the trend charts, spanning only the months that
+   overlap the selected range (each month clipped to the range's edges) ---- */
+function monthLabel(ym){
+  const [y,m] = ym.split('-').map(Number);
+  return new Date(y,m-1,1).toLocaleDateString('en-US',{month:'short', year:'2-digit'});
+}
+function monthsBetween(startISO, endISO){
+  const start = isoToDate(startISO), end = isoToDate(endISO);
+  const months = [];
+  let cur = new Date(start.getFullYear(), start.getMonth(), 1);
+  const last = new Date(end.getFullYear(), end.getMonth(), 1);
+  while(cur <= last){
+    months.push(cur.getFullYear()+'-'+pad2(cur.getMonth()+1));
+    cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+  }
+  return months;
+}
+function chartSeriesForRange(startISO, endISO){
+  return monthsBetween(startISO, endISO).map(ym=>{
+    const [y,m] = ym.split('-').map(Number);
+    const mStart = dateToISO(new Date(y, m-1, 1)), mEnd = dateToISO(new Date(y, m, 0));
+    const clipStart = mStart < startISO ? startISO : mStart;
+    const clipEnd = mEnd > endISO ? endISO : mEnd;
+    const rev = revenueForRange(clipStart, clipEnd);
+    const c = accountTotalsForRange('5000', clipStart, clipEnd);
+    const e = accountTotalsForRange('5100', clipStart, clipEnd);
+    return {ym, sales:rev.sales, service:rev.service, total:rev.total, cogs:c.debit-c.credit, expenses:e.debit-e.credit};
+  });
+}
+function pctChange(curr, prev){
+  curr = Number(curr)||0; prev = Number(prev)||0;
+  if(Math.abs(prev) < 0.005) return curr===0 ? 0 : null; // null = no prior baseline
+  return ((curr-prev)/Math.abs(prev))*100;
+}
+function trendArrowHtml(pct){
+  if(pct===null) return '<span class="trend flat">— n/a</span>';
+  if(Math.abs(pct) < 0.05) return '<span class="trend flat">→ 0.0%</span>';
+  const up = pct>0;
+  return `<span class="trend ${up?'up':'down'}">${up?'▲':'▼'} ${up?'+':''}${pct.toFixed(1)}%</span>`;
+}
+function renderLineChartSVG(categories, series){
+  const w=640, h=220, padL=8, padR=8, padT=26, padB=26;
+  const chartW=w-padL-padR, chartH=h-padT-padB;
+  const maxVal = Math.max(1, ...series.flatMap(s=>s.values));
+  const n = categories.length;
+  const stepX = n>1 ? chartW/(n-1) : 0;
+  const pointsFor = values => values.map((v,i)=>{
+    const x = padL + stepX*i;
+    const y = padT + chartH - (v/maxVal)*chartH;
+    return {x,y,v};
+  });
+  const linesSvg = series.map(s=>{
+    const pts = pointsFor(s.values);
+    const path = pts.map((p,i)=>(i===0?'M':'L')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+    const dots = pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="${s.color}" stroke="#fff" stroke-width="1"></circle>`).join('');
+    const labels = pts.map(p=>`<text x="${p.x.toFixed(1)}" y="${(p.y-9).toFixed(1)}" text-anchor="middle" font-size="10" fill="#152925" font-family="IBM Plex Mono,monospace">${fmt(p.v)}</text>`).join('');
+    return `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></path>${dots}${labels}`;
+  }).join('');
+  const xLabels = categories.map((c,i)=>{
+    const x = padL + stepX*i;
+    return `<text x="${x.toFixed(1)}" y="${(padT+chartH+18).toFixed(1)}" text-anchor="middle" font-size="10" fill="#5B655F" font-family="Inter,sans-serif">${c}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; height:auto; display:block; overflow:visible;">
+    <line x1="${padL}" y1="${padT+chartH}" x2="${w-padR}" y2="${padT+chartH}" stroke="#152925" stroke-width="1"></line>
+    ${linesSvg}
+    ${xLabels}
+  </svg>`;
+}
+function renderRevenueChartSVG(series){
+  const categories = series.map(r=>monthLabel(r.ym));
+  return renderLineChartSVG(categories, [
+    {color:'var(--credit)', values: series.map(r=>r.sales)},
+    {color:'var(--azure)', values: series.map(r=>r.service)}
+  ]);
+}
+function renderCogsExpensesChartSVG(series){
+  const categories = series.map(r=>monthLabel(r.ym));
+  return renderLineChartSVG(categories, [
+    {color:'var(--debit)', values: series.map(r=>r.cogs)},
+    {color:'var(--amber)', values: series.map(r=>r.expenses)}
+  ]);
+}
+
+/* ============================= NAV ============================= */
+const TABS = [
+  {id:'dashboard', label:'Dashboard', icon:'📊', color:'#8E44AD'},
+  {id:'pos', label:'Point of Sale', icon:'💳', color:'#D81B60'},
+  {id:'accounting-suite', label:'Accounting', icon:'📘', color:'#2E86AB'},
+  {id:'sales', label:'Sales', icon:'🧾', color:'#FB8C00'},
+  {id:'purchase', label:'Purchase', icon:'🛒', color:'#00897B'},
+  {id:'inventory', label:'Inventory', icon:'📦', color:'#6D4C41'},
+  {id:'settings-suite', label:'Settings', icon:'💾', color:'#546E7A'},
+];
+
+function renderNav(){
+  const nav = document.getElementById('nav');
+  nav.innerHTML = TABS.map(t=>{
+    let isActive;
+    if(t.id==='accounting-suite') isActive = showTopNav && activeSuite==='accounting';
+    else if(t.id==='settings-suite') isActive = showTopNav && activeSuite==='settings';
+    else isActive = currentTab===t.id && !showTopNav;
+    return `
+    <div class="nav-item ${isActive?'active':''}" onclick="goTo('${t.id}')">
+      <span class="nav-icon" style="background:${t.color}">${t.icon}</span><span>${t.label}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ---- Top navbar (Odoo-style internal app menu) ---- */
+const ACCOUNTING_TOPNAV = [
+  {id:'dashboard', label:'Dashboard', target:'acct-dashboard'},
+  {id:'customers', label:'Customers', children:[
+    {id:'sales', label:'Invoices'},
+    {id:'receipts', label:'Payments'},
+    {id:'inventory', label:'Products'},
+    {id:'customers', label:'Customers'},
+  ]},
+  {id:'vendors', label:'Vendors', children:[
+    {id:'purchase', label:'Bills'},
+    {id:'receipts', label:'Payments'},
+    {id:'inventory', label:'Products'},
+    {id:'suppliers', label:'Vendors'},
+  ]},
+  {id:'accounting', label:'Accounting', children:[
+    {id:'journal', label:'Journal Entries'},
+  ]},
+  {id:'reporting', label:'Reporting', children:[
+    {group:'Statement Reports'},
+    {id:'balance_sheet', label:'Balance Sheet'},
+    {id:'profit_loss', label:'Profit and Loss'},
+    {id:'cash_flow', label:'Cash Flow Statement'},
+    {id:'exec_summary', label:'Executive Summary'},
+    {id:'tax_report', label:'Tax Report'},
+    {group:'Audit Reports'},
+    {id:'general_ledger', label:'General Ledger'},
+    {id:'trial', label:'Trial Balance'},
+    {id:'journal_report', label:'Journal Report'},
+    {group:'Partner Reports'},
+    {id:'partner_ledger', label:'Partner Ledger'},
+    {id:'aged_receivable', label:'Aged Receivable'},
+    {id:'aged_payable', label:'Aged Payable'},
+  ]},
+  {id:'configuration', label:'Configuration', children:[
+    {group:'Settings'},
+    {id:'backup', label:'General Settings'},
+    {id:'users', label:'Users'},
+    {group:'Accounting'},
+    {id:'accounts', label:'Chart of Accounts'},
+    {id:'journals', label:'Journals'},
+    {id:'currencies', label:'Currencies'},
+  ]},
+];
+// The Settings app has its own, simpler top navbar — no dropdowns, just two tabs.
+const SETTINGS_TOPNAV = [
+  {id:'general', label:'General Settings', target:'backup'},
+  {id:'users', label:'Users', target:'users'},
+];
+function currentTopNavList(){ return activeSuite==='settings' ? SETTINGS_TOPNAV : ACCOUNTING_TOPNAV; }
+// Maps each sidebar/internal tab to the top navbar item it belongs under,
+// so the top bar highlight stays in sync no matter how you navigate.
+const TOPNAV_FOR_TAB = {
+  dashboard:'dashboard', 'acct-dashboard':'dashboard', journal:'accounting', inventory:'accounting',
+  sales:'accounting', purchase:'accounting', receipts:'accounting',
+  customers:'customers', suppliers:'vendors', trial:'reporting',
+  balance_sheet:'reporting', profit_loss:'reporting', cash_flow:'reporting',
+  exec_summary:'reporting', tax_report:'reporting', general_ledger:'reporting',
+  journal_report:'reporting', partner_ledger:'reporting',
+  aged_receivable:'reporting', aged_payable:'reporting',
+  accounts:'configuration', journals:'configuration', currencies:'configuration', backup:'configuration',
+  users:'users'
+};
+let topNavActive = 'dashboard';
+let openDropdownId = null; // id of the TOPNAV parent whose dropdown is currently open, or null
+// The top navbar only makes sense while inside the "Accounting" or "Settings" app
+// (entered via its own sidebar icon); every other sidebar app hides it entirely.
+let showTopNav = false;
+let activeSuite = 'accounting'; // which sidebar "app" currently owns the top navbar: 'accounting' | 'settings'
+const ACCOUNTING_ZONE_TABS = ['acct-dashboard','customers','suppliers','sales','purchase','receipts','inventory','journal','trial','accounts','journals','currencies','backup',
+  'balance_sheet','profit_loss','cash_flow','exec_summary','tax_report','general_ledger','journal_report','partner_ledger','aged_receivable','aged_payable'];
+const SETTINGS_ZONE_TABS = ['backup','users'];
+
+function dropdownContentHTML(t){
+  return t.children.map(c=>c.group
+    ? `<div class="dropdown-group-label">${c.group}</div>`
+    : `<div class="dropdown-item ${currentTab===c.id?'current':''}" onclick="goToDropdownChild('${t.id}','${c.id}')">${c.label}</div>`
+  ).join('');
+}
+
+function renderTopNav(){
+  const el = document.getElementById('topnav');
+  const titleEl = document.getElementById('topnav-title');
+  if(!showTopNav){
+    if(el) el.style.display = 'none';
+    if(titleEl) titleEl.style.display = 'none';
+    return;
+  }
+  if(el) el.style.display = '';
+  if(titleEl) titleEl.style.display = '';
+  if(!el) return;
+  const list = currentTopNavList();
+  // The app-name badge (grid icon + "Accounting"/"Settings") always leads the bar,
+  // before the Dashboard/Customers/... items — it names whichever sidebar icon
+  // was clicked to get here, the same way Odoo's app switcher does.
+  const appLabel = activeSuite==='settings' ? 'Settings' : 'Accounting';
+  const appIcon = `<svg width="16" height="16" viewBox="0 0 14 14" fill="currentColor"><circle cx="2" cy="2" r="1.3"/><circle cx="7" cy="2" r="1.3"/><circle cx="12" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="7" cy="7" r="1.3"/><circle cx="12" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="7" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/></svg>`;
+  el.innerHTML = `<div class="topnav-app" onclick="goToAppHome()"><span class="topnav-app-icon">${appIcon}</span><span>${appLabel}</span></div>` +
+    list.map(t=>{
+    if(t.children){
+      return `<div class="topnav-item has-dropdown ${topNavActive===t.id?'active':''}" data-nav-id="${t.id}" onclick="toggleDropdown(event, '${t.id}')">${t.label}</div>`;
+    }
+    return `<div class="topnav-item ${topNavActive===t.id?'active':''}" onclick="goToTop('${t.id}')">${t.label}</div>`;
+  }).join('');
+  if(titleEl){
+    const parent = list.find(t=>t.id===topNavActive);
+    let label = '';
+    if(parent){
+      if(parent.children){
+        const child = parent.children.find(c=>c.id===currentTab);
+        label = child ? child.label : parent.label;
+      } else {
+        label = parent.label;
+      }
+    }
+    titleEl.textContent = label;
+  }
+  // The open dropdown lives in a body-level portal (see toggleDropdown) so it's
+  // never clipped by the topnav's own horizontal scroll/drag container.
+  const portal = document.getElementById('topnav-dropdown-portal');
+  if(portal && !openDropdownId) portal.style.display = 'none';
+}
+// Dropdowns render into this single body-level element instead of nesting inside
+// .topnav-item, so the topnav can safely use overflow-x:auto (for drag-to-scroll)
+// without its overflow box clipping the dropdown underneath.
+function toggleDropdown(e, id){
+  if(topnavDrag.moved) return;
+  if(e) e.stopPropagation();
+  const portal = document.getElementById('topnav-dropdown-portal');
+  if(!portal) return;
+  if(openDropdownId === id){
+    openDropdownId = null;
+    portal.style.display = 'none';
+    return;
+  }
+  const t = currentTopNavList().find(x=>x.id===id);
+  if(!t || !t.children) return;
+  openDropdownId = id;
+  portal.innerHTML = dropdownContentHTML(t);
+  const trigger = (e && e.currentTarget) || document.querySelector(`[data-nav-id="${id}"]`);
+  const rect = trigger.getBoundingClientRect();
+  portal.style.left = Math.round(rect.left) + 'px';
+  portal.style.top = Math.round(rect.bottom) + 'px';
+  portal.style.display = 'block';
+}
+function goToDropdownChild(parentId, childId){
+  openDropdownId = null;
+  const portal = document.getElementById('topnav-dropdown-portal');
+  if(portal) portal.style.display = 'none';
+  showTopNav = true;
+  activeSuite = 'accounting';
+  topNavActive = parentId;
+  currentTab = childId;
+  render();
+}
+function closeDropdown(){
+  if(openDropdownId){
+    openDropdownId = null;
+    const portal = document.getElementById('topnav-dropdown-portal');
+    if(portal) portal.style.display = 'none';
+  }
+}
+document.addEventListener('click', closeDropdown);
+function goToTop(id){
+  if(topnavDrag.moved) return;
+  const t = currentTopNavList().find(x=>x.id===id);
+  if(!t || t.children) return;
+  closeDropdown();
+  showTopNav = true;
+  topNavActive = id;
+  currentTab = t.target;
+  render();
+}
+/* Clicking the app-name badge (the grid icon + "Accounting"/"Settings" label at
+   the very start of the top bar) jumps back to that app's home page, the same
+   way clicking an app name works in Odoo. */
+function goToAppHome(){
+  if(topnavDrag.moved) return;
+  goTo((activeSuite==='settings' ? 'settings' : 'accounting') + '-suite');
+}
+function goTo(tab){
+  closeDropdown();
+  if(tab === 'accounting-suite'){
+    // Entering the Accounting app: always land on its own Dashboard (the
+    // Journal-cards one, not the sidebar's Business Overview), and show its topnav.
+    showTopNav = true;
+    activeSuite = 'accounting';
+    currentTab = 'acct-dashboard';
+    topNavActive = 'dashboard';
+    render();
+    return;
+  }
+  if(tab === 'settings-suite'){
+    // Entering the Settings app: show its (simpler) top navbar, keeping whichever
+    // settings-zone page you were last on, or defaulting to General Settings.
+    showTopNav = true;
+    activeSuite = 'settings';
+    if(!SETTINGS_ZONE_TABS.includes(currentTab)) currentTab = 'backup';
+    topNavActive = currentTab === 'users' ? 'users' : 'general';
+    render();
+    return;
+  }
+  showTopNav = false;
+  currentTab = tab;
+  render();
+}
+
+/* ---- Click-and-drag horizontal panning for the top navbar ---- */
+let topnavDrag = {active:false, moved:false, startX:0, scrollLeft:0};
+function topnavMouseDown(e){
+  const el = document.getElementById('topnav');
+  if(!el) return;
+  topnavDrag.active = true;
+  topnavDrag.moved = false;
+  topnavDrag.startX = e.pageX;
+  topnavDrag.scrollLeft = el.scrollLeft;
+  el.classList.add('dragging');
+}
+function topnavMouseMove(e){
+  if(!topnavDrag.active) return;
+  const dx = e.pageX - topnavDrag.startX;
+  if(Math.abs(dx) > 4 && !topnavDrag.moved){
+    topnavDrag.moved = true;
+    closeDropdown();
+  }
+  if(topnavDrag.moved){
+    e.preventDefault();
+    const el = document.getElementById('topnav');
+    if(el) el.scrollLeft = topnavDrag.scrollLeft - dx;
+  }
+}
+function topnavMouseUp(){
+  const el = document.getElementById('topnav');
+  if(el) el.classList.remove('dragging');
+  topnavDrag.active = false;
+  // Defer clearing "moved" so the click event that follows mouseup still sees it
+  // and skips navigation — a drag shouldn't also trigger the tab underneath it.
+  setTimeout(()=>{ topnavDrag.moved = false; }, 0);
+}
+document.addEventListener('mousemove', topnavMouseMove);
+document.addEventListener('mouseup', topnavMouseUp);
+
+/* ============================= RENDER ROUTER ============================= */
+function render(){
+  try{
+    renderNav();
+    renderTopNav();
+    const v = document.getElementById('view');
+    const renderers = {
+      dashboard: renderDashboard, 'acct-dashboard': renderAccountingDashboard, 'journal-lines': renderJournalLines,
+      'entry-detail': renderEntryDetail,
+      accounts: renderAccounts, journal: renderJournal,
+      journals: renderJournalsConfig, currencies: renderCurrencies,
+      inventory: renderInventory, sales: renderSales, purchase: renderPurchase,
+      receipts: renderReceipts, customers: renderCustomers, suppliers: renderSuppliers,
+      trial: renderTrial, backup: renderBackup, pos: renderPOS, users: renderUsers,
+      balance_sheet: renderBalanceSheet, profit_loss: renderProfitLoss, cash_flow: renderCashFlow,
+      exec_summary: renderExecutiveSummary, tax_report: renderTaxReport, general_ledger: renderGeneralLedger,
+      journal_report: renderJournalReport, partner_ledger: renderPartnerLedger,
+      aged_receivable: renderAgedReceivable, aged_payable: renderAgedPayable
+    };
+    v.innerHTML = (storageMode==='memory' ? memoryBanner() : '') + renderers[currentTab]();
+  }catch(err){
+    showFatalError(err.stack || err.message);
+  }
+}
+function memoryBanner(){
+  return `<div class="banner error">⚠ This browser is blocking on-device storage right now, so changes will only last for this session. Use Backup &amp; Export → Download Backup often, and see the note there for how to keep data saved automatically.</div>`;
+}
+
+/* ============================= DASHBOARD ============================= */
+/* Standalone sidebar "Dashboard" — the overall business snapshot (Cash, revenue,
+   receivables/payables, trend charts). This is intentionally separate from the
+   Accounting app's own Dashboard (see renderAccountingDashboard below), which is
+   Journal-cards-only, Odoo-style. */
+function renderDashboard(){
+  ensureDashRangeInit();
+  const start = dashRangeStart, end = dashRangeEnd;
+  const [prevStart, prevEnd] = dashPreviousRange(dashRangePreset, start, end);
+
+  // balance-sheet items: compare balance as of the range's end date vs as of the previous period's end date
+  const cashCur = cashBalanceAsOfDate(end), cashPrev = cashBalanceAsOfDate(prevEnd);
+  const invCur = inventoryValueAsOfDate(end), invPrev = inventoryValueAsOfDate(prevEnd);
+
+  // flow items: activity within the selected range vs the previous period
+  const revCur = revenueForRange(start,end).total, revPrev = revenueForRange(prevStart,prevEnd).total;
+  const costCur = cogsExpensesForRange(start,end), costPrev = cogsExpensesForRange(prevStart,prevEnd);
+  const npCur = netProfitForRange(start,end), npPrev = netProfitForRange(prevStart,prevEnd);
+
+  const series = chartSeriesForRange(start,end);
+  const rangeLabel = formatDateDisplay(start)+' – '+formatDateDisplay(end);
+
+  // receivables/payables: snapshot AS OF the range's end date, so "current" vs
+  // "overdue" is judged relative to that date, not necessarily today
+  const agingAR = unpaidInvoicesAging(end);
+  const agingAP = unpaidBillsAging(end);
+
+  return `
+    <div style="background:#232B3B; margin:-26px -32px 0; padding:0 32px; height:44px; display:flex; align-items:center;">
+      <div class="topnav-item active" style="cursor:default; font-size:15px;">Dashboard</div>
+    </div>
+    <div style="background:var(--paper); margin:0 -32px 24px; padding:11px 32px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <div style="color:var(--text-soft); font-family:'Inter',sans-serif; font-size:15px; font-weight:700;">Dashboard</div>
+      ${renderDashRangePicker()}
+    </div>
+    <div class="grid g2">
+      ${statCard('', 'Cash Balance', fmt(cashCur), pctChange(cashCur,cashPrev))}
+      ${statCard('amber', 'Inventory Value', fmt(invCur), pctChange(invCur,invPrev))}
+    </div>
+    <div class="grid g3">
+      ${statCard('credit', 'Total Revenue', fmt(revCur), pctChange(revCur,revPrev))}
+      ${statCard('debit', 'COGS + Expenses', fmt(costCur), pctChange(costCur,costPrev))}
+      ${statCard(npCur>=0?'credit':'debit', 'Estimated Net Profit', fmt(npCur), pctChange(npCur,npPrev))}
+    </div>
+    <div class="grid g2">
+      ${receivablePayableCard('ar', 'Total Receivables', 'Total unpaid invoices', agingAR, 'customer')}
+      ${receivablePayableCard('ap', 'Total Payables', 'Total unpaid bills', agingAP, 'supplier')}
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Sales Trend (${rangeLabel})</h3>
+        <div style="display:flex; gap:16px; font-size:12px; color:var(--text-soft); margin-bottom:10px;">
+          <span><span style="display:inline-block;width:10px;height:10px;background:var(--credit);border-radius:2px;margin-right:5px; vertical-align:middle;"></span>Sales Revenue</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:var(--azure);border-radius:2px;margin-right:5px; vertical-align:middle;"></span>Service Revenue</span>
+        </div>
+        ${series.every(r=>r.total===0) ? '<div class="empty">No revenue posted in this period</div>' : renderRevenueChartSVG(series)}
+      </div>
+      <div class="card">
+        <h3>COGS &amp; Expenses Trend (${rangeLabel})</h3>
+        <div style="display:flex; gap:16px; font-size:12px; color:var(--text-soft); margin-bottom:10px;">
+          <span><span style="display:inline-block;width:10px;height:10px;background:var(--debit);border-radius:2px;margin-right:5px; vertical-align:middle;"></span>COGS</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:var(--amber);border-radius:2px;margin-right:5px; vertical-align:middle;"></span>Expenses</span>
+        </div>
+        ${series.every(r=>r.cogs===0 && r.expenses===0) ? '<div class="empty">No COGS or expenses posted in this period</div>' : renderCogsExpensesChartSVG(series)}
+      </div>
+    </div>
+  `;
+}
+/* The Accounting app's own Dashboard (reached via the Accounting sidebar icon,
+   or the "Dashboard" item in its top navbar) — Journal cards only, Odoo-style.
+   The Business Overview content lives solely on the standalone sidebar Dashboard
+   above. */
+function renderAccountingDashboard(){
+  return `
+    <div class="topbar">
+      <div><h2>Accounting Dashboard</h2><div class="sub">Your journals — recent activity and quick actions</div></div>
+    </div>
+    <div class="grid g3">
+      ${state.journalsConfig.length===0?'<div class="card"><div class="empty">No journals yet — add one from Configuration → Journals</div></div>':
+      state.journalsConfig.map(j=>renderJournalDashboardCard(j)).join('')}
+    </div>
+  `;
+}
+/* ---- Journal cards (Odoo-style): one per configured Journal, showing this
+   month's activity and its most recent entries — each stamped with that
+   journal's own running serial, e.g. CASH/2026/01/0001. ---- */
+const JOURNAL_TYPE_META = {
+  sale:     {icon:'🧾', newLabel:'New Invoice', newTab:'sales'},
+  purchase: {icon:'🛒', newLabel:'New Bill',    newTab:'purchase'},
+  cash:     {icon:'💵', newLabel:'New Entry',   newTab:'journal'},
+  bank:     {icon:'🏦', newLabel:'New Entry',   newTab:'journal'},
+  general:  {icon:'📋', newLabel:'New Entry',   newTab:'journal'},
+};
+function journalEntriesFor(journalId){
+  return state.journal.filter(e=>e.journalId===journalId);
+}
+function renderJournalDashboardCard(j){
+  const meta = JOURNAL_TYPE_META[j.type] || JOURNAL_TYPE_META.general;
+  return `
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+      <div>
+        <h3 style="margin-bottom:2px;">${meta.icon} ${j.name}</h3>
+        <div class="hint" style="margin-top:0;">${j.code} · ${journalTypeLabel(j.type)}</div>
+      </div>
+      <button class="small" onclick="goToJournalNew('${j.id}','${meta.newTab}')">${meta.newLabel}</button>
+    </div>
+    <div style="margin-top:14px;">
+      <button class="secondary" style="width:100%;" onclick="goToJournalLines('${j.id}')">View Journal Items</button>
+    </div>
+  </div>`;
+}
+/* "New" on a journal card jumps straight to the right page for that journal's
+   type (Sales/Purchase), or to Journal Entries with that journal pre-selected. */
+function goToJournalNew(journalId, tab){
+  if(tab==='journal'){ manualJournalId = journalId; }
+  goTo(tab);
+}
+
+/* ---- Journal Items: a flat, line-by-line view of one journal's postings.
+   Reached only from a journal card's "View Journal Items" button — works the
+   same for any journal, built-in or custom. Clicking any single line opens the
+   complete entry it belongs to via goToEntryDetail() below. ---- */
+let journalLinesJournalId = null;
+function goToJournalLines(journalId){
+  journalLinesJournalId = journalId;
+  // Stay inside the Accounting app's own topnav — this is a drill-down from its
+  // Dashboard, not a separate top-level page.
+  showTopNav = true;
+  activeSuite = 'accounting';
+  topNavActive = 'dashboard';
+  currentTab = 'journal-lines';
+  render();
+}
+function renderJournalLines(){
+  const journal = state.journalsConfig.find(j=>j.id===journalLinesJournalId);
+  if(!journal){
+    return `
+      <div class="topbar"><div><h2>Journal Items</h2></div>
+        <button class="secondary" onclick="goTo('accounting-suite')">← Back to Dashboard</button>
+      </div>
+      <div class="card"><div class="empty">This journal no longer exists</div></div>
+    `;
+  }
+  const rows = [];
+  journalEntriesFor(journal.id).forEach(e=>{
+    e.lines.forEach(l=>{
+      rows.push({entryId:e.id, date:e.date, desc:e.desc, code:l.code, debit:l.debit, credit:l.credit, reversed:e.reversed});
+    });
+  });
+  rows.sort((a,b)=> a.date===b.date ? a.entryId.localeCompare(b.entryId) : (a.date<b.date?1:-1));
+  return `
+    <div class="topbar">
+      <div><h2>${journal.name}</h2><div class="sub">${journal.code} · Journal Items</div></div>
+      <button class="secondary" onclick="goTo('accounting-suite')">← Back to Dashboard</button>
+    </div>
+    <div class="card">
+      ${rows.length===0?'<div class="empty">No entries in this journal yet</div>':
+      `<table><thead><tr><th>Date</th><th>Entry</th><th>Description</th><th>Account</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr style="cursor:pointer;" onclick="goToEntryDetail('${r.entryId}')">
+        <td>${r.date}</td><td class="mono">${r.entryId}</td>
+        <td>${r.desc}${r.reversed?' <span class="badge reversal">Reversed</span>':''}</td>
+        <td>${r.code} — ${(accountByCode(r.code)||{}).name||''}</td>
+        <td class="num">${r.debit?fmt(r.debit):''}</td><td class="num">${r.credit?fmt(r.credit):''}</td>
+      </tr>`).join('')}
+      </tbody></table>`}
+    </div>
+  `;
+}
+
+function statCard(cls, label, value, pct){
+  return `<div class="stat ${cls}"><div class="label">${label}</div><div class="value">${state.currency}${value}</div>
+    <div style="margin-top:5px;">${trendArrowHtml(pct)}</div>
+  </div>`;
+}
+/* ---- Generic "view one journal entry" drill-down, usable from anywhere in the
+   app (Journal Items, the receivables/payables aging tables, etc.) — remembers
+   exactly where you came from (tab, topnav state) so "Back" returns you there. ---- */
+let entryDetailId = null;
+let entryDetailReturn = null;
+function goToEntryDetail(entryId){
+  entryDetailId = entryId;
+  entryDetailReturn = {tab: currentTab, showTopNav, activeSuite, topNavActive};
+  currentTab = 'entry-detail';
+  render();
+}
+function backFromEntryDetail(){
+  if(entryDetailReturn){
+    currentTab = entryDetailReturn.tab;
+    showTopNav = entryDetailReturn.showTopNav;
+    activeSuite = entryDetailReturn.activeSuite;
+    topNavActive = entryDetailReturn.topNavActive;
+  } else {
+    currentTab = 'dashboard';
+    showTopNav = false;
+  }
+  entryDetailId = null; entryDetailReturn = null;
+  render();
+}
+function renderEntryDetail(){
+  const entry = state.journal.find(e=>e.id===entryDetailId);
+  return `
+    <div class="topbar">
+      <div><h2>Journal Entry</h2><div class="sub">${entry?entry.id:'Not found'}</div></div>
+      <button class="secondary" onclick="backFromEntryDetail()">← Back</button>
+    </div>
+    <div class="card">
+      ${entry ? renderJeCard(entry) : '<div class="empty">This entry no longer exists</div>'}
+    </div>
+  `;
+}
+/* Card showing a receivables/payables title (no amount/trend) with a nested
+   unpaid-invoices/bills aging summary (Current / Overdue). Clicking "Overdue"
+   drops down a vertical list of the four age buckets (Odoo-style); clicking one
+   of those buckets then shows the history of invoices/bills that make it up. */
+const AGING_BUCKET_DEFS = [
+  {key:'b1', label:'1–30 days'},
+  {key:'b2', label:'31–60 days'},
+  {key:'b3', label:'61–90 days'},
+  {key:'b4', label:'Above 90 days'},
+];
+let agingOverdueOpen = {};   // { [cardKey]: true|false } — whether the bucket dropdown is shown
+let agingOpenBucket = {};    // { [cardKey]: bucketKey|null } — which bucket's history is expanded
+let agingCurrentOpen = {};   // { [cardKey]: true|false } — whether the "Current" history is shown
+function receivablePayableCard(key, mainLabel, unpaidLabel, aging, partyType){
+  const partyLabel = partyType==='supplier' ? 'Supplier' : 'Customer';
+  const currentOpen = !!agingCurrentOpen[key];
+  const overdueOpen = !!agingOverdueOpen[key];
+  const openBucket = agingOpenBucket[key] || null;
+  const currentRows = (aging.rows||[]).filter(r=>r.bucket==='current');
+  return `
+  <div class="card">
+    <h3>${mainLabel}</h3>
+    <div style="border-top:1px dashed var(--line); margin-top:14px; padding-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; font-weight:700; color:var(--ink); margin-bottom:14px;">
+        <span>${unpaidLabel}</span>
+        <span class="mono">${state.currency}${fmt(aging.total)}</span>
+      </div>
+      <div class="grid g2">
+        <div class="stat" style="cursor:pointer;" onclick="toggleAgingCurrent('${key}')">
+          <div class="label" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Current</span><span class="mono" style="color:var(--text-soft); font-size:13px;">${currentOpen?'▴':'▾'}</span>
+          </div>
+          <div class="value">${state.currency}${fmt(aging.buckets.current)}</div>
+        </div>
+        <div class="stat" style="cursor:pointer;" onclick="toggleAgingOverdue('${key}')">
+          <div class="label" style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:var(--debit); text-transform:uppercase; letter-spacing:.4px; font-weight:800;">Overdue</span>
+            <span class="mono" style="color:var(--text-soft); font-size:13px;">${overdueOpen?'▴':'▾'}</span>
+          </div>
+          <div class="value">${state.currency}${fmt(aging.overdueTotal)}</div>
+        </div>
+      </div>
+      ${currentOpen?`
+      <div style="margin-top:10px; border:1px solid var(--line); border-radius:10px; overflow:hidden; box-shadow:var(--shadow); padding:14px 16px;">
+        ${currentRows.length===0?'<div class="empty">Nothing current right now</div>':
+        `<table><thead><tr><th>${partyLabel}</th><th>Entry</th><th>Invoice Date</th><th>Due Date</th><th class="num">Amount</th></tr></thead><tbody>
+        ${currentRows.map(r=>`<tr style="cursor:pointer;" onclick="goToEntryDetail('${r.entryId}')"><td>${r.partyName}</td><td class="mono">${r.entryId}</td><td>${r.date}</td><td>${r.dueDate}</td><td class="num">${state.currency}${fmt(r.remaining)}</td></tr>`).join('')}
+        </tbody></table>`}
+      </div>`:''}
+      ${overdueOpen?`
+      <div style="margin-top:10px; border:1px solid var(--line); border-radius:10px; overflow:hidden; box-shadow:var(--shadow);">
+        ${AGING_BUCKET_DEFS.map((b,i)=>{
+          const amount = aging.buckets[b.key];
+          const bucketOpen = openBucket===b.key;
+          const bucketRows = (aging.rows||[]).filter(r=>r.bucket===b.key);
+          return `
+          <div style="${i>0?'border-top:1px solid var(--line);':''}">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:13px 16px; cursor:pointer; background:${bucketOpen?'var(--paper)':'transparent'};" onclick="toggleAgingBucket('${key}','${b.key}')">
+              <span style="color:var(--text-soft); font-weight:600;">${b.label}</span>
+              <span class="mono" style="color:var(--azure); font-weight:700;">${state.currency}${fmt(amount)}</span>
+            </div>
+            ${bucketOpen?`
+            <div style="padding:0 16px 14px; background:var(--paper);">
+              ${bucketRows.length===0?'<div class="empty">Nothing in this range</div>':
+              `<table><thead><tr><th>${partyLabel}</th><th>Entry</th><th>Invoice Date</th><th>Due Date</th><th class="num">Days Overdue</th><th class="num">Amount</th></tr></thead><tbody>
+              ${bucketRows.map(r=>`<tr style="cursor:pointer;" onclick="goToEntryDetail('${r.entryId}')"><td>${r.partyName}</td><td class="mono">${r.entryId}</td><td>${r.date}</td><td>${r.dueDate}</td><td class="num">${r.daysOverdue}</td><td class="num">${state.currency}${fmt(r.remaining)}</td></tr>`).join('')}
+              </tbody></table>`}
+            </div>`:''}
+          </div>`;
+        }).join('')}
+      </div>`:''}
+      ${aging.total===0?'<div class="hint" style="margin-top:10px;">Nothing unpaid right now.</div>':''}
+    </div>
+  </div>`;
+}
+function toggleAgingCurrent(key){
+  const opening = !agingCurrentOpen[key];
+  agingCurrentOpen[key] = opening;
+  if(opening){ agingOverdueOpen[key] = false; agingOpenBucket[key] = null; }
+  render();
+}
+function toggleAgingOverdue(key){
+  const opening = !agingOverdueOpen[key];
+  agingOverdueOpen[key] = opening;
+  if(opening){ agingCurrentOpen[key] = false; } else { agingOpenBucket[key] = null; }
+  render();
+}
+function toggleAgingBucket(key, bucketKey){
+  agingOpenBucket[key] = agingOpenBucket[key]===bucketKey ? null : bucketKey;
+  render();
+}
+function setCurrency(v){ state.currency = v || '$'; saveState(); render(); }
+
+function sourceBadge(source){
+  const map = {manual:['manual','Manual'], sale:['sale','Sale'], purchase:['purchase','Purchase'], receipt:['receipt','Receipt'], payment:['payment','Payment'], reversal:['reversal','Reversal']};
+  const [cls,label] = map[source]||['manual',source];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+/* ============================= CHART OF ACCOUNTS ============================= */
+let showNewAccountForm = false;
+function toggleNewAccountForm(){ showNewAccountForm = !showNewAccountForm; render(); }
+let accountEditingCode = null;
+function renderAccounts(){
+  return `
+    <div class="topbar">
+      <div><h2>Chart of Accounts</h2><div class="sub">The account structure used across every entry</div></div>
+      <div style="display:flex; gap:8px;">
+        <button class="secondary" onclick="exportAccountsExcel()">⬇ Export Excel</button>
+        <button onclick="toggleNewAccountForm()">${showNewAccountForm?'Cancel':'+ New'}</button>
+      </div>
+    </div>
+    ${showNewAccountForm?`
+    <div class="card">
+      <h3>Add a new account</h3>
+      <div class="row">
+        <div class="field"><label>Account code</label><input id="acc-code" placeholder="e.g. 5200"></div>
+        <div class="field"><label>Account name</label><input id="acc-name" placeholder="e.g. Rent Expense"></div>
+        <div class="field"><label>Account type</label>
+          <select id="acc-type">
+            <option value="asset">Asset</option><option value="liability">Liability</option>
+            <option value="equity">Equity</option><option value="revenue">Revenue</option>
+            <option value="expense">Expense</option>
+          </select>
+        </div>
+        <div class="field" style="display:flex; align-items:flex-end;"><button onclick="addAccount()">Add account</button></div>
+      </div>
+    </div>`:''}
+    <div class="card">
+      <h3>Accounts (${state.accounts.length})</h3>
+      <table><thead><tr><th>Code</th><th>Name</th><th>Type</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th><th></th></tr></thead><tbody>
+      ${state.accounts.map(a=>{
+        const t = accountTotals(a.code);
+        const normal = ['asset','expense'].includes(a.type) ? t.debit-t.credit : t.credit-t.debit;
+        if(accountEditingCode===a.code){
+          return `<tr>
+            <td>${a.system?`<span class="mono">${a.code}</span>`:`<input id="acc-edit-code-${a.code}" class="mono" style="width:80px;" value="${a.code}">`}</td>
+            <td><input id="acc-edit-name-${a.code}" value="${a.name}"></td>
+            <td>${a.system?`<span class="badge ${a.type}">${typeLabel(a.type)}</span>`:`
+              <select id="acc-edit-type-${a.code}">
+                <option value="asset" ${a.type==='asset'?'selected':''}>Asset</option>
+                <option value="liability" ${a.type==='liability'?'selected':''}>Liability</option>
+                <option value="equity" ${a.type==='equity'?'selected':''}>Equity</option>
+                <option value="revenue" ${a.type==='revenue'?'selected':''}>Revenue</option>
+                <option value="expense" ${a.type==='expense'?'selected':''}>Expense</option>
+              </select>`}
+            </td>
+            <td class="num">${fmt(t.debit)}</td><td class="num">${fmt(t.credit)}</td><td class="num">${fmt(normal)}</td>
+            <td style="white-space:nowrap;"><button class="small" onclick="saveEditedAccount('${a.code}')">Save</button> <button class="small secondary" onclick="cancelEditAccount()">Cancel</button></td>
+          </tr>`;
+        }
+        return `<tr><td class="mono">${a.code}</td><td>${a.name}</td><td><span class="badge ${a.type}">${typeLabel(a.type)}</span></td>
+        <td class="num">${fmt(t.debit)}</td><td class="num">${fmt(t.credit)}</td><td class="num">${fmt(normal)}</td>
+        <td style="white-space:nowrap;"><button class="small secondary" onclick="startEditAccount('${a.code}')">Edit</button> ${a.system?'':`<button class="small danger" onclick="deleteAccount('${a.code}')">Delete</button>`}</td></tr>`;
+      }).join('')}
+      </tbody></table>
+      ${state.accounts.some(a=>!a.system)?'<div class="hint" style="margin-top:8px;">Built-in accounts (used across the app\'s calculations) can only have their name changed — custom accounts can also have their code and type edited, as long as nothing has been posted against them yet.</div>':''}
+    </div>
+  `;
+}
+function sortAccounts(){
+  state.accounts.sort((x,y)=> x.code.localeCompare(y.code, undefined, {numeric:true}));
+}
+function renderAccountsInPlace(){ document.getElementById('view').innerHTML = renderAccounts(); }
+function startEditAccount(code){ accountEditingCode = code; renderAccountsInPlace(); }
+function cancelEditAccount(){ accountEditingCode = null; renderAccountsInPlace(); }
+function saveEditedAccount(oldCode){
+  const a = accountByCode(oldCode);
+  if(!a) return;
+  const name = document.getElementById('acc-edit-name-'+oldCode).value.trim();
+  if(!name){ toast('Account name cannot be empty'); return; }
+  if(!a.system){
+    const codeEl = document.getElementById('acc-edit-code-'+oldCode);
+    const newCode = codeEl ? codeEl.value.trim() : oldCode;
+    if(!newCode){ toast('Account code cannot be empty'); return; }
+    if(newCode !== oldCode){
+      if(accountByCode(newCode)){ toast('This account code is already in use'); return; }
+      const used = state.journal.some(e=>e.lines.some(l=>l.code===oldCode));
+      if(used){ toast('Cannot change the code of an account that has posted transactions'); return; }
+      a.code = newCode;
+    }
+    const typeEl = document.getElementById('acc-edit-type-'+oldCode);
+    if(typeEl) a.type = typeEl.value;
+  }
+  a.name = name;
+  sortAccounts();
+  accountEditingCode = null;
+  saveState(); toast('Account updated'); render();
+}
+function exportAccountsExcel(){
+  const rows = [['Code','Name','Type','Debit','Credit','Balance']];
+  state.accounts.forEach(a=>{
+    const t = accountTotals(a.code);
+    const normal = ['asset','expense'].includes(a.type) ? t.debit-t.credit : t.credit-t.debit;
+    rows.push([a.code, a.name, typeLabel(a.type), t.debit, t.credit, normal]);
+  });
+  exportRowsToExcel(rows, 'Chart of Accounts', 'chart-of-accounts-'+todayISO()+'.xlsx');
+}
+function addAccount(){
+  const code = document.getElementById('acc-code').value.trim();
+  const name = document.getElementById('acc-name').value.trim();
+  const type = document.getElementById('acc-type').value;
+  if(!code || !name){ toast('Please enter both an account code and name'); return; }
+  if(accountByCode(code)){ toast('This account code is already in use'); return; }
+  state.accounts.push({code,name,type,system:false});
+  sortAccounts();
+  showNewAccountForm = false;
+  saveState(); toast('Account added'); render();
+}
+function deleteAccount(code){
+  const used = state.journal.some(e=>e.lines.some(l=>l.code===code));
+  if(used){ toast('Cannot delete an account that has posted transactions'); return; }
+  state.accounts = state.accounts.filter(a=>a.code!==code);
+  saveState(); render();
+}
+
+/* ============================= JOURNALS (configuration list) ============================= */
+let showNewJournalForm = false;
+let journalEditingId = null;
+function toggleNewJournalForm(){ showNewJournalForm = !showNewJournalForm; render(); }
+function journalTypeLabel(t){
+  return {sale:'Sales', purchase:'Purchases', cash:'Cash', bank:'Bank', general:'Miscellaneous'}[t] || t;
+}
+function renderJournalsConfig(){
+  return `
+    <div class="topbar">
+      <div><h2>Journals</h2><div class="sub">The books used to record and group transactions</div></div>
+      <div style="display:flex; gap:8px;">
+        <button class="secondary" onclick="exportJournalsConfigExcel()">⬇ Export Excel</button>
+        <button onclick="toggleNewJournalForm()">${showNewJournalForm?'Cancel':'+ New'}</button>
+      </div>
+    </div>
+    ${showNewJournalForm?`
+    <div class="card">
+      <h3>Add a new journal</h3>
+      <div class="row">
+        <div class="field"><label>Journal name</label><input id="jc-name" placeholder="e.g. Bank — Checking Account"></div>
+        <div class="field"><label>Short code</label><input id="jc-code" placeholder="e.g. BNK2" maxlength="6"></div>
+        <div class="field"><label>Type</label>
+          <select id="jc-type">
+            <option value="sale">Sales</option>
+            <option value="purchase">Purchases</option>
+            <option value="cash">Cash</option>
+            <option value="bank">Bank</option>
+            <option value="general">Miscellaneous</option>
+          </select>
+        </div>
+        <div class="field" style="display:flex; align-items:flex-end;"><button onclick="addJournalConfig()">Add journal</button></div>
+      </div>
+    </div>`:''}
+    <div class="card">
+      <h3>Journals (${state.journalsConfig.length})</h3>
+      ${state.journalsConfig.length===0?'<div class="empty">No journals yet</div>':
+      `<table><thead><tr><th>Name</th><th>Short code</th><th>Type</th><th></th></tr></thead><tbody>
+      ${state.journalsConfig.map(j=>{
+        if(journalEditingId===j.id){
+          return `<tr>
+            <td><input id="jc-edit-name-${j.id}" value="${j.name}"></td>
+            <td><input id="jc-edit-code-${j.id}" class="mono" style="width:80px;" maxlength="6" value="${j.code}"></td>
+            <td>
+              <select id="jc-edit-type-${j.id}">
+                <option value="sale" ${j.type==='sale'?'selected':''}>Sales</option>
+                <option value="purchase" ${j.type==='purchase'?'selected':''}>Purchases</option>
+                <option value="cash" ${j.type==='cash'?'selected':''}>Cash</option>
+                <option value="bank" ${j.type==='bank'?'selected':''}>Bank</option>
+                <option value="general" ${j.type==='general'?'selected':''}>Miscellaneous</option>
+              </select>
+            </td>
+            <td style="white-space:nowrap;"><button class="small" onclick="saveEditedJournalConfig('${j.id}')">Save</button> <button class="small secondary" onclick="cancelEditJournalConfig()">Cancel</button></td>
+          </tr>`;
+        }
+        return `<tr><td>${j.name}</td><td class="mono">${j.code}</td><td><span class="badge">${journalTypeLabel(j.type)}</span></td>
+      <td style="white-space:nowrap;"><button class="small secondary" onclick="startEditJournalConfig('${j.id}')">Edit</button> <button class="small danger" onclick="deleteJournalConfig('${j.id}')">Delete</button></td></tr>`;
+      }).join('')}
+      </tbody></table>`}
+      <div class="hint" style="margin-top:8px;">Renaming a journal's short code only changes the prefix on entries posted from now on — serials already posted (e.g. CASH/2026/01/0001) keep their original prefix.</div>
+    </div>
+  `;
+}
+function renderJournalsConfigInPlace(){ document.getElementById('view').innerHTML = renderJournalsConfig(); }
+function startEditJournalConfig(id){ journalEditingId = id; renderJournalsConfigInPlace(); }
+function cancelEditJournalConfig(){ journalEditingId = null; renderJournalsConfigInPlace(); }
+function saveEditedJournalConfig(id){
+  const j = state.journalsConfig.find(x=>x.id===id);
+  if(!j) return;
+  const name = document.getElementById('jc-edit-name-'+id).value.trim();
+  const code = document.getElementById('jc-edit-code-'+id).value.trim().toUpperCase();
+  const type = document.getElementById('jc-edit-type-'+id).value;
+  if(!name || !code){ toast('Please enter both a journal name and short code'); return; }
+  if(state.journalsConfig.some(x=>x.id!==id && x.code===code)){ toast('This short code is already in use'); return; }
+  j.name = name; j.code = code; j.type = type;
+  journalEditingId = null;
+  saveState(); toast('Journal updated'); render();
+}
+function exportJournalsConfigExcel(){
+  const rows = [['Name','Short Code','Type']];
+  state.journalsConfig.forEach(j=> rows.push([j.name, j.code, journalTypeLabel(j.type)]));
+  exportRowsToExcel(rows, 'Journals', 'journals-'+todayISO()+'.xlsx');
+}
+function addJournalConfig(){
+  const name = document.getElementById('jc-name').value.trim();
+  const code = document.getElementById('jc-code').value.trim().toUpperCase();
+  const type = document.getElementById('jc-type').value;
+  if(!name || !code){ toast('Please enter both a journal name and short code'); return; }
+  if(state.journalsConfig.some(j=>j.code===code)){ toast('This short code is already in use'); return; }
+  state.journalsConfig.push({id: nextJournalConfigId(), name, code, type});
+  showNewJournalForm = false;
+  saveState(); toast('Journal added'); render();
+}
+function deleteJournalConfig(id){
+  state.journalsConfig = state.journalsConfig.filter(j=>j.id!==id);
+  saveState(); render();
+}
+
+/* ============================= CURRENCIES ============================= */
+let showNewCurrencyForm = false;
+let currencyEditingCode = null;
+function renderCurrencies(){
+  return `
+    <div class="topbar">
+      <div><h2>Currencies</h2><div class="sub">Currencies available in this workspace and their exchange rate</div></div>
+      <button onclick="toggleNewCurrencyForm()">${showNewCurrencyForm?'Cancel':'+ New'}</button>
+    </div>
+    ${showNewCurrencyForm?`
+    <div class="card">
+      <h3>Add a currency</h3>
+      <div class="row">
+        <div class="field"><label>Currency (3-letter code)</label><input id="cur-code" placeholder="e.g. USD" maxlength="6" style="text-transform:uppercase;"></div>
+        <div class="field"><label>Symbol</label><input id="cur-symbol" placeholder="e.g. $" maxlength="6"></div>
+        <div class="field" style="flex:2;"><label>Name</label><input id="cur-name" placeholder="e.g. US Dollar"></div>
+        <div class="field"><label>Current Rate</label><input id="cur-rate" type="number" min="0" step="0.000001" value="1.000000"></div>
+        <div class="field" style="display:flex; align-items:flex-end;"><button onclick="addCurrency()">Add</button></div>
+      </div>
+    </div>`:''}
+    <div class="card">
+      <table><thead><tr><th>Currency</th><th>Symbol</th><th>Name</th><th>Last Update</th><th class="num">Current Rate</th><th>Active</th><th></th></tr></thead><tbody>
+      ${state.currencies.map(c=>{
+        const isCompany = state.companyCurrencyCode===c.code;
+        if(currencyEditingCode===c.code){
+          return `<tr>
+            <td class="mono" style="color:var(--debit); font-weight:700;">${c.code}</td>
+            <td><input id="cur-edit-symbol-${c.code}" value="${c.symbol}"></td>
+            <td><input id="cur-edit-name-${c.code}" value="${c.name}"></td>
+            <td>${c.lastUpdate||'—'}</td>
+            <td class="num"><input id="cur-edit-rate-${c.code}" type="number" min="0" step="0.000001" style="width:110px; text-align:right;" value="${c.rate}"></td>
+            <td><button class="toggle-switch ${c.active?'on':''}" onclick="toggleCurrencyActive('${c.code}')"></button></td>
+            <td style="white-space:nowrap;"><button class="small" onclick="saveEditedCurrency('${c.code}')">Save</button> <button class="small secondary" onclick="cancelEditCurrency()">Cancel</button></td>
+          </tr>`;
+        }
+        return `<tr>
+          <td class="mono" style="color:var(--debit); font-weight:700;">${c.code}${isCompany?' <span class="badge sale" title="Company currency — used for all amounts shown across the app">★ Company</span>':''}</td>
+          <td>${c.symbol}</td>
+          <td style="color:var(--azure);">${c.name}</td>
+          <td>${c.lastUpdate||'—'}</td>
+          <td class="num">${Number(c.rate).toFixed(6)}</td>
+          <td><button class="toggle-switch ${c.active?'on':''}" onclick="toggleCurrencyActive('${c.code}')"></button></td>
+          <td style="white-space:nowrap;">
+            <button class="small secondary" onclick="startEditCurrency('${c.code}')">Edit</button>
+            ${isCompany?'':`<button class="small secondary" onclick="setCompanyCurrency('${c.code}')">Set as Company Currency</button>`}
+            ${isCompany?'':`<button class="small danger" onclick="deleteCurrency('${c.code}')">Delete</button>`}
+          </td>
+        </tr>`;
+      }).join('')}
+      </tbody></table>
+      <div class="hint" style="margin-top:10px;">The row marked ★ Company is the currency symbol used for every amount shown across the app. Pick a different row's "Set as Company Currency" to switch.</div>
+    </div>
+  `;
+}
+function renderCurrenciesInPlace(){ document.getElementById('view').innerHTML = renderCurrencies(); }
+function toggleNewCurrencyForm(){ showNewCurrencyForm = !showNewCurrencyForm; render(); }
+function addCurrency(){
+  const code = document.getElementById('cur-code').value.trim().toUpperCase();
+  const symbol = document.getElementById('cur-symbol').value.trim();
+  const name = document.getElementById('cur-name').value.trim();
+  const rate = Number(document.getElementById('cur-rate').value)||1;
+  if(!code || !symbol || !name){ toast('Please fill in the currency code, symbol and name'); return; }
+  if(state.currencies.some(c=>c.code===code)){ toast('This currency code already exists'); return; }
+  state.currencies.push({code, symbol, name, rate, active:true, lastUpdate:todayISO()});
+  showNewCurrencyForm = false;
+  saveState(); toast('Currency added'); render();
+}
+function startEditCurrency(code){ currencyEditingCode = code; renderCurrenciesInPlace(); }
+function cancelEditCurrency(){ currencyEditingCode = null; renderCurrenciesInPlace(); }
+function saveEditedCurrency(code){
+  const c = state.currencies.find(x=>x.code===code);
+  if(!c) return;
+  const symbol = document.getElementById('cur-edit-symbol-'+code).value.trim();
+  const name = document.getElementById('cur-edit-name-'+code).value.trim();
+  const rate = Number(document.getElementById('cur-edit-rate-'+code).value)||0;
+  if(!symbol || !name){ toast('Symbol and name cannot be empty'); return; }
+  const rateChanged = rate !== c.rate;
+  c.symbol = symbol; c.name = name; c.rate = rate;
+  if(rateChanged) c.lastUpdate = todayISO();
+  currencyEditingCode = null;
+  // keep the app's display symbol in sync if this is the active company currency
+  if(state.companyCurrencyCode===code) state.currency = symbol;
+  saveState(); toast('Currency updated'); render();
+}
+function toggleCurrencyActive(code){
+  const c = state.currencies.find(x=>x.code===code);
+  if(!c) return;
+  if(state.companyCurrencyCode===code && c.active){ toast('Cannot deactivate the company currency'); return; }
+  c.active = !c.active;
+  saveState(); render();
+}
+function setCompanyCurrency(code){
+  const c = state.currencies.find(x=>x.code===code);
+  if(!c) return;
+  if(!c.active){ toast('Activate this currency before making it the company currency'); return; }
+  state.companyCurrencyCode = code;
+  state.currency = c.symbol;
+  saveState(); toast(c.name+' is now the company currency'); render();
+}
+function deleteCurrency(code){
+  if(state.companyCurrencyCode===code){ toast('Cannot delete the company currency'); return; }
+  state.currencies = state.currencies.filter(c=>c.code!==code);
+  saveState(); toast('Currency deleted'); render();
+}
+
+/* ============================= POINT OF SALE ============================= */
+let showNewSessionForm = false;
+function toggleNewSessionForm(){ showNewSessionForm = !showNewSessionForm; render(); }
+function renderPOS(){
+  const sessions = state.posSessions.slice().sort((a,b)=> b.name.localeCompare(a.name));
+  return `
+    <div class="topbar">
+      <div><h2>Point of Sale</h2><div class="sub">Cash register sessions</div></div>
+      <button onclick="toggleNewSessionForm()">${showNewSessionForm?'Cancel':'+ New Session'}</button>
+    </div>
+    ${showNewSessionForm?`
+    <div class="card">
+      <h3>Open a new session</h3>
+      <div class="row">
+        <div class="field"><label>Opening date</label><input type="date" id="pos-date" value="${todayISO()}"></div>
+        <div class="field"><label>Starting cash</label><input type="number" id="pos-cash" placeholder="0.00" step="0.01"></div>
+        <div class="field" style="display:flex; align-items:flex-end;"><button onclick="addSession()">Open session</button></div>
+      </div>
+    </div>`:''}
+    <div class="card">
+      <h3>Sessions (${sessions.length})</h3>
+      ${sessions.length===0?'<div class="empty">No sessions yet — open one to start selling</div>':
+      `<table><thead><tr><th>Session</th><th>Opened</th><th class="num">Starting cash</th><th>Status</th><th></th></tr></thead><tbody>
+      ${sessions.map(s=>`<tr><td class="mono">${s.name}</td><td>${s.openedAt}</td><td class="num">${state.currency}${fmt(s.startingCash)}</td>
+      <td><span class="badge ${s.status==='open'?'sale':'manual'}">${s.status==='open'?'Open':'Closed'}</span></td>
+      <td>${s.status==='open'?`<button class="small secondary" onclick="closeSession('${s.id}')">Close session</button>`:''}</td></tr>`).join('')}
+      </tbody></table>`}
+    </div>
+  `;
+}
+function addSession(){
+  const openedAt = document.getElementById('pos-date').value || todayISO();
+  const startingCash = Number(document.getElementById('pos-cash').value)||0;
+  const name = uid('POS','posSession');
+  state.posSessions.push({id:name, name, openedAt, startingCash, status:'open'});
+  showNewSessionForm = false;
+  saveState(); toast('Session opened'); render();
+}
+function closeSession(id){
+  const s = state.posSessions.find(x=>x.id===id);
+  if(s) s.status = 'closed';
+  saveState(); render();
+}
+
+/* ============================= JOURNAL ============================= */
+let manualLines = [{code:'',debit:'',credit:''},{code:'',debit:'',credit:''}];
+let jeDate = todayISO();
+let manualJournalId = null;
+
+function renderJournal(){
+  if(!manualJournalId || !state.journalsConfig.some(j=>j.id===manualJournalId)){
+    manualJournalId = (defaultJournalForType('general') || state.journalsConfig[0] || {}).id || null;
+  }
+  const totalD = manualLines.reduce((s,l)=>s+(Number(l.debit)||0),0);
+  const totalC = manualLines.reduce((s,l)=>s+(Number(l.credit)||0),0);
+  const balanced = manualLines.length>=2 && totalD>0 && Math.round(totalD*100)===Math.round(totalC*100);
+  return `
+    <div class="topbar"><div><h2>Journal Entries</h2><div class="sub">Every manual entry and every entry auto-generated from invoices</div></div></div>
+    <div class="card">
+      <h3>Add a manual entry (e.g. opening balance, petty cash expense, adjustment)</h3>
+      <div class="row">
+        <div class="field"><label>Journal</label>
+          <select onchange="manualJournalId=this.value;">
+            ${state.journalsConfig.map(j=>`<option value="${j.id}" ${manualJournalId===j.id?'selected':''}>${j.name} (${j.code})</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Date</label><input type="date" id="je-date" value="${jeDate}" onchange="jeDate=this.value||todayISO();"></div>
+        <div class="field" style="flex:2;"><label>Description</label><input id="je-desc" placeholder="Entry description"></div>
+      </div>
+      <div id="je-lines">${manualLines.map((l,i)=>renderJeLine(l,i)).join('')}</div>
+      <button class="secondary small" onclick="addJeLine()">+ Add line</button>
+      <div class="total-line">
+        <span>Debit: <span class="amt" id="je-total-debit">${fmt(totalD)}</span></span>
+        <span>Credit: <span class="amt" id="je-total-credit">${fmt(totalC)}</span></span>
+        <span id="je-balance-status" class="${balanced?'balanced':'unbalanced'}">${balanced?'✓ Balanced':'Not balanced'}</span>
+      </div>
+      <div style="margin-top:12px;"><button id="je-post-btn" onclick="submitManualEntry()" ${balanced?'':'disabled'}>Post entry</button></div>
+    </div>
+    <div class="card">
+      <h3>Posted entries (${state.journal.length})</h3>
+      ${state.journal.length===0?'<div class="empty">No entries yet</div>':
+        state.journal.slice().reverse().map(e=>renderJeCard(e)).join('')}
+    </div>
+  `;
+}
+function renderJeLine(l,i){
+  return `<div class="line-item">
+    <div><label>Account</label>
+      <select onchange="manualLines[${i}].code=this.value">
+        <option value="">Select account</option>
+        ${state.accounts.map(a=>`<option value="${a.code}" ${l.code===a.code?'selected':''}>${a.code} — ${a.name}</option>`).join('')}
+      </select>
+    </div>
+    <div><label>Debit</label><input type="number" min="0" step="0.01" id="je-debit-${i}" value="${l.debit}" oninput="updateJeLine(${i},'debit',this.value)"></div>
+    <div><label>Credit</label><input type="number" min="0" step="0.01" id="je-credit-${i}" value="${l.credit}" oninput="updateJeLine(${i},'credit',this.value)"></div>
+    <div></div>
+    <div>${manualLines.length>2?`<button class="small secondary" onclick="removeJeLine(${i})">Remove</button>`:''}</div>
+  </div>`;
+}
+function renderJournalInPlace(){ document.getElementById('view').innerHTML = renderJournal(); }
+/* Same lightweight in-place pattern as the Sales/Purchase line items: typing in
+   Debit or Credit only patches that line's other (mutually-exclusive) field plus
+   the running totals/balance status/Post button — no full rebuild, so the Date
+   field and whichever input you're typing in are never disturbed. */
+function updateJeLine(i, field, value){
+  if(field==='debit'){
+    manualLines[i].debit = value;
+    manualLines[i].credit = '';
+    const creditEl = document.getElementById('je-credit-'+i);
+    if(creditEl) creditEl.value = '';
+  } else {
+    manualLines[i].credit = value;
+    manualLines[i].debit = '';
+    const debitEl = document.getElementById('je-debit-'+i);
+    if(debitEl) debitEl.value = '';
+  }
+  updateJeTotals();
+}
+function updateJeTotals(){
+  const totalD = manualLines.reduce((s,l)=>s+(Number(l.debit)||0),0);
+  const totalC = manualLines.reduce((s,l)=>s+(Number(l.credit)||0),0);
+  const balanced = manualLines.length>=2 && totalD>0 && Math.round(totalD*100)===Math.round(totalC*100);
+  const debitEl = document.getElementById('je-total-debit');
+  if(debitEl) debitEl.textContent = fmt(totalD);
+  const creditEl = document.getElementById('je-total-credit');
+  if(creditEl) creditEl.textContent = fmt(totalC);
+  const balEl = document.getElementById('je-balance-status');
+  if(balEl){ balEl.textContent = balanced?'✓ Balanced':'Not balanced'; balEl.className = balanced?'balanced':'unbalanced'; }
+  const postBtn = document.getElementById('je-post-btn');
+  if(postBtn) postBtn.disabled = !balanced;
+}
+function addJeLine(){ manualLines.push({code:'',debit:'',credit:''}); renderJournalInPlace(); }
+function removeJeLine(i){ manualLines.splice(i,1); renderJournalInPlace(); }
+function submitManualEntry(){
+  const date = jeDate || todayISO();
+  const desc = document.getElementById('je-desc').value.trim() || 'Manual entry';
+  const lines = manualLines.filter(l=>l.code && (Number(l.debit)>0 || Number(l.credit)>0));
+  if(lines.length<2){ toast('You must enter at least two lines'); return; }
+  try{
+    postEntry(date, desc, 'manual', lines, manualJournalId);
+    manualLines = [{code:'',debit:'',credit:''},{code:'',debit:'',credit:''}];
+    jeDate = todayISO();
+    saveState(); toast('Entry posted successfully'); render();
+  }catch(err){ toast(err.message); }
+}
+function renderJeCard(e){
+  return `<div class="journal-entry">
+    <div class="je-head">
+      <div><span class="je-id">${e.id}</span> — ${e.date} — ${e.desc} ${e.reversed?'<span class="badge reversal">Reversed</span>':''}</div>
+      <div style="display:flex; align-items:center; gap:10px;">${sourceBadge(e.source)}
+        ${(!e.reversed && e.source!=='reversal')?`<button class="small secondary" onclick="reverseEntry('${e.id}')">Reverse entry</button>`:''}
+      </div>
+    </div>
+    <table><thead><tr><th>Account</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead><tbody>
+    ${e.lines.map(l=>`<tr><td>${l.code} — ${(accountByCode(l.code)||{}).name||''} ${l.partyType?`<span class="party-tag">(${partyName(l.partyType,l.partyId)})</span>`:''}</td><td class="num">${l.debit?fmt(l.debit):''}</td><td class="num">${l.credit?fmt(l.credit):''}</td></tr>`).join('')}
+    </tbody></table>
+  </div>`;
+}
+function partyName(type,id){
+  const list = type==='customer'?state.customers:state.suppliers;
+  const p = list.find(x=>x.id===id);
+  return p?p.name:'—';
+}
+function reverseEntry(id){
+  const e = state.journal.find(x=>x.id===id);
+  if(!e || e.reversed) return;
+  const revLines = e.lines.map(l=>({code:l.code, debit:l.credit, credit:l.debit, partyType:l.partyType, partyId:l.partyId}));
+  postEntry(todayISO(), 'Reversal of ' + e.id, 'reversal', revLines, e.journalId);
+  e.reversed = true;
+  saveState(); toast('Entry reversed'); render();
+}
+
+/* ============================= INVENTORY / PRODUCTS & SERVICES ============================= */
+let productEditingId = null;
+function renderInventory(){
+  return `
+    <div class="topbar">
+      <div><h2>Inventory & Services</h2><div class="sub">Manage products (tracked in inventory) and services (no inventory)</div></div>
+      <button class="secondary" onclick="exportInventoryExcel()">⬇ Export Excel</button>
+    </div>
+    <div class="card">
+      <h3>Add a new item</h3>
+      <div class="row">
+        <div class="field"><label>Name</label><input id="p-name" placeholder="Product or service name"></div>
+        <div class="field"><label>Type</label>
+          <select id="p-kind" onchange="toggleProductFields()">
+            <option value="product">Product (tracked in inventory)</option>
+            <option value="service">Service (no inventory)</option>
+          </select>
+        </div>
+        <div class="field" id="p-qty-wrap"><label>Opening quantity</label><input id="p-qty" type="number" min="0" step="1" value="0"></div>
+        <div class="field" id="p-cost-wrap"><label>Unit cost</label><input id="p-cost" type="number" min="0" step="0.01" value="0"></div>
+        <div class="field"><label>Selling price</label><input id="p-price" type="number" min="0" step="0.01" value="0"></div>
+        <div class="field" style="display:flex; align-items:flex-end;"><button onclick="addProduct()">Add</button></div>
+      </div>
+      <div class="hint">Adding a product with an opening balance automatically posts a journal entry (Debit Inventory / Credit Owner's Capital) for quantity × cost.</div>
+    </div>
+    <div class="card">
+      <h3>Items (${state.products.length})</h3>
+      ${state.products.length===0?'<div class="empty">No items yet</div>':
+      `<table><thead><tr><th>Name</th><th>Type</th><th class="num">Qty</th><th class="num">Cost</th><th class="num">Price</th><th class="num">Inventory Value</th><th></th></tr></thead><tbody>
+      ${state.products.map(p=>{
+        const hasActivity = productHasActivity(p.id);
+        if(productEditingId===p.id){
+          return `<tr>
+            <td><input id="p-edit-name-${p.id}" value="${p.name}"></td>
+            <td>${p.kind==='product'?'Product':'Service'}</td>
+            <td class="num">${p.kind==='product'?(hasActivity?fmt(p.qty):`<input id="p-edit-qty-${p.id}" type="number" min="0" step="1" style="width:70px; text-align:right;" value="${p.qty}">`):'—'}</td>
+            <td class="num">${p.kind==='product'?(hasActivity?fmt(p.cost):`<input id="p-edit-cost-${p.id}" type="number" min="0" step="0.01" style="width:80px; text-align:right;" value="${p.cost}">`):'—'}</td>
+            <td class="num"><input id="p-edit-price-${p.id}" type="number" min="0" step="0.01" style="width:80px; text-align:right;" value="${p.price}"></td>
+            <td class="num">${p.kind==='product'?fmt(p.qty*p.cost):'—'}</td>
+            <td style="white-space:nowrap;"><button class="small" onclick="saveEditedProduct('${p.id}')">Save</button> <button class="small secondary" onclick="cancelEditProduct()">Cancel</button></td>
+          </tr>`;
+        }
+        return `<tr><td>${p.name}</td><td>${p.kind==='product'?'Product':'Service'}</td>
+        <td class="num">${p.kind==='product'?p.qty:'—'}</td><td class="num">${p.kind==='product'?fmt(p.cost):'—'}</td>
+        <td class="num">${fmt(p.price)}</td><td class="num">${p.kind==='product'?fmt(p.qty*p.cost):'—'}</td>
+        <td style="white-space:nowrap;"><button class="small secondary" onclick="startEditProduct('${p.id}')">Edit</button> ${hasActivity?'':`<button class="small danger" onclick="deleteProduct('${p.id}')">Delete</button>`}</td></tr>`;
+      }).join('')}
+      </tbody></table>`}
+      ${state.products.some(p=>p.kind==='product')?'<div class="hint" style="margin-top:8px;">Once an item has been used in a posted sale or purchase, only its name and price stay editable — quantity and cost are then driven by those transactions.</div>':''}
+    </div>
+  `;
+}
+function renderInventoryInPlace(){ document.getElementById('view').innerHTML = renderInventory(); }
+function toggleProductFields(){
+  const kind = document.getElementById('p-kind').value;
+  document.getElementById('p-qty-wrap').style.display = kind==='product'?'block':'none';
+  document.getElementById('p-cost-wrap').style.display = kind==='product'?'block':'none';
+}
+function addProduct(){
+  const name = document.getElementById('p-name').value.trim();
+  const kind = document.getElementById('p-kind').value;
+  const qty = Number(document.getElementById('p-qty').value)||0;
+  const cost = Number(document.getElementById('p-cost').value)||0;
+  const price = Number(document.getElementById('p-price').value)||0;
+  if(!name){ toast('Please enter an item name'); return; }
+  const p = {id: uid('P','product'), name, kind, qty: kind==='product'?qty:0, cost: kind==='product'?cost:0, price, openingEntryId:null};
+  state.products.push(p);
+  if(kind==='product' && qty>0 && cost>0){
+    const entry = postEntry(todayISO(), 'Opening inventory balance: '+name, 'manual', [
+      {code:'1200', debit:qty*cost, credit:0},
+      {code:'3000', debit:0, credit:qty*cost}
+    ]);
+    p.openingEntryId = entry.id;
+  }
+  saveState(); toast('Item added'); render();
+}
+/* Whether this item has ever appeared on a posted sale or purchase — once it
+   has, quantity/cost come from those transactions and are no longer freely
+   editable (editing them here could silently desync the Inventory GL balance). */
+function productHasActivity(id){
+  return state.sales.some(s=>s.items.some(it=>it.productId===id)) ||
+         state.purchases.some(p=>p.items.some(it=>it.productId===id));
+}
+function startEditProduct(id){ productEditingId = id; renderInventoryInPlace(); }
+function cancelEditProduct(){ productEditingId = null; renderInventoryInPlace(); }
+function saveEditedProduct(id){
+  const p = state.products.find(x=>x.id===id);
+  if(!p) return;
+  const name = document.getElementById('p-edit-name-'+id).value.trim();
+  if(!name){ toast('Item name cannot be empty'); return; }
+  const price = Number(document.getElementById('p-edit-price-'+id).value)||0;
+  p.name = name; p.price = price;
+  if(p.kind==='product' && !productHasActivity(id)){
+    const qtyEl = document.getElementById('p-edit-qty-'+id);
+    const costEl = document.getElementById('p-edit-cost-'+id);
+    const qty = qtyEl ? (Number(qtyEl.value)||0) : p.qty;
+    const cost = costEl ? (Number(costEl.value)||0) : p.cost;
+    // re-post the opening-balance entry so the Inventory account stays in sync
+    if(p.openingEntryId){ state.journal = state.journal.filter(e=>e.id!==p.openingEntryId); p.openingEntryId = null; }
+    p.qty = qty; p.cost = cost;
+    if(qty>0 && cost>0){
+      const entry = postEntry(todayISO(), 'Opening inventory balance: '+p.name, 'manual', [
+        {code:'1200', debit:qty*cost, credit:0},
+        {code:'3000', debit:0, credit:qty*cost}
+      ]);
+      p.openingEntryId = entry.id;
+    }
+  }
+  productEditingId = null;
+  saveState(); toast('Item updated'); render();
+}
+function deleteProduct(id){
+  if(productHasActivity(id)){ toast('Cannot delete an item that has been used in a posted sale or purchase'); return; }
+  const p = state.products.find(x=>x.id===id);
+  if(p && p.openingEntryId){ state.journal = state.journal.filter(e=>e.id!==p.openingEntryId); }
+  state.products = state.products.filter(x=>x.id!==id);
+  saveState(); toast('Item deleted'); render();
+}
+function exportInventoryExcel(){
+  const rows = [['Name','Type','Qty','Cost','Price','Inventory Value']];
+  state.products.forEach(p=>{
+    rows.push([p.name, p.kind==='product'?'Product':'Service', p.kind==='product'?p.qty:'', p.kind==='product'?p.cost:'', p.price, p.kind==='product'?p.qty*p.cost:'']);
+  });
+  exportRowsToExcel(rows, 'Inventory', 'inventory-'+todayISO()+'.xlsx');
+}
+
+/* ============================= SALES INVOICE ============================= */
+let saleItems = [{productId:'', qty:1, price:0}];
+let salePayment = 'cash';
+let saleCustomer = '';
+let saleDate = todayISO();
+let saleDueDate = addDays(todayISO(),30);
+let salesEditingId = null;   // id of the posted sale currently being edited, or null
+let saleEditDraft = null;    // working copy of that sale's items while editing
+
+function renderSales(){
+  return `
+    <div class="topbar"><div><h2>Sales</h2><div class="sub">Sell a product or service to a customer — posts a journal entry automatically</div></div></div>
+    <div class="card">
+      <div class="row">
+        <div class="field"><label>Payment method</label>
+          <select onchange="salePayment=this.value; renderSalesInPlace();">
+            <option value="cash" ${salePayment==='cash'?'selected':''}>Cash</option>
+            <option value="credit" ${salePayment==='credit'?'selected':''}>On credit (to customer account)</option>
+          </select>
+        </div>
+        ${salePayment==='credit'?`
+        <div class="field"><label>Customer</label>
+          <select onchange="saleCustomer=this.value">
+            <option value="">Select customer</option>
+            ${state.customers.map(c=>`<option value="${c.id}" ${saleCustomer===c.id?'selected':''}>${c.name}</option>`).join('')}
+          </select>
+        </div>`:''}
+        <div class="field"><label>Date</label><input type="date" id="sale-date" value="${saleDate}" onchange="saleDate=this.value||todayISO();"></div>
+        ${salePayment==='credit'?`
+        <div class="field"><label>Due date</label><input type="date" id="sale-due" value="${saleDueDate}" onchange="saleDueDate=this.value||addDays(saleDate,30);"></div>`:''}
+      </div>
+      <h3 style="margin-top:16px;">Items</h3>
+      <div id="sale-items">${saleItems.map((it,i)=>renderSaleLine(it,i)).join('')}</div>
+      <button class="secondary small" onclick="addSaleItem()">+ Add item</button>
+      <div class="total-line"><span>Total: <span class="amt" id="sale-grand-total">${fmt(saleTotal())}</span></span></div>
+      <div style="margin-top:12px;"><button onclick="submitSale()">Post invoice</button></div>
+    </div>
+    <div class="card">
+      <h3>Posted Sales Invoices (${state.sales.length})</h3>
+      ${state.sales.length===0?'<div class="empty">No sales invoices yet</div>':
+      state.sales.slice().reverse().map(s=>renderPostedSaleRow(s)).join('')}
+      <div class="hint" style="margin-top:10px;">Only invoices posted from this list support Edit/Delete — older entries can still be reviewed from the Journal Report.</div>
+    </div>
+  `;
+}
+function renderSaleLine(it,i){
+  return `<div class="line-item">
+    <div><label>Item</label>
+      <select onchange="selectSaleProduct(${i}, this.value)">
+        <option value="">Select item</option>
+        ${state.products.map(p=>`<option value="${p.id}" ${it.productId===p.id?'selected':''}>${p.name} (${p.kind==='product'?'in stock: '+p.qty:'service'})</option>`).join('')}
+      </select>
+    </div>
+    <div><label>Qty</label><input type="number" min="1" step="1" value="${it.qty}" oninput="saleItems[${i}].qty=Number(this.value); updateSaleLineTotal(${i});"></div>
+    <div><label>Price</label><input type="number" min="0" step="0.01" value="${it.price}" oninput="saleItems[${i}].price=Number(this.value); updateSaleLineTotal(${i});"></div>
+    <div><label>Line total</label><input disabled id="sale-line-total-${i}" value="${fmt((it.qty||0)*(it.price||0))}"></div>
+    <div>${saleItems.length>1?`<button class="small secondary" onclick="removeSaleItem(${i})">Remove</button>`:''}</div>
+  </div>`;
+}
+function renderSalesInPlace(){ document.getElementById('view').innerHTML = renderSales(); }
+/* Updates just this line's total and the grand total in place, without rebuilding
+   the whole form — so typing in Qty/Price doesn't reset focus, the on-screen
+   number keyboard, or the Date/Due date fields (which used to snap back to
+   today because a full re-render always redrew them from scratch). */
+function updateSaleLineTotal(i){
+  const it = saleItems[i];
+  const lineEl = document.getElementById('sale-line-total-'+i);
+  if(lineEl) lineEl.value = fmt((it.qty||0)*(it.price||0));
+  const grandEl = document.getElementById('sale-grand-total');
+  if(grandEl) grandEl.textContent = fmt(saleTotal());
+}
+function selectSaleProduct(i,pid){
+  saleItems[i].productId = pid;
+  const prod = state.products.find(p=>p.id===pid);
+  if(prod) saleItems[i].price = prod.price;
+  renderSalesInPlace();
+}
+function addSaleItem(){ saleItems.push({productId:'',qty:1,price:0}); renderSalesInPlace(); }
+function removeSaleItem(i){ saleItems.splice(i,1); renderSalesInPlace(); }
+function saleTotal(){ return saleItems.reduce((s,it)=>s+(it.qty||0)*(it.price||0),0); }
+
+/* Posts the journal entries + stock effect for a sale record's *current* items.
+   Used both when first posting an invoice and when re-applying it after an edit —
+   always call reverseSaleEffect() first if the record was already posted before. */
+function applySaleRecord(s){
+  let productRevenue=0, serviceRevenue=0, cogs=0;
+  s.items.forEach(it=>{
+    const prod = state.products.find(p=>p.id===it.productId);
+    if(!prod) return;
+    const lineTotal = it.qty*it.price;
+    if(prod.kind==='product'){ productRevenue+=lineTotal; cogs += it.qty*prod.cost; }
+    else{ serviceRevenue+=lineTotal; }
+  });
+  const total = productRevenue+serviceRevenue;
+  const lines = [];
+  if(s.payment==='cash'){ lines.push({code:'1000', debit:total, credit:0}); }
+  else{ lines.push({code:'1100', debit:total, credit:0, partyType:'customer', partyId:s.customerId}); }
+  if(productRevenue>0) lines.push({code:'4000', debit:0, credit:productRevenue});
+  if(serviceRevenue>0) lines.push({code:'4100', debit:0, credit:serviceRevenue});
+  const custLabel = s.payment==='credit' ? (state.customers.find(c=>c.id===s.customerId)||{}).name : 'Cash customer';
+  const entry = postEntry(s.date, 'Sales invoice — '+custLabel, 'sale', lines);
+  if(s.payment==='credit') entry.dueDate = s.dueDate;
+  const entryIds = [entry.id];
+  if(cogs>0){
+    const cogsEntry = postEntry(s.date, 'Cost of goods sold — '+entry.id, 'sale', [
+      {code:'5000', debit:cogs, credit:0}, {code:'1200', debit:0, credit:cogs}
+    ]);
+    entryIds.push(cogsEntry.id);
+  }
+  s.items.forEach(it=>{
+    const prod = state.products.find(p=>p.id===it.productId);
+    if(prod && prod.kind==='product') prod.qty -= it.qty;
+  });
+  s.entryIds = entryIds;
+}
+/* Undoes a previously-applied sale record: restores the stock it took out and
+   removes the journal entries it posted. Sales never touch weighted-average cost
+   (only purchases do), so this reversal is always exact. */
+function reverseSaleEffect(s){
+  s.items.forEach(it=>{
+    const prod = state.products.find(p=>p.id===it.productId);
+    if(prod && prod.kind==='product') prod.qty += it.qty;
+  });
+  state.journal = state.journal.filter(e=>!s.entryIds.includes(e.id));
+}
+function submitSale(){
+  const date = saleDate || todayISO();
+  const items = saleItems.filter(it=>it.productId && it.qty>0);
+  if(items.length===0){ toast('Add at least one item'); return; }
+  if(salePayment==='credit' && !saleCustomer){ toast('Please select a customer for a credit sale'); return; }
+  for(const it of items){
+    const prod = state.products.find(p=>p.id===it.productId);
+    if(prod.kind==='product' && it.qty>prod.qty){ toast(`Not enough stock of "${prod.name}"`); return; }
+  }
+  const dueDate = salePayment==='credit' ? (saleDueDate || addDays(date,30)) : null;
+  const record = {
+    id: uid('INV','sale'), date, dueDate, payment: salePayment,
+    customerId: salePayment==='credit' ? saleCustomer : null,
+    items: items.map(it=>({productId:it.productId, qty:it.qty, price:it.price})),
+    entryIds: []
+  };
+  applySaleRecord(record);
+  state.sales.push(record);
+  saleItems = [{productId:'',qty:1,price:0}]; salePayment='cash'; saleCustomer='';
+  saleDate = todayISO(); saleDueDate = addDays(todayISO(),30);
+  saveState(); toast('Sales invoice posted ('+record.id+')'); render();
+}
+
+/* ---- Posted sales list: view, edit, delete ---- */
+function renderPostedSaleRow(s){
+  const total = s.items.reduce((sum,it)=>sum+it.qty*it.price,0);
+  const custLabel = s.payment==='credit' ? ((state.customers.find(c=>c.id===s.customerId)||{}).name || '—') : 'Cash';
+  const isEditing = salesEditingId===s.id;
+  return `
+  <div class="journal-entry">
+    <div class="je-head">
+      <div><span class="je-id">${s.id}</span> — ${s.date} — ${custLabel} ${s.payment==='credit' && s.dueDate?`<span class="hint" style="margin-left:6px;">due ${s.dueDate}</span>`:''}</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="mono">${state.currency}${fmt(total)}</span>
+        ${isEditing?'':`<button class="small secondary" onclick="startEditSale('${s.id}')">Edit</button><button class="small danger" onclick="deleteSaleInvoice('${s.id}')">Delete</button>`}
+      </div>
+    </div>
+    ${isEditing? renderSaleEditForm(s) :
+    `<table><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Line total</th></tr></thead><tbody>
+    ${s.items.map(it=>{
+      const prod = state.products.find(p=>p.id===it.productId);
+      return `<tr><td>${prod?prod.name:'(deleted item)'}</td><td class="num">${it.qty}</td><td class="num">${fmt(it.price)}</td><td class="num">${fmt(it.qty*it.price)}</td></tr>`;
+    }).join('')}
+    </tbody></table>`}
+  </div>`;
+}
+function renderSaleEditForm(s){
+  return `
+  <div style="margin-top:10px;">
+    ${saleEditDraft.map((it,i)=>`
+    <div class="line-item">
+      <div><label>Item</label>
+        <select onchange="editSaleDraftField(${i},'productId',this.value)">
+          <option value="">Select item</option>
+          ${state.products.map(p=>`<option value="${p.id}" ${it.productId===p.id?'selected':''}>${p.name}</option>`).join('')}
+        </select>
+      </div>
+      <div><label>Qty</label><input type="number" min="1" step="1" value="${it.qty}" oninput="editSaleDraftField(${i},'qty',this.value,true)"></div>
+      <div><label>Price</label><input type="number" min="0" step="0.01" value="${it.price}" oninput="editSaleDraftField(${i},'price',this.value,true)"></div>
+      <div><label>Line total</label><input disabled id="sale-edit-line-total-${i}" value="${fmt((it.qty||0)*(it.price||0))}"></div>
+      <div><button class="small secondary" onclick="removeSaleDraftItem(${i})">Remove</button></div>
+    </div>`).join('')}
+    <button class="secondary small" onclick="addSaleDraftItem()">+ Add item</button>
+    <div class="total-line"><span>Total: <span class="amt" id="sale-edit-grand-total">${fmt(saleEditDraft.reduce((s2,it)=>s2+(it.qty||0)*(it.price||0),0))}</span></span></div>
+    <div style="margin-top:10px; display:flex; gap:8px;">
+      <button onclick="saveEditedSale('${s.id}')">Save changes</button>
+      <button class="secondary" onclick="cancelEditSale()">Cancel</button>
+    </div>
+    <div class="hint" style="margin-top:6px;">Removing all items (or saving with none left) deletes this invoice.</div>
+  </div>`;
+}
+function startEditSale(id){
+  const s = state.sales.find(x=>x.id===id);
+  if(!s) return;
+  salesEditingId = id;
+  saleEditDraft = JSON.parse(JSON.stringify(s.items));
+  renderSalesInPlace();
+}
+function cancelEditSale(){ salesEditingId=null; saleEditDraft=null; renderSalesInPlace(); }
+/* When editingProductSelect is falsy (Qty/Price typing) we only patch the two total
+   display fields in place, the same lightweight way updateSaleLineTotal() does for
+   the new-invoice form — so typing a number doesn't rebuild the whole form. Picking
+   a different item from the dropdown still does a full re-render (needed to refresh
+   the Line total field's disabled state etc.), which is fine since that's a single
+   discrete click, not continuous typing. */
+function editSaleDraftField(idx, field, value, liveOnly){
+  saleEditDraft[idx][field] = field==='productId' ? value : Number(value)||0;
+  if(liveOnly){
+    const it = saleEditDraft[idx];
+    const lineEl = document.getElementById('sale-edit-line-total-'+idx);
+    if(lineEl) lineEl.value = fmt((it.qty||0)*(it.price||0));
+    const grandEl = document.getElementById('sale-edit-grand-total');
+    if(grandEl) grandEl.textContent = fmt(saleEditDraft.reduce((s2,x)=>s2+(x.qty||0)*(x.price||0),0));
+    return;
+  }
+  renderSalesInPlace();
+}
+function removeSaleDraftItem(idx){ saleEditDraft.splice(idx,1); renderSalesInPlace(); }
+function addSaleDraftItem(){ saleEditDraft.push({productId:'', qty:1, price:0}); renderSalesInPlace(); }
+function saveEditedSale(id){
+  const s = state.sales.find(x=>x.id===id);
+  if(!s) return;
+  const newItems = (saleEditDraft||[]).filter(it=>it.productId && it.qty>0);
+  reverseSaleEffect(s); // temporarily restore stock/undo entries so we can validate against true availability
+  for(const it of newItems){
+    const prod = state.products.find(p=>p.id===it.productId);
+    if(prod && prod.kind==='product' && it.qty>prod.qty){
+      toast(`Not enough stock of "${prod.name}"`);
+      applySaleRecord(s); // roll back — reapply with the original (unchanged) items
+      return;
+    }
+  }
+  if(newItems.length===0){
+    state.sales = state.sales.filter(x=>x.id!==id);
+    salesEditingId=null; saleEditDraft=null;
+    saveState(); toast('Sales invoice deleted'); render();
+    return;
+  }
+  s.items = newItems;
+  applySaleRecord(s);
+  salesEditingId=null; saleEditDraft=null;
+  saveState(); toast('Sales invoice updated'); render();
+}
+function deleteSaleInvoice(id){
+  const s = state.sales.find(x=>x.id===id);
+  if(!s) return;
+  if(!confirm('Delete this sales invoice? This restores the stock it took out and removes its journal entries.')) return;
+  reverseSaleEffect(s);
+  state.sales = state.sales.filter(x=>x.id!==id);
+  if(salesEditingId===id){ salesEditingId=null; saleEditDraft=null; }
+  saveState(); toast('Sales invoice deleted'); render();
+}
+
+/* ============================= PURCHASE INVOICE ============================= */
+let purchaseItems = [{productId:'', qty:1, cost:0}];
+let purchasePayment = 'cash';
+let purchaseSupplier = '';
+let purchaseDate = todayISO();
+let purchaseDueDate = addDays(todayISO(),30);
+let purchasesEditingId = null;  // id of the posted purchase currently being edited, or null
+let purchaseEditDraft = null;   // working copy of that purchase's items while editing
+
+function renderPurchase(){
+  const productsOnly = state.products.filter(p=>p.kind==='product');
+  return `
+    <div class="topbar"><div><h2>Purchase</h2><div class="sub">Buy stock from a supplier — increases inventory automatically</div></div></div>
+    <div class="card">
+      <div class="row">
+        <div class="field"><label>Payment method</label>
+          <select onchange="purchasePayment=this.value; renderPurchaseInPlace();">
+            <option value="cash" ${purchasePayment==='cash'?'selected':''}>Cash</option>
+            <option value="credit" ${purchasePayment==='credit'?'selected':''}>On credit (to supplier account)</option>
+          </select>
+        </div>
+        ${purchasePayment==='credit'?`
+        <div class="field"><label>Supplier</label>
+          <select onchange="purchaseSupplier=this.value">
+            <option value="">Select supplier</option>
+            ${state.suppliers.map(s=>`<option value="${s.id}" ${purchaseSupplier===s.id?'selected':''}>${s.name}</option>`).join('')}
+          </select>
+        </div>`:''}
+        <div class="field"><label>Date</label><input type="date" id="purchase-date" value="${purchaseDate}" onchange="purchaseDate=this.value||todayISO();"></div>
+        ${purchasePayment==='credit'?`
+        <div class="field"><label>Due date</label><input type="date" id="purchase-due" value="${purchaseDueDate}" onchange="purchaseDueDate=this.value||addDays(purchaseDate,30);"></div>`:''}
+      </div>
+      <h3 style="margin-top:16px;">Items ${productsOnly.length===0?'<span class="hint">— add products first from the Inventory tab</span>':''}</h3>
+      <div id="purchase-items">${purchaseItems.map((it,i)=>renderPurchaseLine(it,i)).join('')}</div>
+      <button class="secondary small" onclick="addPurchaseItem()">+ Add item</button>
+      <div class="total-line"><span>Total: <span class="amt" id="purchase-grand-total">${fmt(purchaseTotal())}</span></span></div>
+      <div style="margin-top:12px;"><button onclick="submitPurchase()">Post invoice</button></div>
+    </div>
+    <div class="card">
+      <h3>Posted Purchase Invoices (${state.purchases.length})</h3>
+      ${state.purchases.length===0?'<div class="empty">No purchase invoices yet</div>':
+      state.purchases.slice().reverse().map(p=>renderPostedPurchaseRow(p)).join('')}
+      <div class="hint" style="margin-top:10px;">Only invoices posted from this list support Edit/Delete — older entries can still be reviewed from the Journal Report.</div>
+    </div>
+  `;
+}
+function renderPurchaseLine(it,i){
+  const productsOnly = state.products.filter(p=>p.kind==='product');
+  return `<div class="line-item">
+    <div><label>Item</label>
+      <select onchange="selectPurchaseProduct(${i}, this.value)">
+        <option value="">Select item</option>
+        ${productsOnly.map(p=>`<option value="${p.id}" ${it.productId===p.id?'selected':''}>${p.name}</option>`).join('')}
+      </select>
+    </div>
+    <div><label>Qty</label><input type="number" min="1" step="1" value="${it.qty}" oninput="purchaseItems[${i}].qty=Number(this.value); updatePurchaseLineTotal(${i});"></div>
+    <div><label>Unit cost</label><input type="number" min="0" step="0.01" value="${it.cost}" oninput="purchaseItems[${i}].cost=Number(this.value); updatePurchaseLineTotal(${i});"></div>
+    <div><label>Line total</label><input disabled id="purchase-line-total-${i}" value="${fmt((it.qty||0)*(it.cost||0))}"></div>
+    <div>${purchaseItems.length>1?`<button class="small secondary" onclick="removePurchaseItem(${i})">Remove</button>`:''}</div>
+  </div>`;
+}
+function renderPurchaseInPlace(){ document.getElementById('view').innerHTML = renderPurchase(); }
+/* Same lightweight, non-rebuilding update as updateSaleLineTotal() — keeps typing
+   in Qty/Unit cost from resetting focus or the Date/Due date fields. */
+function updatePurchaseLineTotal(i){
+  const it = purchaseItems[i];
+  const lineEl = document.getElementById('purchase-line-total-'+i);
+  if(lineEl) lineEl.value = fmt((it.qty||0)*(it.cost||0));
+  const grandEl = document.getElementById('purchase-grand-total');
+  if(grandEl) grandEl.textContent = fmt(purchaseTotal());
+}
+function selectPurchaseProduct(i,pid){
+  purchaseItems[i].productId = pid;
+  const prod = state.products.find(p=>p.id===pid);
+  if(prod) purchaseItems[i].cost = prod.cost;
+  renderPurchaseInPlace();
+}
+function addPurchaseItem(){ purchaseItems.push({productId:'',qty:1,cost:0}); renderPurchaseInPlace(); }
+function removePurchaseItem(i){ purchaseItems.splice(i,1); renderPurchaseInPlace(); }
+function purchaseTotal(){ return purchaseItems.reduce((s,it)=>s+(it.qty||0)*(it.cost||0),0); }
+
+/* Posts the journal entries + weighted-average inventory effect for a purchase
+   record's *current* items. Used both when first posting and when re-applying
+   after an edit — always call reversePurchaseEffect() first if it was posted before. */
+function applyPurchaseRecord(p){
+  const total = p.items.reduce((s,it)=>s+it.qty*it.cost,0);
+  const lines = [{code:'1200', debit:total, credit:0}];
+  if(p.payment==='cash') lines.push({code:'1000', debit:0, credit:total});
+  else lines.push({code:'2000', debit:0, credit:total, partyType:'supplier', partyId:p.supplierId});
+  const supLabel = p.payment==='credit' ? (state.suppliers.find(s=>s.id===p.supplierId)||{}).name : 'Cash supplier';
+  const entry = postEntry(p.date, 'Purchase invoice — '+supLabel, 'purchase', lines);
+  if(p.payment==='credit') entry.dueDate = p.dueDate;
+  p.entryIds = [entry.id];
+  p.items.forEach(it=>{
+    const prod = state.products.find(pp=>pp.id===it.productId);
+    if(!prod) return;
+    const newQty = prod.qty + it.qty;
+    prod.cost = newQty>0 ? ((prod.qty*prod.cost)+(it.qty*it.cost))/newQty : it.cost; // weighted average
+    prod.qty = newQty;
+  });
+}
+/* Undoes a previously-applied purchase record: removes its journal entries and
+   reverses the weighted-average cost update it made — the exact mathematical
+   inverse of applyPurchaseRecord's update (exact if this was the most recent
+   purchase affecting the product; a close approximation otherwise, same as any
+   moving-average costing system without full per-lot tracking). */
+function reversePurchaseEffect(p){
+  state.journal = state.journal.filter(e=>!p.entryIds.includes(e.id));
+  p.items.forEach(it=>{
+    const prod = state.products.find(pp=>pp.id===it.productId);
+    if(!prod || prod.kind!=='product') return;
+    const beforeQty = prod.qty - it.qty;
+    prod.cost = beforeQty>0.0001 ? ((prod.qty*prod.cost)-(it.qty*it.cost))/beforeQty : 0;
+    prod.qty = beforeQty;
+  });
+}
+function submitPurchase(){
+  const date = purchaseDate || todayISO();
+  const items = purchaseItems.filter(it=>it.productId && it.qty>0);
+  if(items.length===0){ toast('Add at least one item'); return; }
+  if(purchasePayment==='credit' && !purchaseSupplier){ toast('Please select a supplier for a credit purchase'); return; }
+  const dueDate = purchasePayment==='credit' ? (purchaseDueDate || addDays(date,30)) : null;
+  const record = {
+    id: uid('BILL','purchase'), date, dueDate, payment: purchasePayment,
+    supplierId: purchasePayment==='credit' ? purchaseSupplier : null,
+    items: items.map(it=>({productId:it.productId, qty:it.qty, cost:it.cost})),
+    entryIds: []
+  };
+  applyPurchaseRecord(record);
+  state.purchases.push(record);
+  purchaseItems=[{productId:'',qty:1,cost:0}]; purchasePayment='cash'; purchaseSupplier='';
+  purchaseDate = todayISO(); purchaseDueDate = addDays(todayISO(),30);
+  saveState(); toast('Purchase invoice posted ('+record.id+')'); render();
+}
+
+/* ---- Posted purchases list: view, edit, delete ---- */
+function renderPostedPurchaseRow(p){
+  const total = p.items.reduce((sum,it)=>sum+it.qty*it.cost,0);
+  const supLabel = p.payment==='credit' ? ((state.suppliers.find(s=>s.id===p.supplierId)||{}).name || '—') : 'Cash';
+  const isEditing = purchasesEditingId===p.id;
+  return `
+  <div class="journal-entry">
+    <div class="je-head">
+      <div><span class="je-id">${p.id}</span> — ${p.date} — ${supLabel} ${p.payment==='credit' && p.dueDate?`<span class="hint" style="margin-left:6px;">due ${p.dueDate}</span>`:''}</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="mono">${state.currency}${fmt(total)}</span>
+        ${isEditing?'':`<button class="small secondary" onclick="startEditPurchase('${p.id}')">Edit</button><button class="small danger" onclick="deletePurchaseInvoice('${p.id}')">Delete</button>`}
+      </div>
+    </div>
+    ${isEditing? renderPurchaseEditForm(p) :
+    `<table><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit cost</th><th class="num">Line total</th></tr></thead><tbody>
+    ${p.items.map(it=>{
+      const prod = state.products.find(pp=>pp.id===it.productId);
+      return `<tr><td>${prod?prod.name:'(deleted item)'}</td><td class="num">${it.qty}</td><td class="num">${fmt(it.cost)}</td><td class="num">${fmt(it.qty*it.cost)}</td></tr>`;
+    }).join('')}
+    </tbody></table>`}
+  </div>`;
+}
+function renderPurchaseEditForm(p){
+  const productsOnly = state.products.filter(pp=>pp.kind==='product');
+  return `
+  <div style="margin-top:10px;">
+    ${purchaseEditDraft.map((it,i)=>`
+    <div class="line-item">
+      <div><label>Item</label>
+        <select onchange="editPurchaseDraftField(${i},'productId',this.value)">
+          <option value="">Select item</option>
+          ${productsOnly.map(pp=>`<option value="${pp.id}" ${it.productId===pp.id?'selected':''}>${pp.name}</option>`).join('')}
+        </select>
+      </div>
+      <div><label>Qty</label><input type="number" min="1" step="1" value="${it.qty}" oninput="editPurchaseDraftField(${i},'qty',this.value,true)"></div>
+      <div><label>Unit cost</label><input type="number" min="0" step="0.01" value="${it.cost}" oninput="editPurchaseDraftField(${i},'cost',this.value,true)"></div>
+      <div><label>Line total</label><input disabled id="purchase-edit-line-total-${i}" value="${fmt((it.qty||0)*(it.cost||0))}"></div>
+      <div><button class="small secondary" onclick="removePurchaseDraftItem(${i})">Remove</button></div>
+    </div>`).join('')}
+    <button class="secondary small" onclick="addPurchaseDraftItem()">+ Add item</button>
+    <div class="total-line"><span>Total: <span class="amt" id="purchase-edit-grand-total">${fmt(purchaseEditDraft.reduce((s2,it)=>s2+(it.qty||0)*(it.cost||0),0))}</span></span></div>
+    <div style="margin-top:10px; display:flex; gap:8px;">
+      <button onclick="saveEditedPurchase('${p.id}')">Save changes</button>
+      <button class="secondary" onclick="cancelEditPurchase()">Cancel</button>
+    </div>
+    <div class="hint" style="margin-top:6px;">Removing all items (or saving with none left) deletes this invoice.</div>
+  </div>`;
+}
+function startEditPurchase(id){
+  const p = state.purchases.find(x=>x.id===id);
+  if(!p) return;
+  purchasesEditingId = id;
+  purchaseEditDraft = JSON.parse(JSON.stringify(p.items));
+  renderPurchaseInPlace();
+}
+function cancelEditPurchase(){ purchasesEditingId=null; purchaseEditDraft=null; renderPurchaseInPlace(); }
+/* Same lightweight in-place pattern as editSaleDraftField(): Qty/Unit cost typing
+   only patches the two total fields, a product-select change does a full re-render. */
+function editPurchaseDraftField(idx, field, value, liveOnly){
+  purchaseEditDraft[idx][field] = field==='productId' ? value : Number(value)||0;
+  if(liveOnly){
+    const it = purchaseEditDraft[idx];
+    const lineEl = document.getElementById('purchase-edit-line-total-'+idx);
+    if(lineEl) lineEl.value = fmt((it.qty||0)*(it.cost||0));
+    const grandEl = document.getElementById('purchase-edit-grand-total');
+    if(grandEl) grandEl.textContent = fmt(purchaseEditDraft.reduce((s2,x)=>s2+(x.qty||0)*(x.cost||0),0));
+    return;
+  }
+  renderPurchaseInPlace();
+}
+function removePurchaseDraftItem(idx){ purchaseEditDraft.splice(idx,1); renderPurchaseInPlace(); }
+function addPurchaseDraftItem(){ purchaseEditDraft.push({productId:'', qty:1, cost:0}); renderPurchaseInPlace(); }
+function saveEditedPurchase(id){
+  const p = state.purchases.find(x=>x.id===id);
+  if(!p) return;
+  const newItems = (purchaseEditDraft||[]).filter(it=>it.productId && it.qty>0);
+  reversePurchaseEffect(p);
+  if(newItems.length===0){
+    state.purchases = state.purchases.filter(x=>x.id!==id);
+    purchasesEditingId=null; purchaseEditDraft=null;
+    saveState(); toast('Purchase invoice deleted'); render();
+    return;
+  }
+  p.items = newItems;
+  applyPurchaseRecord(p);
+  purchasesEditingId=null; purchaseEditDraft=null;
+  saveState(); toast('Purchase invoice updated'); render();
+}
+function deletePurchaseInvoice(id){
+  const p = state.purchases.find(x=>x.id===id);
+  if(!p) return;
+  if(!confirm('Delete this purchase invoice? This reverses the stock/cost change it made and removes its journal entries.')) return;
+  reversePurchaseEffect(p);
+  state.purchases = state.purchases.filter(x=>x.id!==id);
+  if(purchasesEditingId===id){ purchasesEditingId=null; purchaseEditDraft=null; }
+  saveState(); toast('Purchase invoice deleted'); render();
+}
+
+/* ============================= RECEIPTS & PAYMENTS ============================= */
+function renderReceipts(){
+  const customersWithBalance = state.customers.map(c=>({...c, bal:partyBalance('customer',c.id)}));
+  const suppliersWithBalance = state.suppliers.map(s=>({...s, bal:partyBalance('supplier',s.id)}));
+  return `
+    <div class="topbar"><div><h2>Receipts & Payments</h2><div class="sub">Collect from a customer or pay a supplier</div></div></div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Receive from customer</h3>
+        <div class="field"><label>Customer</label>
+          <select id="rc-customer">
+            <option value="">Select customer</option>
+            ${customersWithBalance.map(c=>`<option value="${c.id}">${c.name} — due ${fmt(c.bal)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Amount received</label><input id="rc-amount" type="number" min="0" step="0.01"></div>
+        <div class="field"><label>Date</label><input id="rc-date" type="date" value="${todayISO()}"></div>
+        <button onclick="submitReceipt()">Record receipt</button>
+      </div>
+      <div class="card">
+        <h3>Pay a supplier</h3>
+        <div class="field"><label>Supplier</label>
+          <select id="pm-supplier">
+            <option value="">Select supplier</option>
+            ${suppliersWithBalance.map(s=>`<option value="${s.id}">${s.name} — due ${fmt(s.bal)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Amount paid</label><input id="pm-amount" type="number" min="0" step="0.01"></div>
+        <div class="field"><label>Date</label><input id="pm-date" type="date" value="${todayISO()}"></div>
+        <button onclick="submitPayment()">Record payment</button>
+      </div>
+    </div>
+  `;
+}
+function submitReceipt(){
+  const cid = document.getElementById('rc-customer').value;
+  const amount = Number(document.getElementById('rc-amount').value)||0;
+  const date = document.getElementById('rc-date').value || todayISO();
+  if(!cid || amount<=0){ toast('Please select a customer and enter a valid amount'); return; }
+  const c = state.customers.find(x=>x.id===cid);
+  postEntry(date, 'Receipt from customer — '+c.name, 'receipt', [
+    {code:'1000', debit:amount, credit:0},
+    {code:'1100', debit:0, credit:amount, partyType:'customer', partyId:cid}
+  ]);
+  saveState(); toast('Receipt recorded'); render();
+}
+function submitPayment(){
+  const sid = document.getElementById('pm-supplier').value;
+  const amount = Number(document.getElementById('pm-amount').value)||0;
+  const date = document.getElementById('pm-date').value || todayISO();
+  if(!sid || amount<=0){ toast('Please select a supplier and enter a valid amount'); return; }
+  const s = state.suppliers.find(x=>x.id===sid);
+  postEntry(date, 'Payment to supplier — '+s.name, 'payment', [
+    {code:'2000', debit:amount, credit:0, partyType:'supplier', partyId:sid},
+    {code:'1000', debit:0, credit:amount}
+  ]);
+  saveState(); toast('Payment recorded'); render();
+}
+
+/* ============================= CUSTOMERS ============================= */
+let customerEditingId = null;
+function renderCustomers(){
+  return `
+    <div class="topbar">
+      <div><h2>Customers</h2><div class="sub">Customer list and outstanding balances</div></div>
+      <button class="secondary" onclick="exportCustomersExcel()">⬇ Export Excel</button>
+    </div>
+    <div class="card">
+      <h3>Add customer</h3>
+      <div class="row">
+        <div class="field"><label>Name</label><input id="c-name" placeholder="Customer name"></div>
+        <div class="field"><label>Phone</label><input id="c-phone" placeholder="Phone number (optional)"></div>
+        <div class="field" style="display:flex; align-items:flex-end;"><button onclick="addCustomer()">Add</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>List (${state.customers.length})</h3>
+      ${state.customers.length===0?'<div class="empty">No customers yet</div>':
+      `<table><thead><tr><th>Name</th><th>Phone</th><th class="num">Balance Due</th><th></th></tr></thead><tbody>
+      ${state.customers.map(c=>{
+        if(customerEditingId===c.id){
+          return `<tr>
+            <td><input id="c-edit-name-${c.id}" value="${c.name}"></td>
+            <td><input id="c-edit-phone-${c.id}" value="${c.phone||''}"></td>
+            <td class="num">${fmt(partyBalance('customer',c.id))}</td>
+            <td style="white-space:nowrap;"><button class="small" onclick="saveEditedCustomer('${c.id}')">Save</button> <button class="small secondary" onclick="cancelEditCustomer()">Cancel</button></td>
+          </tr>`;
+        }
+        return `<tr><td>${c.name}</td><td>${c.phone||'—'}</td><td class="num">${fmt(partyBalance('customer',c.id))}</td>
+        <td style="white-space:nowrap;"><button class="small secondary" onclick="startEditCustomer('${c.id}')">Edit</button> ${partyHasActivity('customer',c.id)?'':`<button class="small danger" onclick="deleteCustomer('${c.id}')">Delete</button>`}</td></tr>`;
+      }).join('')}
+      </tbody></table>`}
+    </div>
+  `;
+}
+function renderCustomersInPlace(){ document.getElementById('view').innerHTML = renderCustomers(); }
+function addCustomer(){
+  const name = document.getElementById('c-name').value.trim();
+  const phone = document.getElementById('c-phone').value.trim();
+  if(!name){ toast('Please enter the customer name'); return; }
+  state.customers.push({id: uid('C','customer'), name, phone});
+  saveState(); toast('Customer added'); render();
+}
+/* Whether this party (customer/supplier) has any posted journal activity —
+   deleting them afterwards would leave dangling references, so it's blocked. */
+function partyHasActivity(type, id){
+  return state.journal.some(e=>e.lines.some(l=>l.partyType===type && l.partyId===id));
+}
+function startEditCustomer(id){ customerEditingId = id; renderCustomersInPlace(); }
+function cancelEditCustomer(){ customerEditingId = null; renderCustomersInPlace(); }
+function saveEditedCustomer(id){
+  const c = state.customers.find(x=>x.id===id);
+  if(!c) return;
+  const name = document.getElementById('c-edit-name-'+id).value.trim();
+  if(!name){ toast('Customer name cannot be empty'); return; }
+  c.name = name;
+  c.phone = document.getElementById('c-edit-phone-'+id).value.trim();
+  customerEditingId = null;
+  saveState(); toast('Customer updated'); render();
+}
+function deleteCustomer(id){
+  if(partyHasActivity('customer', id)){ toast('Cannot delete a customer with posted invoices or payments'); return; }
+  state.customers = state.customers.filter(c=>c.id!==id);
+  saveState(); toast('Customer deleted'); render();
+}
+function exportCustomersExcel(){
+  const rows = [['Name','Phone','Balance Due']];
+  state.customers.forEach(c=> rows.push([c.name, c.phone||'', partyBalance('customer',c.id)]));
+  exportRowsToExcel(rows, 'Customers', 'customers-'+todayISO()+'.xlsx');
+}
+
+/* ============================= SUPPLIERS ============================= */
+let supplierEditingId = null;
+function renderSuppliers(){
+  return `
+    <div class="topbar">
+      <div><h2>Suppliers</h2><div class="sub">Supplier list and outstanding balances</div></div>
+      <button class="secondary" onclick="exportSuppliersExcel()">⬇ Export Excel</button>
+    </div>
+    <div class="card">
+      <h3>Add supplier</h3>
+      <div class="row">
+        <div class="field"><label>Name</label><input id="s-name" placeholder="Supplier name"></div>
+        <div class="field"><label>Phone</label><input id="s-phone" placeholder="Phone number (optional)"></div>
+        <div class="field" style="display:flex; align-items:flex-end;"><button onclick="addSupplier()">Add</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>List (${state.suppliers.length})</h3>
+      ${state.suppliers.length===0?'<div class="empty">No suppliers yet</div>':
+      `<table><thead><tr><th>Name</th><th>Phone</th><th class="num">Balance Due</th><th></th></tr></thead><tbody>
+      ${state.suppliers.map(s=>{
+        if(supplierEditingId===s.id){
+          return `<tr>
+            <td><input id="s-edit-name-${s.id}" value="${s.name}"></td>
+            <td><input id="s-edit-phone-${s.id}" value="${s.phone||''}"></td>
+            <td class="num">${fmt(partyBalance('supplier',s.id))}</td>
+            <td style="white-space:nowrap;"><button class="small" onclick="saveEditedSupplier('${s.id}')">Save</button> <button class="small secondary" onclick="cancelEditSupplier()">Cancel</button></td>
+          </tr>`;
+        }
+        return `<tr><td>${s.name}</td><td>${s.phone||'—'}</td><td class="num">${fmt(partyBalance('supplier',s.id))}</td>
+        <td style="white-space:nowrap;"><button class="small secondary" onclick="startEditSupplier('${s.id}')">Edit</button> ${partyHasActivity('supplier',s.id)?'':`<button class="small danger" onclick="deleteSupplier('${s.id}')">Delete</button>`}</td></tr>`;
+      }).join('')}
+      </tbody></table>`}
+    </div>
+  `;
+}
+function renderSuppliersInPlace(){ document.getElementById('view').innerHTML = renderSuppliers(); }
+function addSupplier(){
+  const name = document.getElementById('s-name').value.trim();
+  const phone = document.getElementById('s-phone').value.trim();
+  if(!name){ toast('Please enter the supplier name'); return; }
+  state.suppliers.push({id: uid('S','supplier'), name, phone});
+  saveState(); toast('Supplier added'); render();
+}
+function startEditSupplier(id){ supplierEditingId = id; renderSuppliersInPlace(); }
+function cancelEditSupplier(){ supplierEditingId = null; renderSuppliersInPlace(); }
+function saveEditedSupplier(id){
+  const s = state.suppliers.find(x=>x.id===id);
+  if(!s) return;
+  const name = document.getElementById('s-edit-name-'+id).value.trim();
+  if(!name){ toast('Supplier name cannot be empty'); return; }
+  s.name = name;
+  s.phone = document.getElementById('s-edit-phone-'+id).value.trim();
+  supplierEditingId = null;
+  saveState(); toast('Supplier updated'); render();
+}
+function deleteSupplier(id){
+  if(partyHasActivity('supplier', id)){ toast('Cannot delete a supplier with posted bills or payments'); return; }
+  state.suppliers = state.suppliers.filter(s=>s.id!==id);
+  saveState(); toast('Supplier deleted'); render();
+}
+function exportSuppliersExcel(){
+  const rows = [['Name','Phone','Balance Due']];
+  state.suppliers.forEach(s=> rows.push([s.name, s.phone||'', partyBalance('supplier',s.id)]));
+  exportRowsToExcel(rows, 'Suppliers', 'suppliers-'+todayISO()+'.xlsx');
+}
+
+/* ============================= TRIAL BALANCE ============================= */
+function renderTrial(){
+  let totalD=0, totalC=0;
+  const rows = state.accounts.map(a=>{
+    const t = accountTotals(a.code);
+    const normal = ['asset','expense'].includes(a.type) ? t.debit-t.credit : t.credit-t.debit;
+    const debitCol = normal>=0 && ['asset','expense'].includes(a.type) ? normal : (normal<0 && !['asset','expense'].includes(a.type) ? -normal : 0);
+    const creditCol = normal>=0 && !['asset','expense'].includes(a.type) ? normal : (normal<0 && ['asset','expense'].includes(a.type) ? -normal : 0);
+    totalD += debitCol; totalC += creditCol;
+    return {a, debitCol, creditCol};
+  }).filter(r=>r.debitCol!==0 || r.creditCol!==0);
+  const balanced = Math.round(totalD*100)===Math.round(totalC*100);
+  return `
+    <div class="topbar"><div><h2>Trial Balance</h2><div class="sub">Total debit and credit balances across all accounts</div></div></div>
+    <div class="card">
+      <table><thead><tr><th>Code</th><th>Account name</th><th>Type</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr><td class="mono">${r.a.code}</td><td>${r.a.name}</td><td><span class="badge ${r.a.type}">${typeLabel(r.a.type)}</span></td>
+      <td class="num">${r.debitCol?fmt(r.debitCol):''}</td><td class="num">${r.creditCol?fmt(r.creditCol):''}</td></tr>`).join('')}
+      </tbody>
+      <tfoot><tr style="font-weight:800; border-top:2px solid var(--ink);">
+        <td colspan="3">Total</td><td class="num">${fmt(totalD)}</td><td class="num">${fmt(totalC)}</td>
+      </tr></tfoot>
+      </table>
+      <div class="total-line"><span class="${balanced?'balanced':'unbalanced'}">${balanced?'✓ Trial balance is balanced':'⚠ Not balanced — review your entries'}</span></div>
+    </div>
+  `;
+}
+
+/* ============================= STATEMENT REPORTS ============================= */
+function balanceSheetData(){
+  const groups = {asset:[], liability:[], equity:[]};
+  state.accounts.forEach(a=>{
+    if(!groups[a.type]) return;
+    const t = accountTotals(a.code);
+    const balance = a.type==='asset' ? t.debit-t.credit : t.credit-t.debit;
+    if(balance!==0) groups[a.type].push({account:a, balance});
+  });
+  const totalAssets = groups.asset.reduce((s,r)=>s+r.balance,0);
+  const totalLiabilities = groups.liability.reduce((s,r)=>s+r.balance,0);
+  const equityAccounts = groups.equity.reduce((s,r)=>s+r.balance,0);
+  const currentEarnings = netProfit();
+  const totalEquity = equityAccounts + currentEarnings;
+  return {groups, totalAssets, totalLiabilities, totalEquity, currentEarnings};
+}
+function bsRows(rows){
+  if(rows.length===0) return '<div class="empty">No activity</div>';
+  return `<table><tbody>${rows.map(r=>`<tr><td>${r.account.code} — ${r.account.name}</td><td class="num">${state.currency}${fmt(r.balance)}</td></tr>`).join('')}</tbody></table>`;
+}
+function renderBalanceSheet(){
+  const d = balanceSheetData();
+  const liabEquity = d.totalLiabilities + d.totalEquity;
+  const balanced = Math.round(d.totalAssets*100) === Math.round(liabEquity*100);
+  return `
+    <div class="topbar"><div><h2>Balance Sheet</h2><div class="sub">Financial position as of ${todayISO()} — all-time balances</div></div></div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Assets</h3>
+        ${bsRows(d.groups.asset)}
+        <div class="total-line"><span>Total Assets</span><span class="amt">${state.currency}${fmt(d.totalAssets)}</span></div>
+      </div>
+      <div class="card">
+        <h3>Liabilities</h3>
+        ${bsRows(d.groups.liability)}
+        <div class="total-line"><span>Total Liabilities</span><span class="amt">${state.currency}${fmt(d.totalLiabilities)}</span></div>
+        <h3 style="margin-top:20px;">Equity</h3>
+        ${bsRows(d.groups.equity)}
+        <table><tbody><tr><td>Current Year Earnings (Net Profit)</td><td class="num">${state.currency}${fmt(d.currentEarnings)}</td></tr></tbody></table>
+        <div class="total-line"><span>Total Equity</span><span class="amt">${state.currency}${fmt(d.totalEquity)}</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="total-line">
+        <span>Total Assets: <span class="amt">${state.currency}${fmt(d.totalAssets)}</span></span>
+        <span>Total Liabilities &amp; Equity: <span class="amt">${state.currency}${fmt(liabEquity)}</span></span>
+        <span class="${balanced?'balanced':'unbalanced'}">${balanced?'✓ Balanced':'⚠ Not balanced — review your entries'}</span>
+      </div>
+    </div>
+  `;
+}
+
+function profitLossData(){
+  const revenueRows = [], cogsRows = [], expenseRows = [];
+  state.accounts.forEach(a=>{
+    const t = accountTotals(a.code);
+    if(a.type==='revenue'){
+      const bal = t.credit-t.debit;
+      if(bal!==0) revenueRows.push({account:a, balance:bal});
+    } else if(a.type==='expense'){
+      const bal = t.debit-t.credit;
+      if(bal===0) return;
+      if(a.code==='5000') cogsRows.push({account:a, balance:bal});
+      else expenseRows.push({account:a, balance:bal});
+    }
+  });
+  const totalRevenue = revenueRows.reduce((s,r)=>s+r.balance,0);
+  const totalCogs = cogsRows.reduce((s,r)=>s+r.balance,0);
+  const grossProfit = totalRevenue - totalCogs;
+  const totalExpense = expenseRows.reduce((s,r)=>s+r.balance,0);
+  const netIncome = grossProfit - totalExpense;
+  return {revenueRows, cogsRows, expenseRows, totalRevenue, totalCogs, grossProfit, totalExpense, netIncome};
+}
+function renderProfitLoss(){
+  const d = profitLossData();
+  return `
+    <div class="topbar"><div><h2>Profit and Loss</h2><div class="sub">Income statement — all-time activity</div></div></div>
+    <div class="card">
+      <h3>Revenue</h3>
+      ${bsRows(d.revenueRows)}
+      <div class="total-line"><span>Total Revenue</span><span class="amt">${state.currency}${fmt(d.totalRevenue)}</span></div>
+    </div>
+    <div class="card">
+      <h3>Cost of Goods Sold</h3>
+      ${bsRows(d.cogsRows)}
+      <div class="total-line"><span>Gross Profit</span><span class="amt">${state.currency}${fmt(d.grossProfit)}</span></div>
+    </div>
+    <div class="card">
+      <h3>Operating Expenses</h3>
+      ${bsRows(d.expenseRows)}
+      <div class="total-line"><span>Total Expenses</span><span class="amt">${state.currency}${fmt(d.totalExpense)}</span></div>
+    </div>
+    <div class="card">
+      <div class="total-line">
+        <span style="font-size:16px;">Net ${d.netIncome>=0?'Profit':'Loss'}</span>
+        <span class="amt" style="font-size:16px; color:${d.netIncome>=0?'var(--credit)':'var(--debit)'};">${state.currency}${fmt(Math.abs(d.netIncome))}</span>
+      </div>
+    </div>
+  `;
+}
+
+function cashFlowLabelForSource(source){
+  const map = {
+    receipt: 'Cash received from customers',
+    payment: 'Cash paid to suppliers',
+    sale: 'Cash sales',
+    purchase: 'Cash purchases',
+    manual: 'Other manual cash movements',
+    reversal: 'Reversed cash entries',
+  };
+  return map[source] || 'Other cash movements';
+}
+function cashFlowData(){
+  const byLabel = {};
+  let net = 0;
+  state.journal.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.code!=='1000') return;
+      const amt = l.debit - l.credit;
+      if(amt===0) return;
+      const label = cashFlowLabelForSource(e.source);
+      byLabel[label] = (byLabel[label]||0) + amt;
+      net += amt;
+    });
+  });
+  return {rows: Object.entries(byLabel).map(([label,amount])=>({label,amount})), net};
+}
+function renderCashFlow(){
+  const d = cashFlowData();
+  const ending = cashBalance();
+  return `
+    <div class="topbar"><div><h2>Cash Flow Statement</h2><div class="sub">All-time cash movements through the Cash account</div></div></div>
+    <div class="card">
+      <h3>Cash Movements</h3>
+      ${d.rows.length===0?'<div class="empty">No cash activity yet</div>':
+      `<table><thead><tr><th>Activity</th><th class="num">Amount</th></tr></thead><tbody>
+      ${d.rows.map(r=>`<tr><td>${r.label}</td><td class="num" style="color:${r.amount>=0?'var(--credit)':'var(--debit)'};">${r.amount>=0?'':'-'}${state.currency}${fmt(Math.abs(r.amount))}</td></tr>`).join('')}
+      </tbody></table>`}
+      <div class="total-line"><span>Net Change in Cash</span><span class="amt">${state.currency}${fmt(d.net)}</span></div>
+    </div>
+    <div class="card">
+      <div class="grid g2">
+        <div class="stat"><div class="label">Beginning Cash</div><div class="value">${state.currency}${fmt(ending-d.net)}</div></div>
+        <div class="stat credit"><div class="label">Ending Cash</div><div class="value">${state.currency}${fmt(ending)}</div></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderExecutiveSummary(){
+  const agingAR = unpaidInvoicesAging();
+  const agingAP = unpaidBillsAging();
+  const pl = profitLossData();
+  return `
+    <div class="topbar"><div><h2>Executive Summary</h2><div class="sub">A one-page snapshot of the business — all-time figures</div></div></div>
+    <div class="grid g3">
+      ${statCard('credit','Total Revenue', fmt(totalRevenue()), null)}
+      ${statCard('debit','Total COGS + Expenses', fmt(totalCOGS()+totalExpenses()), null)}
+      ${statCard(netProfit()>=0?'credit':'debit','Net Profit', fmt(netProfit()), null)}
+    </div>
+    <div class="grid g2">
+      ${statCard('','Cash Balance', fmt(cashBalance()), null)}
+      ${statCard('amber','Inventory Value', fmt(inventoryValue()), null)}
+    </div>
+    <div class="grid g2">
+      ${receivablePayableCard('exec-ar','Total Receivables','Total unpaid invoices', agingAR, 'customer')}
+      ${receivablePayableCard('exec-ap','Total Payables','Total unpaid bills', agingAP, 'supplier')}
+    </div>
+    <div class="card">
+      <h3>Profitability</h3>
+      <table><tbody>
+        <tr><td>Revenue</td><td class="num">${state.currency}${fmt(pl.totalRevenue)}</td></tr>
+        <tr><td>Cost of Goods Sold</td><td class="num">${state.currency}${fmt(pl.totalCogs)}</td></tr>
+        <tr style="font-weight:700;"><td>Gross Profit</td><td class="num">${state.currency}${fmt(pl.grossProfit)}</td></tr>
+        <tr><td>Operating Expenses</td><td class="num">${state.currency}${fmt(pl.totalExpense)}</td></tr>
+        <tr style="font-weight:800; border-top:2px solid var(--ink);"><td>Net ${pl.netIncome>=0?'Profit':'Loss'}</td><td class="num">${state.currency}${fmt(Math.abs(pl.netIncome))}</td></tr>
+      </tbody></table>
+    </div>
+  `;
+}
+
+let taxRate = 14;
+function taxAccountRows(){
+  return state.accounts.filter(a=>/tax/i.test(a.name)).map(a=>{
+    const t = accountTotals(a.code);
+    const bal = ['asset','expense'].includes(a.type) ? t.debit-t.credit : t.credit-t.debit;
+    return {account:a, balance:bal};
+  }).filter(r=>r.balance!==0);
+}
+function renderTaxReport(){
+  const pl = profitLossData();
+  const taxRows = taxAccountRows();
+  const estimatedTax = pl.netIncome>0 ? pl.netIncome * (Number(taxRate)||0)/100 : 0;
+  return `
+    <div class="topbar"><div><h2>Tax Report</h2><div class="sub">Tax-related accounts and an estimate based on net profit</div></div></div>
+    <div class="card">
+      <h3>Tax accounts</h3>
+      ${taxRows.length===0?'<div class="empty">No accounts with "Tax" in the name yet — add one from Chart of Accounts (e.g. Sales Tax Payable) to track it here.</div>':
+      `<table><thead><tr><th>Code</th><th>Account</th><th>Type</th><th class="num">Balance</th></tr></thead><tbody>
+      ${taxRows.map(r=>`<tr><td class="mono">${r.account.code}</td><td>${r.account.name}</td><td><span class="badge ${r.account.type}">${typeLabel(r.account.type)}</span></td><td class="num">${state.currency}${fmt(r.balance)}</td></tr>`).join('')}
+      </tbody></table>`}
+    </div>
+    <div class="card">
+      <h3>Estimated income tax</h3>
+      <div class="row">
+        <div class="field"><label>Net Profit</label><input value="${state.currency}${fmt(pl.netIncome)}" disabled></div>
+        <div class="field"><label>Tax rate (%)</label><input type="number" min="0" step="0.1" value="${taxRate}" oninput="updateTaxEstimate(this.value)"></div>
+        <div class="field"><label>Estimated Tax</label><input id="tax-estimate-output" value="${state.currency}${fmt(estimatedTax)}" disabled></div>
+      </div>
+      <div class="hint">This is a simple estimate (Net Profit × rate) for planning purposes only — it doesn't account for tax-deductible adjustments. Consult your accountant for the actual filing.</div>
+    </div>
+  `;
+}
+function renderTaxReportInPlace(){ document.getElementById('view').innerHTML = renderTaxReport(); }
+/* Same lightweight in-place pattern used elsewhere: typing a tax rate only patches
+   the Estimated Tax field, instead of rebuilding the whole report (which used to
+   reset focus after every digit typed). */
+function updateTaxEstimate(value){
+  taxRate = value;
+  const pl = profitLossData();
+  const estimatedTax = pl.netIncome>0 ? pl.netIncome * (Number(taxRate)||0)/100 : 0;
+  const outEl = document.getElementById('tax-estimate-output');
+  if(outEl) outEl.value = state.currency+fmt(estimatedTax);
+}
+
+/* ============================= AUDIT REPORTS ============================= */
+function generalLedgerAccountLines(code, type){
+  const rows = [];
+  state.journal.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.code===code) rows.push({date:e.date, id:e.id, desc:e.desc, reversed:e.reversed, debit:l.debit, credit:l.credit});
+    });
+  });
+  rows.sort((a,b)=> a.date===b.date ? String(a.id).localeCompare(b.id) : a.date.localeCompare(b.date));
+  let bal = 0;
+  const normalDebit = ['asset','expense'].includes(type);
+  return rows.map(r=>{
+    bal += normalDebit ? (r.debit-r.credit) : (r.credit-r.debit);
+    return {...r, balance:bal};
+  });
+}
+function renderGeneralLedger(){
+  const accountsWithActivity = state.accounts.filter(a=>{
+    const t = accountTotals(a.code);
+    return t.debit!==0 || t.credit!==0;
+  });
+  return `
+    <div class="topbar"><div><h2>General Ledger</h2><div class="sub">Every posting, account by account</div></div></div>
+    ${accountsWithActivity.length===0?'<div class="card"><div class="empty">No journal activity yet</div></div>':
+    accountsWithActivity.map(a=>{
+      const lines = generalLedgerAccountLines(a.code, a.type);
+      const ending = lines.length ? lines[lines.length-1].balance : 0;
+      return `
+      <div class="card">
+        <h3>${a.code} — ${a.name} <span class="badge ${a.type}" style="margin-left:8px;">${typeLabel(a.type)}</span></h3>
+        <table><thead><tr><th>Date</th><th>Entry</th><th>Description</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>
+        ${lines.map(l=>`<tr><td>${l.date}</td><td class="mono">${l.id}</td><td>${l.desc}${l.reversed?' <span class="badge reversal">Reversed</span>':''}</td><td class="num">${l.debit?fmt(l.debit):''}</td><td class="num">${l.credit?fmt(l.credit):''}</td><td class="num">${fmt(l.balance)}</td></tr>`).join('')}
+        </tbody></table>
+        <div class="total-line"><span>Ending Balance</span><span class="amt">${state.currency}${fmt(ending)}</span></div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function renderJournalReport(){
+  const totalD = state.journal.reduce((s,e)=>s+e.lines.reduce((s2,l)=>s2+l.debit,0),0);
+  const totalC = state.journal.reduce((s,e)=>s+e.lines.reduce((s2,l)=>s2+l.credit,0),0);
+  return `
+    <div class="topbar"><div><h2>Journal Report</h2><div class="sub">Full list of posted journal entries — ${state.journal.length} entries</div></div></div>
+    <div class="card">
+      ${state.journal.length===0?'<div class="empty">No entries yet</div>':
+      state.journal.slice().sort((a,b)=> a.date===b.date ? String(a.id).localeCompare(b.id) : a.date.localeCompare(b.date)).map(e=>`
+      <div class="journal-entry">
+        <div class="je-head">
+          <div><span class="je-id">${e.id}</span> — ${e.date} — ${e.desc} ${e.reversed?'<span class="badge reversal">Reversed</span>':''}</div>
+          <div>${sourceBadge(e.source)}</div>
+        </div>
+        <table><thead><tr><th>Account</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead><tbody>
+        ${e.lines.map(l=>`<tr><td>${l.code} — ${(accountByCode(l.code)||{}).name||''} ${l.partyType?`<span class="party-tag">(${partyName(l.partyType,l.partyId)})</span>`:''}</td><td class="num">${l.debit?fmt(l.debit):''}</td><td class="num">${l.credit?fmt(l.credit):''}</td></tr>`).join('')}
+        </tbody></table>
+      </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="total-line"><span>Total Debit: <span class="amt">${state.currency}${fmt(totalD)}</span></span><span>Total Credit: <span class="amt">${state.currency}${fmt(totalC)}</span></span></div>
+    </div>
+  `;
+}
+
+/* ============================= PARTNER REPORTS ============================= */
+let plPartnerType = 'customer';
+let plPartnerId = '';
+function partnerLedgerLines(type, id){
+  const rows = [];
+  state.journal.forEach(e=>{
+    e.lines.forEach(l=>{
+      if(l.partyType===type && l.partyId===id) rows.push({date:e.date, id:e.id, desc:e.desc, reversed:e.reversed, debit:l.debit, credit:l.credit});
+    });
+  });
+  rows.sort((a,b)=> a.date===b.date ? String(a.id).localeCompare(b.id) : a.date.localeCompare(b.date));
+  let bal = 0;
+  return rows.map(r=>{
+    bal += type==='customer' ? (r.debit-r.credit) : (r.credit-r.debit);
+    return {...r, balance:bal};
+  });
+}
+function setPartnerLedgerType(type){
+  plPartnerType = type;
+  const list = type==='customer' ? state.customers : state.suppliers;
+  plPartnerId = list.length ? list[0].id : '';
+  renderPartnerLedgerInPlace();
+}
+function setPartnerLedgerId(id){ plPartnerId = id; renderPartnerLedgerInPlace(); }
+function renderPartnerLedgerInPlace(){ document.getElementById('view').innerHTML = renderPartnerLedger(); }
+function renderPartnerLedger(){
+  const list = plPartnerType==='customer' ? state.customers : state.suppliers;
+  if(!plPartnerId && list.length) plPartnerId = list[0].id;
+  const lines = plPartnerId ? partnerLedgerLines(plPartnerType, plPartnerId) : [];
+  const ending = lines.length ? lines[lines.length-1].balance : 0;
+  return `
+    <div class="topbar"><div><h2>Partner Ledger</h2><div class="sub">Transaction history and running balance for one customer or supplier</div></div></div>
+    <div class="card">
+      <div class="row">
+        <div class="field"><label>Partner type</label>
+          <select onchange="setPartnerLedgerType(this.value)">
+            <option value="customer" ${plPartnerType==='customer'?'selected':''}>Customer</option>
+            <option value="supplier" ${plPartnerType==='supplier'?'selected':''}>Supplier</option>
+          </select>
+        </div>
+        <div class="field"><label>${plPartnerType==='customer'?'Customer':'Supplier'}</label>
+          <select onchange="setPartnerLedgerId(this.value)">
+            ${list.length===0?'<option value="">None</option>':list.map(p=>`<option value="${p.id}" ${plPartnerId===p.id?'selected':''}>${p.name}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      ${list.length===0?`<div class="empty">No ${plPartnerType}s yet</div>`:
+      lines.length===0?'<div class="empty">No transactions for this partner</div>':
+      `<table><thead><tr><th>Date</th><th>Entry</th><th>Description</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>
+      ${lines.map(l=>`<tr><td>${l.date}</td><td class="mono">${l.id}</td><td>${l.desc}${l.reversed?' <span class="badge reversal">Reversed</span>':''}</td><td class="num">${l.debit?fmt(l.debit):''}</td><td class="num">${l.credit?fmt(l.credit):''}</td><td class="num">${fmt(l.balance)}</td></tr>`).join('')}
+      </tbody></table>
+      <div class="total-line"><span>Balance Due</span><span class="amt">${state.currency}${fmt(ending)}</span></div>`}
+    </div>
+  `;
+}
+
+function agedPartyRows(type, parties){
+  return parties.map(p=>{
+    const buckets = {current:0,b1:0,b2:0,b3:0,b4:0};
+    invoicesForParty(type, p.id).forEach(inv=>{ buckets[agingBucket(inv.dueDate)] += inv.remaining; });
+    const total = Object.values(buckets).reduce((s,v)=>s+v,0);
+    return {party:p, buckets, total};
+  }).filter(r=>r.total>0.004);
+}
+function renderAgedReport(type, title, parties){
+  const rows = agedPartyRows(type, parties);
+  const totals = rows.reduce((acc,r)=>{
+    acc.current+=r.buckets.current; acc.b1+=r.buckets.b1; acc.b2+=r.buckets.b2; acc.b3+=r.buckets.b3; acc.b4+=r.buckets.b4; acc.total+=r.total;
+    return acc;
+  }, {current:0,b1:0,b2:0,b3:0,b4:0,total:0});
+  return `
+    <div class="topbar"><div><h2>${title}</h2><div class="sub">Outstanding balances by age, as of ${todayISO()}</div></div></div>
+    <div class="card">
+      ${rows.length===0?'<div class="empty">Nothing outstanding right now</div>':
+      `<table><thead><tr><th>${type==='customer'?'Customer':'Supplier'}</th><th class="num">Current</th><th class="num">1–30 days</th><th class="num">31–60 days</th><th class="num">61–90 days</th><th class="num">Above 90</th><th class="num">Total</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr><td>${r.party.name}</td><td class="num">${fmt(r.buckets.current)}</td><td class="num">${fmt(r.buckets.b1)}</td><td class="num">${fmt(r.buckets.b2)}</td><td class="num">${fmt(r.buckets.b3)}</td><td class="num">${fmt(r.buckets.b4)}</td><td class="num">${fmt(r.total)}</td></tr>`).join('')}
+      </tbody>
+      <tfoot><tr style="font-weight:800; border-top:2px solid var(--ink);">
+        <td>Total</td><td class="num">${fmt(totals.current)}</td><td class="num">${fmt(totals.b1)}</td><td class="num">${fmt(totals.b2)}</td><td class="num">${fmt(totals.b3)}</td><td class="num">${fmt(totals.b4)}</td><td class="num">${fmt(totals.total)}</td>
+      </tr></tfoot>
+      </table>`}
+    </div>
+  `;
+}
+function renderAgedReceivable(){ return renderAgedReport('customer', 'Aged Receivable', state.customers); }
+function renderAgedPayable(){ return renderAgedReport('supplier', 'Aged Payable', state.suppliers); }
+
+/* ============================= BACKUP / EXPORT ============================= */
+/* ============================= USERS ============================= */
+let showNewUserForm = false;
+function toggleNewUserForm(){ showNewUserForm = !showNewUserForm; render(); }
+function generateTempPassword(){
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  let pass = '';
+  for(let i=0;i<10;i++) pass += chars[Math.floor(Math.random()*chars.length)];
+  return pass;
+}
+let userEditingId = null;
+function renderUsers(){
+  return `
+    <div class="topbar">
+      <div><h2>Users</h2><div class="sub">People who can access this workspace</div></div>
+      <div style="display:flex; gap:8px;">
+        <button class="secondary" onclick="exportUsersExcel()">⬇ Export Excel</button>
+        <button onclick="toggleNewUserForm()">${showNewUserForm?'Cancel':'+ New'}</button>
+      </div>
+    </div>
+    ${showNewUserForm?`
+    <div class="card">
+      <h3>Invite a new user</h3>
+      <div class="row">
+        <div class="field"><label>Name</label><input id="user-name" placeholder="e.g. Sara Ahmed"></div>
+        <div class="field"><label>Email Address</label><input id="user-email" type="email" placeholder="e.g. sara@company.com"></div>
+        <div class="field"><label>Access rights</label>
+          <select id="user-role"><option value="User">User</option><option value="Administrator">Administrator</option></select>
+        </div>
+        <div class="field" style="display:flex; align-items:flex-end;"><button onclick="addUser()">Send invite</button></div>
+      </div>
+      <div class="hint" style="margin-top:8px;">A temporary password will be emailed to them — this is simulated in this demo; no real email is sent.</div>
+    </div>`:''}
+    <div class="card">
+      <h3>Users (${state.users.length})</h3>
+      ${state.users.length===0?'<div class="empty">No users yet — invite one to get started</div>':
+      `<table><thead><tr><th>Name</th><th>Email Address</th><th>Latest Authentication</th><th>Status</th><th>Access Rights</th><th></th></tr></thead><tbody>
+      ${state.users.map(u=>{
+        if(userEditingId===u.id){
+          return `<tr>
+            <td><input id="user-edit-name-${u.id}" value="${u.name}"></td>
+            <td><input id="user-edit-email-${u.id}" type="email" class="mono" value="${u.email}"></td>
+            <td>${u.lastAuth || 'Never'}</td>
+            <td><span class="badge ${u.status==='Confirmed'?'sale':'purchase'}">${u.status}</span></td>
+            <td>
+              <select id="user-edit-role-${u.id}">
+                <option value="User" ${u.role==='User'?'selected':''}>User</option>
+                <option value="Administrator" ${u.role==='Administrator'?'selected':''}>Administrator</option>
+              </select>
+            </td>
+            <td style="white-space:nowrap;"><button class="small" onclick="saveEditedUser('${u.id}')">Save</button> <button class="small secondary" onclick="cancelEditUser()">Cancel</button></td>
+          </tr>`;
+        }
+        return `<tr><td>${u.name}</td><td class="mono">${u.email}</td><td>${u.lastAuth || 'Never'}</td>
+      <td><span class="badge ${u.status==='Confirmed'?'sale':'purchase'}">${u.status}</span></td>
+      <td>${u.role}</td>
+      <td style="white-space:nowrap;"><button class="small secondary" onclick="startEditUser('${u.id}')">Edit</button>
+      <button class="small secondary" onclick="resetUserPassword('${u.id}')">Reset Password</button>
+      <button class="small danger" onclick="deleteUser('${u.id}')">Delete</button></td></tr>`;
+      }).join('')}
+      </tbody></table>`}
+    </div>
+  `;
+}
+function renderUsersInPlace(){ document.getElementById('view').innerHTML = renderUsers(); }
+function addUser(){
+  const name = document.getElementById('user-name').value.trim();
+  const email = document.getElementById('user-email').value.trim();
+  const role = document.getElementById('user-role').value;
+  if(!name || !email){ toast('Please enter both a name and an email address'); return; }
+  if(state.users.some(u=>u.email.toLowerCase()===email.toLowerCase())){ toast('A user with this email already exists'); return; }
+  generateTempPassword(); // a real backend would email this; this demo has none to send it from
+  state.users.push({id: uid('U','user'), name, email, role, status:'Pending', lastAuth:null});
+  showNewUserForm = false;
+  saveState();
+  toast(`Invite sent to ${email} with a temporary password (simulated — no real email is sent from this demo)`);
+  render();
+}
+function startEditUser(id){ userEditingId = id; renderUsersInPlace(); }
+function cancelEditUser(){ userEditingId = null; renderUsersInPlace(); }
+function saveEditedUser(id){
+  const u = state.users.find(x=>x.id===id);
+  if(!u) return;
+  const name = document.getElementById('user-edit-name-'+id).value.trim();
+  const email = document.getElementById('user-edit-email-'+id).value.trim();
+  if(!name || !email){ toast('Please enter both a name and an email address'); return; }
+  if(state.users.some(x=>x.id!==id && x.email.toLowerCase()===email.toLowerCase())){ toast('A user with this email already exists'); return; }
+  u.name = name; u.email = email;
+  u.role = document.getElementById('user-edit-role-'+id).value;
+  userEditingId = null;
+  saveState(); toast('User updated'); render();
+}
+function resetUserPassword(id){
+  const u = state.users.find(x=>x.id===id);
+  if(!u) return;
+  generateTempPassword();
+  toast(`New password emailed to ${u.email} (simulated — no real email is sent from this demo)`);
+}
+function deleteUser(id){
+  state.users = state.users.filter(u=>u.id!==id);
+  saveState(); render();
+}
+function exportUsersExcel(){
+  const rows = [['Name','Email Address','Latest Authentication','Status','Access Rights']];
+  state.users.forEach(u=> rows.push([u.name, u.email, u.lastAuth||'Never', u.status, u.role]));
+  exportRowsToExcel(rows, 'Users', 'users-'+todayISO()+'.xlsx');
+}
+
+function renderBackup(){
+  return `
+    <div class="topbar"><div><h2>Settings</h2><div class="sub">Keep a copy of your data, or restore it later</div></div></div>
+    <div class="banner">Data auto-saves to this browser's local storage on this device. It stays put across visits as long as you keep using the same browser on this same device and don't clear its site data. It won't follow you to another browser, another device, or private/incognito mode — download a backup file below if you need that.</div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Full backup (JSON)</h3>
+        <p class="hint" style="margin-bottom:14px;">Downloads a file with everything (accounts, journal, inventory, customers, suppliers) so you can restore it on any device or browser.</p>
+        <button onclick="exportJSON()">⬇ Download backup</button>
+        <div style="margin-top:18px; padding-top:16px; border-top:1px dashed var(--line);">
+          <label>Restore from backup</label>
+          <input type="file" id="import-file" accept=".json" onchange="importJSONFile(this)">
+          <div class="hint">⚠ Importing will completely replace all current data.</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Export to Excel</h3>
+        <p class="hint" style="margin-bottom:14px;">Creates an Excel file with several sheets: trial balance, journal, customers, suppliers, inventory — good for sharing or printing.</p>
+        <button onclick="exportExcel()">⬇ Download Excel file</button>
+      </div>
+    </div>
+  `;
+}
+
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ledger-backup-' + todayISO() + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded');
+}
+
+function importJSONFile(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const imported = JSON.parse(e.target.result);
+      if(!imported.accounts || !imported.journal){ throw new Error('This file is not a valid backup'); }
+      state = imported;
+      saveState();
+      toast('Backup restored successfully');
+      goTo('dashboard');
+    }catch(err){
+      toast('Could not read file: ' + err.message);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function exportExcel(){
+  if(typeof XLSX !== 'undefined'){ buildAndDownloadExcel(); return; }
+  toast('Loading export tool...');
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  script.onload = function(){ buildAndDownloadExcel(); };
+  script.onerror = function(){ toast('Could not load the export tool — check your internet connection'); };
+  document.head.appendChild(script);
+}
+/* Generic single-sheet exporter used by the "Export Excel" button on individual
+   list pages (Chart of Accounts, Journals, Users, ...) — reuses the same
+   lazy-loaded XLSX library as the full multi-sheet backup export below. */
+function exportRowsToExcel(rows, sheetName, filename){
+  if(typeof XLSX !== 'undefined'){ downloadExcelRows(rows, sheetName, filename); return; }
+  toast('Loading export tool...');
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  script.onload = function(){ downloadExcelRows(rows, sheetName, filename); };
+  script.onerror = function(){ toast('Could not load the export tool — check your internet connection'); };
+  document.head.appendChild(script);
+}
+function downloadExcelRows(rows, sheetName, filename){
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), sheetName);
+  XLSX.writeFile(wb, filename);
+  toast('Excel file downloaded');
+}
+
+function buildAndDownloadExcel(){
+  const wb = XLSX.utils.book_new();
+
+  // Trial balance
+  const tbRows = [['Code','Account Name','Type','Debit','Credit']];
+  let totalD=0, totalC=0;
+  state.accounts.forEach(a=>{
+    const t = accountTotals(a.code);
+    const normal = ['asset','expense'].includes(a.type) ? t.debit-t.credit : t.credit-t.debit;
+    const debitCol = normal>=0 && ['asset','expense'].includes(a.type) ? normal : (normal<0 && !['asset','expense'].includes(a.type) ? -normal : 0);
+    const creditCol = normal>=0 && !['asset','expense'].includes(a.type) ? normal : (normal<0 && ['asset','expense'].includes(a.type) ? -normal : 0);
+    if(debitCol||creditCol){ tbRows.push([a.code, a.name, typeLabel(a.type), debitCol||'', creditCol||'']); totalD+=debitCol; totalC+=creditCol; }
+  });
+  tbRows.push(['','Total','', totalD, totalC]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tbRows), 'Trial Balance');
+
+  // Journal
+  const jRows = [['Entry No.','Date','Description','Source','Account','Debit','Credit']];
+  state.journal.forEach(e=>{
+    e.lines.forEach(l=>{
+      jRows.push([e.id, e.date, e.desc + (e.reversed?' (reversed)':''), e.source, l.code+' - '+((accountByCode(l.code)||{}).name||''), l.debit||'', l.credit||'']);
+    });
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(jRows), 'Journal');
+
+  // Customers
+  const cRows = [['Name','Phone','Balance Due']];
+  state.customers.forEach(c=> cRows.push([c.name, c.phone||'', partyBalance('customer',c.id)]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cRows), 'Customers');
+
+  // Suppliers
+  const sRows = [['Name','Phone','Balance Due']];
+  state.suppliers.forEach(s=> sRows.push([s.name, s.phone||'', partyBalance('supplier',s.id)]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sRows), 'Suppliers');
+
+  // Inventory
+  const pRows = [['Name','Type','Qty','Cost','Price','Inventory Value']];
+  state.products.forEach(p=> pRows.push([p.name, p.kind==='product'?'Product':'Service', p.kind==='product'?p.qty:'', p.kind==='product'?p.cost:'', p.price, p.kind==='product'?p.qty*p.cost:'']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pRows), 'Inventory');
+
+  // Chart of Accounts
+  const acctRows = [['Code','Name','Type','Debit','Credit','Balance']];
+  state.accounts.forEach(a=>{
+    const t = accountTotals(a.code);
+    const normal = ['asset','expense'].includes(a.type) ? t.debit-t.credit : t.credit-t.debit;
+    acctRows.push([a.code, a.name, typeLabel(a.type), t.debit, t.credit, normal]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(acctRows), 'Chart of Accounts');
+
+  // Journals (configuration)
+  const jcRows = [['Name','Short Code','Type']];
+  state.journalsConfig.forEach(j=> jcRows.push([j.name, j.code, journalTypeLabel(j.type)]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(jcRows), 'Journals');
+
+  // Users
+  const uRows = [['Name','Email','Latest Authentication','Status','Access Rights']];
+  state.users.forEach(u=> uRows.push([u.name, u.email, u.lastAuth||'Never', u.status, u.role]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(uRows), 'Users');
+
+  XLSX.writeFile(wb, 'accounting-report-' + todayISO() + '.xlsx');
+  toast('Excel file downloaded');
+}
+
+/* ============================= INIT ============================= */
+try{
+  loadState();
+}catch(err){
+  showFatalError(err.stack || err.message);
+}
+</script>
+
+
+</body></html>
