@@ -347,47 +347,52 @@ const DEFAULT_STATE = {
 function newState(){ return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
 
 function loadState(){
-  try{
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    state = raw ? JSON.parse(raw) : newState();
-    storageMode = 'localStorage';
-  }catch(e){
-    storageMode = 'memory';
-    state = newState();
-  }
-  // backward-compat: fill in any fields introduced after this state was first saved
-  if(!Array.isArray(state.journalsConfig)) state.journalsConfig = JSON.parse(JSON.stringify(DEFAULT_STATE.journalsConfig));
-  if(!Array.isArray(state.posSessions)) state.posSessions = [];
-  if(!Array.isArray(state.users)) state.users = [];
-  if(!Array.isArray(state.sales)) state.sales = [];
-  if(!Array.isArray(state.purchases)) state.purchases = [];
-  if(!Array.isArray(state.currencies)) state.currencies = JSON.parse(JSON.stringify(DEFAULT_STATE.currencies));
-  if(!state.companyCurrencyCode) state.companyCurrencyCode = state.currencies[0] ? state.currencies[0].code : null;
-  if(!state.journalSeq || typeof state.journalSeq!=='object') state.journalSeq = {};
-  // backward-compat: earlier saved states don't track which journal entry
-  // recorded a product's opening inventory balance, which editing needs in order
-  // to keep the Inventory account in sync — recover it by its description.
-  state.products.forEach(p=>{
-    if(p.kind==='product' && p.openingEntryId===undefined){
-      const match = state.journal.find(e=>e.source==='manual' && e.desc==='Opening inventory balance: '+p.name);
-      p.openingEntryId = match ? match.id : null;
+  db.ref('ledger_state').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      state = data;
+    } else {
+      state = newState();
+      saveState();
     }
+
+    storageMode = 'firebase';
+
+    // backward-compat: fill in any fields introduced after this state was first saved
+    if(!Array.isArray(state.journalsConfig)) state.journalsConfig = JSON.parse(JSON.stringify(DEFAULT_STATE.journalsConfig));
+    if(!Array.isArray(state.posSessions)) state.posSessions = [];
+    if(!Array.isArray(state.users)) state.users = [];
+    if(!Array.isArray(state.sales)) state.sales = [];
+    if(!Array.isArray(state.purchases)) state.purchases = [];
+    if(!Array.isArray(state.currencies)) state.currencies = JSON.parse(JSON.stringify(DEFAULT_STATE.currencies));
+    if(!state.companyCurrencyCode) state.companyCurrencyCode = state.currencies[0] ? state.currencies[0].code : null;
+    if(!state.journalSeq || typeof state.journalSeq!=='object') state.journalSeq = {};
+
+    // recover opening inventory entry match
+    if(Array.isArray(state.products)){
+      state.products.forEach(p=>{
+        if(p.kind==='product' && p.openingEntryId===undefined){
+          const match = (state.journal || []).find(e=>e.source==='manual' && e.desc==='Opening inventory balance: '+p.name);
+          p.openingEntryId = match ? match.id : null;
+        }
+      });
+    }
+
+    if(Array.isArray(state.accounts)) sortAccounts(); // keep the chart of accounts ordered by code
+
+    // self-repair duplicate journal ids
+    (function dedupeJournalIds(){
+      const seen = new Set();
+      if(Array.isArray(state.journalsConfig)){
+        state.journalsConfig.forEach(j=>{
+          if(seen.has(j.id)) j.id = nextJournalConfigId();
+          seen.add(j.id);
+        });
+      }
+    })();
+
+    render();
   });
-  if(Array.isArray(state.accounts)) sortAccounts(); // keep the chart of accounts ordered by code
-  // self-repair: a custom journal (e.g. "CIBRV") could previously be assigned the
-  // same internal id as one of the five built-in journals (both "J-0001"), which
-  // silently made entries post through — and take the serial of — the built-in
-  // journal instead of the one actually selected. Give any later duplicate its
-  // own fresh id; the first occurrence (and anything already posted against that
-  // id) is left untouched.
-  (function dedupeJournalIds(){
-    const seen = new Set();
-    state.journalsConfig.forEach(j=>{
-      if(seen.has(j.id)) j.id = nextJournalConfigId();
-      seen.add(j.id);
-    });
-  })();
-  render();
 }
 /* Generates a journal id that's guaranteed unique against whatever is currently
    in state.journalsConfig — deliberately NOT based on the shared uid() counter,
@@ -401,16 +406,16 @@ function nextJournalConfigId(){
   });
   return 'J-' + String(maxN+1).padStart(4,'0');
 }
+
 function saveState(){
-  try{
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    storageMode = 'localStorage';
-  }catch(e){
-    storageMode = 'memory';
-    console.error('storage error', e);
+  if(db && state){
+    db.ref('ledger_state').set(state, (error) => {
+      if(error){
+        console.error('Firebase save error:', error);
+      }
+    });
   }
 }
-
 /* ============================= HELPERS ============================= */
 function fmt(n){
   n = Number(n)||0;
