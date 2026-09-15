@@ -2372,8 +2372,7 @@ function renderDashboard(){
 function renderAccountingDashboard(){
   return `
     <div class="grid g2">
-      ${state.journalsConfig.length===0?'<div class="card"><div class="empty">No journals yet — add one from Configuration → Journals</div></div>':
-      state.journalsConfig.map(j=>renderJournalDashboardCard(j)).join('')}
+${(state?.journalsConfig || []).length === 0 ? '<div class="card"><div class="empty">No journals yet — add one from Configuration → Journals</div></div>' :      state.journalsConfig.map(j=>renderJournalDashboardCard(j)).join('')}
     </div>
   `;
 }
