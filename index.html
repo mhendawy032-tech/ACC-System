@@ -506,25 +506,25 @@
 <div id="auth-gate">
   <div class="auth-box" id="auth-form-panel">
     <h2>Accounting System</h2>
-    <div class="sub">سجّل دخولك بحساب شركتك.</div>
-    <input type="text" id="auth-email" placeholder="اسم الشركة (أو إيميلك لو حسابك قديم)" autocomplete="username" onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('auth-password').focus(); }">
-    <input type="password" id="auth-password" placeholder="الباسورد" autocomplete="current-password" onkeydown="if(event.key==='Enter'){ event.preventDefault(); authSignIn(); }">
+    <div class="sub">Sign in to your company account.</div>
+    <input type="text" id="auth-email" placeholder="Company name (or your email if you have an older account)" autocomplete="username" onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('auth-password').focus(); }">
+    <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter'){ event.preventDefault(); authSignIn(); }">
     <div style="display:flex; align-items:center; gap:6px; margin:6px 0 2px; font-size:12.5px; color:var(--text-soft);">
       <input type="checkbox" id="auth-remember-me" style="width:auto; margin:0;">
-      <label for="auth-remember-me" style="cursor:pointer; margin:0;">تذكرني</label>
+      <label for="auth-remember-me" style="cursor:pointer; margin:0;">Remember me</label>
     </div>
-    <button class="btn-primary" onclick="authSignIn()">تسجيل الدخول</button>
-    <div style="text-align:center; margin-top:10px; font-size:12px; color:var(--text-soft);">نسيت الباسورد أو عايز حساب شركة جديد؟ تواصل مع مسؤول النظام.</div>
+    <button class="btn-primary" onclick="authSignIn()">Sign In</button>
+    <div style="text-align:center; margin-top:10px; font-size:12px; color:var(--text-soft);">Forgot your password, or need a new company account? Contact the system administrator.</div>
     <div id="auth-error"></div>
     <div id="auth-status"></div>
   </div>
   <div class="auth-box" id="auth-admin-panel" style="display:none;">
-    <h2>إضافة شركة جديدة</h2>
-    <div class="sub">اللوحة دي مخفية عن باقي المستخدمين — بتظهر بس لما تفتح الرابط الخاص بيك.</div>
-    <input type="text" id="admin-new-company-name" placeholder="اسم الشركة (بالإنجليزي أو أرقام، بدون مسافات)" autocomplete="off">
-    <input type="password" id="admin-new-company-password" placeholder="باسورد الشركة (6 أحرف على الأقل)" autocomplete="new-password">
-    <button class="btn-primary" onclick="adminCreateCompany()">إنشاء حساب الشركة</button>
-    <div style="text-align:center; margin-top:10px;"><a href="#" onclick="showLoginPanel(); return false;" style="font-size:12px; color:var(--teal);">رجوع لتسجيل الدخول</a></div>
+    <h2>Add New Company</h2>
+    <div class="sub">This panel is hidden from everyone else — it only shows up when you open your private link.</div>
+    <input type="text" id="admin-new-company-name" placeholder="Company name (letters/numbers, no spaces)" autocomplete="off">
+    <input type="password" id="admin-new-company-password" placeholder="Company password (min 6 characters)" autocomplete="new-password">
+    <button class="btn-primary" onclick="adminCreateCompany()">Create Company Account</button>
+    <div style="text-align:center; margin-top:10px;"><a href="#" onclick="showLoginPanel(); return false;" style="font-size:12px; color:var(--teal);">Back to sign in</a></div>
     <div id="admin-error"></div>
     <div id="admin-status"></div>
   </div>
@@ -917,10 +917,10 @@ function companyNameToLoginEmail(name){
 }
 
 function validateAuthInputs(name, password){
-  if(!name){ setAuthError('من فضلك اكتب اسم الشركة.'); return false; }
-  if(!isValidEmailFormat(name) && !isValidCompanyName(name)){ setAuthError('اسم الشركة لازم يكون حروف إنجليزي أو أرقام بس (من غير رموز غريبة)، من 3 لـ 40 حرف.'); return false; }
-  if(!password){ setAuthError('من فضلك اكتب الباسورد.'); return false; }
-  if(password.length < 6){ setAuthError('الباسورد لازم يكون 6 حروف على الأقل.'); return false; }
+  if(!name){ setAuthError('Please enter your company name.'); return false; }
+  if(!isValidEmailFormat(name) && !isValidCompanyName(name)){ setAuthError('Company name must be letters/numbers only (no special symbols), 3 to 40 characters.'); return false; }
+  if(!password){ setAuthError('Please enter your password.'); return false; }
+  if(password.length < 6){ setAuthError('Password must be at least 6 characters.'); return false; }
   return true;
 }
 /* Accounts created before this update sign in with a real email; accounts
@@ -963,13 +963,13 @@ function authSignIn(){
   const password = document.getElementById('auth-password').value;
   if(!validateAuthInputs(name, password)) return;
   const remember = document.getElementById('auth-remember-me').checked;
-  setAuthStatus('جاري تسجيل الدخول…');
+  setAuthStatus('Signing in…');
   auth.signInWithEmailAndPassword(resolveLoginEmail(name), password).then(function(){
     if(remember){ saveRememberedLogin(name, password); } else { clearRememberedLogin(); }
   }).catch(function(err){
     setAuthStatus('');
     if(err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential'){
-      setAuthError('اسم الشركة أو الباسورد غلط.');
+      setAuthError('Incorrect company name or password.');
     } else {
       setAuthError(err.message);
     }
@@ -1001,16 +1001,16 @@ function adminCreateCompany(){
   setAdminError(''); setAdminStatus('');
   const name = document.getElementById('admin-new-company-name').value.trim();
   const password = document.getElementById('admin-new-company-password').value;
-  if(!name || !isValidCompanyName(name)){ setAdminError('اسم الشركة لازم يكون حروف إنجليزي أو أرقام بس، من 3 لـ 40 حرف.'); return; }
-  if(!password || password.length < 6){ setAdminError('الباسورد لازم يكون 6 حروف على الأقل.'); return; }
-  setAdminStatus('جاري إنشاء حساب الشركة…');
+  if(!name || !isValidCompanyName(name)){ setAdminError('Company name must be letters/numbers only, 3 to 40 characters.'); return; }
+  if(!password || password.length < 6){ setAdminError('Password must be at least 6 characters.'); return; }
+  setAdminStatus('Creating the company account…');
   auth.createUserWithEmailAndPassword(companyNameToLoginEmail(name), password).then(function(){
-    setAdminStatus('اتعمل الحساب بنجاح. سجّل خروج دلوقتي وسلّم الشركة اسمها وباسوردها.');
+    setAdminStatus('Account created. Sign out now and give the company its name and password.');
     document.getElementById('admin-new-company-name').value = '';
     document.getElementById('admin-new-company-password').value = '';
   }).catch(function(err){
     setAdminStatus('');
-    setAdminError(err.code === 'auth/email-already-in-use' ? 'في شركة متسجلة بنفس الاسم ده قبل كده.' : err.message);
+    setAdminError(err.code === 'auth/email-already-in-use' ? 'A company is already registered with that name.' : err.message);
   });
 }
 
