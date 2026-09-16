@@ -506,17 +506,31 @@
 <div id="auth-gate">
   <div class="auth-box" id="auth-form-panel">
     <h2>Accounting System</h2>
-    <div class="sub">Sign in to your company account, or create a new one — each account has its own separate, private data.</div>
-    <input type="email" id="auth-email" placeholder="Email" autocomplete="username">
-    <input type="password" id="auth-password" placeholder="Password (min 6 characters)" autocomplete="current-password">
-    <button class="btn-primary" onclick="authSignIn()">Sign In</button>
-    <button class="btn-secondary" onclick="authSignUp()">Create New Company Account</button>
-    <div style="text-align:center; margin-top:10px;"><a href="#" onclick="authForgotPassword(); return false;" style="font-size:12px; color:var(--teal);">Forgot password?</a></div>
+    <div class="sub">سجّل دخولك بحساب شركتك.</div>
+    <input type="text" id="auth-email" placeholder="اسم الشركة (بالإنجليزي أو أرقام)" autocomplete="username" onkeydown="if(event.key==='Enter'){ event.preventDefault(); document.getElementById('auth-password').focus(); }">
+    <input type="password" id="auth-password" placeholder="الباسورد" autocomplete="current-password" onkeydown="if(event.key==='Enter'){ event.preventDefault(); authSignIn(); }">
+    <div style="display:flex; align-items:center; gap:6px; margin:6px 0 2px; font-size:12.5px; color:var(--text-soft);">
+      <input type="checkbox" id="auth-remember-me" style="width:auto; margin:0;">
+      <label for="auth-remember-me" style="cursor:pointer; margin:0;">تذكرني</label>
+    </div>
+    <button class="btn-primary" onclick="authSignIn()">تسجيل الدخول</button>
+    <div style="text-align:center; margin-top:10px; font-size:12px; color:var(--text-soft);">نسيت الباسورد أو عايز حساب شركة جديد؟ تواصل مع مسؤول النظام.</div>
     <div id="auth-error"></div>
     <div id="auth-status"></div>
   </div>
+  <div class="auth-box" id="auth-admin-panel" style="display:none;">
+    <h2>إضافة شركة جديدة</h2>
+    <div class="sub">اللوحة دي مخفية عن باقي المستخدمين — بتظهر بس لما تفتح الرابط الخاص بيك.</div>
+    <input type="text" id="admin-new-company-name" placeholder="اسم الشركة (بالإنجليزي أو أرقام، بدون مسافات)" autocomplete="off">
+    <input type="password" id="admin-new-company-password" placeholder="باسورد الشركة (6 أحرف على الأقل)" autocomplete="new-password">
+    <button class="btn-primary" onclick="adminCreateCompany()">إنشاء حساب الشركة</button>
+    <div style="text-align:center; margin-top:10px;"><a href="#" onclick="showLoginPanel(); return false;" style="font-size:12px; color:var(--teal);">رجوع لتسجيل الدخول</a></div>
+    <div id="admin-error"></div>
+    <div id="admin-status"></div>
+  </div>
   <div class="auth-box" id="auth-loading-panel" style="display:none; text-align:center;">
     <div class="auth-spinner"></div>
+
     <h2 style="margin-top:14px;">Accounting System</h2>
     <div class="sub" id="auth-loading-text">Loading your data…</div>
   </div>
@@ -884,56 +898,124 @@ function isValidEmailFormat(email){
   // "@", or a missing domain before bothering Firebase with the request.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-function validateAuthInputs(email, password){
-  if(!email){ setAuthError('Please enter your email address.'); return false; }
-  if(!isValidEmailFormat(email)){ setAuthError('That doesn\'t look like a valid email — check for a missing "@" or domain (e.g. name@example.com), and remove any extra spaces.'); return false; }
-  if(!password){ setAuthError('Please enter your password.'); return false; }
-  if(password.length < 6){ setAuthError('Password must be at least 6 characters.'); return false; }
+
+/* ---- Company name -> Firebase login -----------------------------------
+   Firebase's email/password auth needs something shaped like an email, but
+   companies sign in with a short name/code instead of a real email address.
+   companyNameToLoginEmail() turns "Al Noor Trading" into
+   "al-noor-trading@accounting-system.local" behind the scenes; nothing about
+   this touches Firestore, so the existing companies/{uid} data model (and
+   the fact that everyone loads this exact same file) is unchanged. ------- */
+const COMPANY_LOGIN_DOMAIN = '@accounting-system.local';
+function isValidCompanyName(name){
+  // English letters, numbers, spaces, dashes, underscores, dots — 3 to 40 chars.
+  return /^[A-Za-z0-9 ._-]{3,40}$/.test(name);
+}
+function companyNameToLoginEmail(name){
+  const slug = name.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9._-]/g,'');
+  return slug + COMPANY_LOGIN_DOMAIN;
+}
+
+function validateAuthInputs(name, password){
+  if(!name){ setAuthError('من فضلك اكتب اسم الشركة.'); return false; }
+  if(!isValidCompanyName(name)){ setAuthError('اسم الشركة لازم يكون حروف إنجليزي أو أرقام بس (من غير رموز غريبة)، من 3 لـ 40 حرف.'); return false; }
+  if(!password){ setAuthError('من فضلك اكتب الباسورد.'); return false; }
+  if(password.length < 6){ setAuthError('الباسورد لازم يكون 6 حروف على الأقل.'); return false; }
   return true;
+}
+
+/* ---- Remember me: keep the last-used company name + password in this
+   browser only, so returning users don't have to retype them every time. */
+function saveRememberedLogin(name, password){
+  try{
+    localStorage.setItem('rememberedAuthEmail', name);
+    localStorage.setItem('rememberedAuthPassword', password);
+  }catch(e){ /* localStorage unavailable — ignore, not critical */ }
+}
+function clearRememberedLogin(){
+  try{
+    localStorage.removeItem('rememberedAuthEmail');
+    localStorage.removeItem('rememberedAuthPassword');
+  }catch(e){}
+}
+function loadRememberedLogin(){
+  try{
+    const name = localStorage.getItem('rememberedAuthEmail');
+    const password = localStorage.getItem('rememberedAuthPassword');
+    if(name && password){
+      document.getElementById('auth-email').value = name;
+      document.getElementById('auth-password').value = password;
+      document.getElementById('auth-remember-me').checked = true;
+    }
+  }catch(e){}
 }
 
 function authSignIn(){
   setAuthError('');
-  const email = document.getElementById('auth-email').value.trim();
+  const name = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
-  if(!validateAuthInputs(email, password)) return;
-  setAuthStatus('Signing in…');
-  auth.signInWithEmailAndPassword(email, password).catch(function(err){
-    setAuthStatus(''); setAuthError(err.message);
-  });
-}
-function authSignUp(){
-  setAuthError('');
-  const email = document.getElementById('auth-email').value.trim();
-  const password = document.getElementById('auth-password').value;
-  if(!validateAuthInputs(email, password)) return;
-  setAuthStatus('Creating your company account…');
-  auth.createUserWithEmailAndPassword(email, password).catch(function(err){
-    setAuthStatus(''); setAuthError(err.message);
+  if(!validateAuthInputs(name, password)) return;
+  const remember = document.getElementById('auth-remember-me').checked;
+  setAuthStatus('جاري تسجيل الدخول…');
+  auth.signInWithEmailAndPassword(companyNameToLoginEmail(name), password).then(function(){
+    if(remember){ saveRememberedLogin(name, password); } else { clearRememberedLogin(); }
+  }).catch(function(err){
+    setAuthStatus('');
+    if(err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential'){
+      setAuthError('اسم الشركة أو الباسورد غلط.');
+    } else {
+      setAuthError(err.message);
+    }
   });
 }
 function authSignOut(){
   if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
   auth.signOut();
 }
-function authForgotPassword(){
-  setAuthError('');
-  const email = document.getElementById('auth-email').value.trim();
-  if(!email || !isValidEmailFormat(email)){ setAuthError('Type your email above first, then click "Forgot password?" again.'); return; }
-  setAuthStatus('Sending reset email…');
-  auth.sendPasswordResetEmail(email).then(function(){
-    setAuthStatus('Reset email sent — check your inbox (and spam folder).');
+
+/* ---- Hidden admin panel: only reachable via a secret link
+   (index.html?admin=KEY), never shown from the normal login screen. Change
+   ADMIN_SECRET_KEY below to your own secret before sharing the app. ------ */
+const ADMIN_SECRET_KEY = 'mhendawy-admin';
+function isAdminUrl(){
+  return new URLSearchParams(window.location.search).get('admin') === ADMIN_SECRET_KEY;
+}
+function showLoginPanel(){
+  document.getElementById('auth-admin-panel').style.display = 'none';
+  document.getElementById('auth-form-panel').style.display = 'block';
+}
+function showAdminPanel(){
+  document.getElementById('auth-form-panel').style.display = 'none';
+  document.getElementById('auth-admin-panel').style.display = 'block';
+}
+function setAdminStatus(msg){ const el = document.getElementById('admin-status'); if(el) el.textContent = msg; }
+function setAdminError(msg){ const el = document.getElementById('admin-error'); if(el) el.textContent = msg; }
+function adminCreateCompany(){
+  setAdminError(''); setAdminStatus('');
+  const name = document.getElementById('admin-new-company-name').value.trim();
+  const password = document.getElementById('admin-new-company-password').value;
+  if(!name || !isValidCompanyName(name)){ setAdminError('اسم الشركة لازم يكون حروف إنجليزي أو أرقام بس، من 3 لـ 40 حرف.'); return; }
+  if(!password || password.length < 6){ setAdminError('الباسورد لازم يكون 6 حروف على الأقل.'); return; }
+  setAdminStatus('جاري إنشاء حساب الشركة…');
+  auth.createUserWithEmailAndPassword(companyNameToLoginEmail(name), password).then(function(){
+    setAdminStatus('اتعمل الحساب بنجاح. سجّل خروج دلوقتي وسلّم الشركة اسمها وباسوردها.');
+    document.getElementById('admin-new-company-name').value = '';
+    document.getElementById('admin-new-company-password').value = '';
   }).catch(function(err){
-    setAuthStatus(''); setAuthError(err.message);
+    setAdminStatus('');
+    setAdminError(err.code === 'auth/email-already-in-use' ? 'في شركة متسجلة بنفس الاسم ده قبل كده.' : err.message);
   });
 }
 
+function companyLoginEmailToName(email){
+  return (email || '').replace(COMPANY_LOGIN_DOMAIN, '').replace(/-/g,' ');
+}
 function renderAccountFoot(){
   const el = document.getElementById('sidebar-account-foot');
   if(!el) return;
   const user = auth.currentUser;
   el.innerHTML = user
-    ? '<div class="acct-email">' + user.email + '</div><button onclick="authSignOut()">Sign out</button>'
+    ? '<div class="acct-email">' + companyLoginEmailToName(user.email) + '</div><button onclick="authSignOut()">Sign out</button>'
     : '';
 }
 
@@ -941,6 +1023,7 @@ auth.onAuthStateChanged(function(user){
   const gate = document.getElementById('auth-gate');
   const appEl = document.getElementById('app');
   const formPanel = document.getElementById('auth-form-panel');
+  const adminPanel = document.getElementById('auth-admin-panel');
   const loadingPanel = document.getElementById('auth-loading-panel');
   if(user){
     currentUid = user.uid;
@@ -948,6 +1031,7 @@ auth.onAuthStateChanged(function(user){
     // first Firestore snapshot actually arrives, instead of revealing an
     // empty app shell while the data is still in transit.
     formPanel.style.display = 'none';
+    adminPanel.style.display = 'none';
     loadingPanel.style.display = 'block';
     gate.style.display = 'flex';
     appEl.style.display = 'none';
@@ -962,10 +1046,12 @@ auth.onAuthStateChanged(function(user){
     state = null;
     appEl.style.display = 'none';
     loadingPanel.style.display = 'none';
-    formPanel.style.display = 'block';
+    if(isAdminUrl()){ showAdminPanel(); } else { showLoginPanel(); }
     gate.style.display = 'flex';
     document.getElementById('auth-email').value = '';
     document.getElementById('auth-password').value = '';
+    document.getElementById('auth-remember-me').checked = false;
+    loadRememberedLogin();
     setAuthStatus(''); setAuthError('');
   }
 });
