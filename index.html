@@ -498,6 +498,17 @@
   // Offline cache: lets the app keep working (read + queue writes) if the
   // connection drops, then syncs automatically once it's back.
   db.enablePersistence({synchronizeTabs:true}).catch(function(e){ console.warn('Firestore offline persistence not enabled:', e.code); });
+  // A second, independent Firebase app instance — used only to create a new
+  // team-member's Auth account. Auth SDKs always sign in as whichever
+  // account they just created, so doing this on the SAME `auth` instance as
+  // the company would kick the company out of its own session; a separate
+  // instance keeps the company signed in throughout.
+  function getSecondaryAuth(){
+    let secApp;
+    try{ secApp = firebase.app('Secondary'); }
+    catch(e){ secApp = firebase.initializeApp(firebaseConfig, 'Secondary'); }
+    return secApp.auth();
+  }
 </script>
 </head>
 <body>
@@ -527,6 +538,15 @@
     <div style="text-align:center; margin-top:10px;"><a href="#" onclick="showLoginPanel(); return false;" style="font-size:12px; color:var(--teal);">Back to sign in</a></div>
     <div id="admin-error"></div>
     <div id="admin-status"></div>
+  </div>
+  <div class="auth-box" id="auth-setpassword-panel" style="display:none;">
+    <h2>Set Your Password</h2>
+    <div class="sub" id="setpw-for-email"></div>
+    <input type="password" id="setpw-new" placeholder="New password (min 6 characters)" autocomplete="new-password">
+    <input type="password" id="setpw-confirm" placeholder="Confirm new password" autocomplete="new-password" onkeydown="if(event.key==='Enter'){ event.preventDefault(); confirmSetPassword(); }">
+    <button class="btn-primary" onclick="confirmSetPassword()">Save Password</button>
+    <div id="setpw-error"></div>
+    <div id="setpw-status"></div>
   </div>
   <div class="auth-box" id="auth-loading-panel" style="display:none; text-align:center;">
     <div class="auth-spinner"></div>
@@ -655,6 +675,7 @@ function applyBackwardCompatAndRender(){
   if(!Array.isArray(state.journalsConfig)) state.journalsConfig = JSON.parse(JSON.stringify(DEFAULT_STATE.journalsConfig));
   if(!Array.isArray(state.posSessions)) state.posSessions = [];
   if(!Array.isArray(state.users)) state.users = [];
+  if(!Array.isArray(state.allowedUids)) state.allowedUids = [];
   if(!Array.isArray(state.sales)) state.sales = [];
   if(!Array.isArray(state.purchases)) state.purchases = [];
   if(!Array.isArray(state.purchaseQuotes)) state.purchaseQuotes = [];
@@ -876,6 +897,9 @@ function saveState(){
   saveDebounceTimer = setTimeout(function(){
     companyDocRef().set({
       json: JSON.stringify(state),
+      // Mirrored at the top level (outside the json blob) so Firestore
+      // security rules can check it directly — rules can't parse JSON strings.
+      allowedUids: Array.isArray(state.allowedUids) ? state.allowedUids : [],
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(function(err){
       console.error('Firestore save error', err);
@@ -989,11 +1013,67 @@ function isAdminUrl(){
 }
 function showLoginPanel(){
   document.getElementById('auth-admin-panel').style.display = 'none';
+  document.getElementById('auth-setpassword-panel').style.display = 'none';
   document.getElementById('auth-form-panel').style.display = 'block';
 }
 function showAdminPanel(){
   document.getElementById('auth-form-panel').style.display = 'none';
+  document.getElementById('auth-setpassword-panel').style.display = 'none';
   document.getElementById('auth-admin-panel').style.display = 'block';
+}
+
+/* ---- Set-password link handling ---------------------------------------
+   Both "invite a new team member" and "forgot password" reuse Firebase's
+   built-in password-reset email, since it's free and needs no backend.
+   The email links back to THIS page with ?mode=resetPassword&oobCode=...
+   (set that as the custom action URL under Firebase Console > Authentication
+   > Templates, so people land here instead of on Firebase's own page) —
+   this code recognizes that link and shows a real "new password + confirm"
+   form instead of the normal sign-in panel. ------------------------------- */
+let isHandlingPasswordReset = false;
+let pendingResetOobCode = null;
+function checkForPasswordResetLink(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('mode') !== 'resetPassword' || !params.get('oobCode')) return false;
+  pendingResetOobCode = params.get('oobCode');
+  isHandlingPasswordReset = true;
+  auth.verifyPasswordResetCode(pendingResetOobCode).then(function(email){
+    document.getElementById('setpw-for-email').textContent = 'For ' + email;
+    document.getElementById('auth-gate').style.display = 'flex';
+    document.getElementById('auth-form-panel').style.display = 'none';
+    document.getElementById('auth-admin-panel').style.display = 'none';
+    document.getElementById('auth-loading-panel').style.display = 'none';
+    document.getElementById('auth-setpassword-panel').style.display = 'block';
+  }).catch(function(err){
+    isHandlingPasswordReset = false;
+    showLoginPanel();
+    document.getElementById('auth-gate').style.display = 'flex';
+    document.getElementById('auth-loading-panel').style.display = 'none';
+    setAuthError('This link has expired or was already used — please ask your administrator to resend it.');
+  });
+  return true;
+}
+function setSetpwError(msg){ const el = document.getElementById('setpw-error'); if(el) el.textContent = msg; }
+function setSetpwStatus(msg){ const el = document.getElementById('setpw-status'); if(el) el.textContent = msg; }
+function confirmSetPassword(){
+  setSetpwError(''); setSetpwStatus('');
+  const pass = document.getElementById('setpw-new').value;
+  const confirm = document.getElementById('setpw-confirm').value;
+  if(!pass || pass.length < 6){ setSetpwError('Password must be at least 6 characters.'); return; }
+  if(pass !== confirm){ setSetpwError('The two passwords don\'t match.'); return; }
+  setSetpwStatus('Saving…');
+  auth.confirmPasswordReset(pendingResetOobCode, pass).then(function(){
+    isHandlingPasswordReset = false;
+    setSetpwStatus('');
+    // Drop the mode/oobCode query params so refreshing doesn't reopen this form.
+    window.history.replaceState({}, document.title, window.location.pathname);
+    toast('Password saved — you can sign in now.');
+    showLoginPanel();
+    document.getElementById('auth-gate').style.display = 'flex';
+  }).catch(function(err){
+    setSetpwStatus('');
+    setSetpwError(err.message);
+  });
 }
 function setAdminStatus(msg){ const el = document.getElementById('admin-status'); if(el) el.textContent = msg; }
 function setAdminError(msg){ const el = document.getElementById('admin-error'); if(el) el.textContent = msg; }
@@ -1028,26 +1108,52 @@ function renderAccountFoot(){
     : '';
 }
 
+checkForPasswordResetLink();
 auth.onAuthStateChanged(function(user){
   const gate = document.getElementById('auth-gate');
   const appEl = document.getElementById('app');
   const formPanel = document.getElementById('auth-form-panel');
   const adminPanel = document.getElementById('auth-admin-panel');
   const loadingPanel = document.getElementById('auth-loading-panel');
+  if(isHandlingPasswordReset) return; // let checkForPasswordResetLink() own the screen for now
   if(user){
-    currentUid = user.uid;
-    // Keep the gate up — just switch it to a loading spinner — until the
-    // first Firestore snapshot actually arrives, instead of revealing an
-    // empty app shell while the data is still in transit.
+    const signedInUid = user.uid;
+    // Figure out which company doc this login should load: either this
+    // account IS a company (the owner), or it's a team member invited into
+    // one (looked up via userIndex/{uid}).
     formPanel.style.display = 'none';
     adminPanel.style.display = 'none';
     loadingPanel.style.display = 'block';
     gate.style.display = 'flex';
     appEl.style.display = 'none';
-    attachFirestoreListener(function(){
-      gate.style.display = 'none';
-      appEl.style.display = 'flex';
-      renderAccountFoot();
+    db.collection('companies').doc(signedInUid).get().then(function(ownDoc){
+      if(ownDoc.exists){ return signedInUid; }
+      return db.collection('userIndex').doc(signedInUid).get().then(function(idxDoc){
+        if(idxDoc.exists && idxDoc.data().companyUid) return idxDoc.data().companyUid;
+        return null;
+      });
+    }).then(function(resolvedCompanyUid){
+      if(!resolvedCompanyUid){
+        showFatalError('This account is not linked to any company. Ask your administrator to invite you again.');
+        auth.signOut();
+        return;
+      }
+      currentUid = resolvedCompanyUid;
+      attachFirestoreListener(function(){
+        // If a team member (not the company's own owner account) just signed
+        // in, mark their invite as accepted and stamp when they last logged in.
+        if(signedInUid !== resolvedCompanyUid && Array.isArray(state.users)){
+          const member = state.users.find(function(u){ return u.uid === signedInUid; });
+          if(member){
+            member.status = 'Confirmed';
+            member.lastAuth = todayISO();
+            saveState();
+          }
+        }
+        gate.style.display = 'none';
+        appEl.style.display = 'flex';
+        renderAccountFoot();
+      });
     });
   } else {
     currentUid = null;
@@ -8281,7 +8387,7 @@ function renderUsers(){
         </div>
         <div class="field" style="display:flex; align-items:flex-end;"><button onclick="addUser()">Send invite</button></div>
       </div>
-      <div class="hint" style="margin-top:8px;">A temporary password will be emailed to them — this is simulated in this demo; no real email is sent.</div>
+      <div class="hint" style="margin-top:8px;">They'll get a real email with a link to set their own password.</div>
     </div>`:''}
     <div class="card">
       <h3>Users (${state.users.length})</h3>
@@ -8291,7 +8397,7 @@ function renderUsers(){
         if(userEditingId===u.id){
           return `<tr id="user-edit-row-${u.id}" onfocusout="handleUserRowBlur(event,'${u.id}')">
             <td><input id="user-edit-name-${u.id}" value="${u.name}" onkeydown="if(event.key==='Enter') saveEditedUser('${u.id}')"></td>
-            <td><input id="user-edit-email-${u.id}" type="email" class="mono" value="${u.email}" onkeydown="if(event.key==='Enter') saveEditedUser('${u.id}')"></td>
+            <td>${u.uid ? `<span class="mono">${u.email}</span>` : `<input id="user-edit-email-${u.id}" type="email" class="mono" value="${u.email}" onkeydown="if(event.key==='Enter') saveEditedUser('${u.id}')">`}</td>
             <td>${u.lastAuth || 'Never'}</td>
             <td><span class="badge ${u.status==='Confirmed'?'sale':'purchase'}">${u.status}</span></td>
             <td>
@@ -8321,13 +8427,33 @@ function addUser(){
   const email = document.getElementById('user-email').value.trim();
   const role = document.getElementById('user-role').value;
   if(!name || !email){ toast('Please enter both a name and an email address'); return; }
+  if(!isValidEmailFormat(email)){ toast("That doesn't look like a valid email address"); return; }
   if(state.users.some(u=>u.email.toLowerCase()===email.toLowerCase())){ toast('A user with this email already exists'); return; }
-  generateTempPassword(); // a real backend would email this; this demo has none to send it from
-  state.users.push({id: uid('U','user'), name, email, role, status:'Pending', lastAuth:null});
-  showNewUserForm = false;
-  saveState();
-  toast(`Invite sent to ${email} with a temporary password (simulated — no real email is sent from this demo)`);
-  render();
+  toast('Sending invite…');
+  const secondaryAuth = getSecondaryAuth();
+  const tempPassword = generateTempPassword(); // never shown to anyone; they set their own via the emailed link
+  const actionSettings = { url: window.location.origin + window.location.pathname };
+  secondaryAuth.createUserWithEmailAndPassword(email, tempPassword)
+    .then(function(cred){
+      const newUid = cred.user.uid;
+      return secondaryAuth.sendPasswordResetEmail(email, actionSettings)
+        .then(function(){ return secondaryAuth.signOut(); })
+        .then(function(){ return db.collection('userIndex').doc(newUid).set({ companyUid: currentUid }); })
+        .then(function(){
+          state.allowedUids = Array.isArray(state.allowedUids) ? state.allowedUids : [];
+          state.allowedUids.push(newUid);
+          state.users.push({id: uid('U','user'), uid:newUid, name, email, role, status:'Pending', lastAuth:null});
+          showNewUserForm = false;
+          saveState();
+          toast(`Invite sent to ${email} — they'll get a real email to set their password`);
+          render();
+        });
+    })
+    .catch(function(err){
+      toast(err.code === 'auth/email-already-in-use'
+        ? 'That email already has an account elsewhere in the system.'
+        : 'Could not send invite: ' + err.message);
+    });
 }
 function startEditUser(id){ userEditingId = id; renderUsersInPlace(); }
 function cancelEditUser(){ userEditingId = null; renderUsersInPlace(); }
@@ -8343,7 +8469,7 @@ function saveEditedUser(id){
   const u = state.users.find(x=>x.id===id);
   if(!u) return;
   const name = document.getElementById('user-edit-name-'+id).value.trim();
-  const email = document.getElementById('user-edit-email-'+id).value.trim();
+  const email = u.uid ? u.email : document.getElementById('user-edit-email-'+id).value.trim();
   if(!name || !email){ toast('Please enter both a name and an email address'); return; }
   if(state.users.some(x=>x.id!==id && x.email.toLowerCase()===email.toLowerCase())){ toast('A user with this email already exists'); return; }
   u.name = name; u.email = email;
@@ -8354,15 +8480,25 @@ function saveEditedUser(id){
 function resetUserPassword(id){
   const u = state.users.find(x=>x.id===id);
   if(!u) return;
-  generateTempPassword();
-  toast(`New password emailed to ${u.email} (simulated — no real email is sent from this demo)`);
+  if(!u.uid){ toast('This user has no real linked account yet — delete and re-invite them instead.'); return; }
+  auth.sendPasswordResetEmail(u.email, { url: window.location.origin + window.location.pathname })
+    .then(function(){ toast(`Password reset email sent to ${u.email}`); })
+    .catch(function(err){ toast('Could not send reset email: ' + err.message); });
 }
 function deleteUser(id){
   const u = state.users.find(x=>x.id===id);
   if(!u) return;
-  if(!confirm('Delete user '+u.name+' ('+u.email+')? This cannot be undone.')) return;
-  state.users = state.users.filter(x=>x.id!==id);
-  saveState(); toast('User deleted'); render();
+  if(!confirm('Remove '+u.name+' ('+u.email+')? They will lose access to this company\'s data immediately. This cannot be undone.')) return;
+  const finish = function(){
+    state.users = state.users.filter(x=>x.id!==id);
+    saveState(); toast('User removed'); render();
+  };
+  if(u.uid){
+    state.allowedUids = (state.allowedUids||[]).filter(function(id2){ return id2 !== u.uid; });
+    db.collection('userIndex').doc(u.uid).delete().catch(function(){ /* non-fatal — access is already revoked via allowedUids */ }).then(finish);
+  } else {
+    finish();
+  }
 }
 function exportUsersExcel(){
   const rows = [['Name','Email Address','Latest Authentication','Status','Access Rights']];
