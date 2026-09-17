@@ -8432,7 +8432,7 @@ function addUser(){
   toast('Sending invite…');
   const secondaryAuth = getSecondaryAuth();
   const tempPassword = generateTempPassword(); // never shown to anyone; they set their own via the emailed link
-  const actionSettings = { url: window.location.origin + window.location.pathname };
+  const actionSettings = { url: window.location.origin + window.location.pathname, handleCodeInApp: true };
   secondaryAuth.createUserWithEmailAndPassword(email, tempPassword)
     .then(function(cred){
       const newUid = cred.user.uid;
@@ -8481,7 +8481,7 @@ function resetUserPassword(id){
   const u = state.users.find(x=>x.id===id);
   if(!u) return;
   if(!u.uid){ toast('This user has no real linked account yet — delete and re-invite them instead.'); return; }
-  auth.sendPasswordResetEmail(u.email, { url: window.location.origin + window.location.pathname })
+  auth.sendPasswordResetEmail(u.email, { url: window.location.origin + window.location.pathname, handleCodeInApp: true })
     .then(function(){ toast(`Password reset email sent to ${u.email}`); })
     .catch(function(err){ toast('Could not send reset email: ' + err.message); });
 }
