@@ -592,10 +592,16 @@ function showFatalError(detail){
   if(!box){
     box = document.createElement('div');
     box.id = 'fatal-error-box';
-    box.style.cssText = 'position:fixed; bottom:0; left:0; right:0; background:#7d2c22; color:#fff; padding:12px 18px; font:12px monospace; z-index:9999; max-height:35vh; overflow:auto; white-space:pre-wrap;';
+    box.style.cssText = 'position:fixed; bottom:0; left:0; right:0; background:#7d2c22; color:#fff; padding:12px 40px 12px 18px; font:12px monospace; z-index:9999; max-height:35vh; overflow:auto; white-space:pre-wrap;';
     document.body.appendChild(box);
   }
   box.textContent = 'Something went wrong: ' + detail;
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '×';
+  closeBtn.setAttribute('aria-label','Dismiss');
+  closeBtn.style.cssText = 'position:absolute; top:6px; right:10px; background:none; border:none; color:#fff; font-size:20px; line-height:1; cursor:pointer; padding:4px 8px;';
+  closeBtn.onclick = function(){ box.remove(); };
+  box.appendChild(closeBtn);
 }
 
 /* ============================= STATE ============================= */
@@ -865,6 +871,7 @@ function companyDocRef(){ return db.collection('companies').doc(currentUid); }
 function attachFirestoreListener(onFirstLoad){
   if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
   let firstLoad = true;
+  let retriedAfterError = false;
   unsubscribeSnapshot = companyDocRef().onSnapshot(function(snap){
     // A write we just made ourselves echoes back through onSnapshot with
     // hasPendingWrites=true before the server has confirmed it — we already
@@ -883,6 +890,14 @@ function attachFirestoreListener(onFirstLoad){
     if(firstLoad){ firstLoad = false; if(onFirstLoad) onFirstLoad(); }
   }, function(err){
     if(firstLoad){ firstLoad = false; if(onFirstLoad) onFirstLoad(); }
+    if(!retriedAfterError && err.code === 'permission-denied'){
+      // Can happen as a brief, self-resolving hiccup right after signing in
+      // or right after security rules are updated — try once more before
+      // treating it as a real problem.
+      retriedAfterError = true;
+      setTimeout(function(){ attachFirestoreListener(function(){}); }, 1500);
+      return;
+    }
     showFatalError('Firestore sync error: ' + err.message);
   });
 }
@@ -1130,14 +1145,13 @@ auth.onAuthStateChanged(function(user){
       if(ownDoc.exists){ return signedInUid; }
       return db.collection('userIndex').doc(signedInUid).get().then(function(idxDoc){
         if(idxDoc.exists && idxDoc.data().companyUid) return idxDoc.data().companyUid;
-        return null;
+        // Neither a company doc nor a team-member mapping exists yet for this
+        // uid — this is a brand-new company account's very first sign-in.
+        // Treat it as its own company; attachFirestoreListener() below will
+        // create the document since it doesn't exist yet.
+        return signedInUid;
       });
     }).then(function(resolvedCompanyUid){
-      if(!resolvedCompanyUid){
-        showFatalError('This account is not linked to any company. Ask your administrator to invite you again.');
-        auth.signOut();
-        return;
-      }
       currentUid = resolvedCompanyUid;
       attachFirestoreListener(function(){
         // If a team member (not the company's own owner account) just signed
@@ -8435,10 +8449,11 @@ function addUser(){
   const actionSettings = { url: window.location.origin + window.location.pathname, handleCodeInApp: true };
   secondaryAuth.createUserWithEmailAndPassword(email, tempPassword)
     .then(function(cred){
-      const newUid = cred.user.uid;
+      const newUser = cred.user;
+      const newUid = newUser.uid;
       return secondaryAuth.sendPasswordResetEmail(email, actionSettings)
-        .then(function(){ return secondaryAuth.signOut(); })
         .then(function(){ return db.collection('userIndex').doc(newUid).set({ companyUid: currentUid }); })
+        .then(function(){ return secondaryAuth.signOut(); })
         .then(function(){
           state.allowedUids = Array.isArray(state.allowedUids) ? state.allowedUids : [];
           state.allowedUids.push(newUid);
@@ -8447,6 +8462,11 @@ function addUser(){
           saveState();
           toast(`Invite sent to ${email} — they'll get a real email to set their password`);
           render();
+        })
+        .catch(function(err){
+          // Something after account-creation failed — undo the account so this
+          // email isn't left stuck as "already in use" with no working invite.
+          return newUser.delete().catch(function(){ /* best effort */ }).then(function(){ throw err; });
         });
     })
     .catch(function(err){
