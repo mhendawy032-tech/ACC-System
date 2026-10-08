@@ -6,7 +6,7 @@
 <title>Accounting System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com/">
 <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Nunito+Sans:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Almarai:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Nunito+Sans:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Almarai:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&family=Source+Sans+3:wght@400;600;700&family=Work+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Mulish:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=El+Messiri:wght@400;500;600;700&family=Mada:wght@400;500;600;700&family=Changa:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper:#F3F4F8;
@@ -355,6 +355,35 @@
   .bs-row.bs-bold td{font-weight:700; color:var(--ink);}
   .bs-row.bs-section td{border-bottom:1px solid var(--line); padding-top:14px; text-transform:uppercase; font-weight:700; font-size:calc(13.5px*var(--fs,1)); letter-spacing:.3px; color:var(--ink);}
   .bs-row.bs-grand td{border-top:2px solid var(--ink); padding-top:11px;}
+  .gl-acc td{font-weight:700; color:var(--ink); cursor:pointer; padding:7px 8px; border-bottom:1px solid var(--line);}
+  .gl-acc:hover td{background:rgba(31,111,100,0.05);}
+  .gl-sub td, .gl-line td, .gl-more td{padding:5px 8px; border-bottom:1px solid var(--line); font-size:calc(13px*var(--fs,1));}
+  .gl-line:hover td{background:rgba(31,111,100,0.05);}
+  .tb-table th.tb-grp{text-align:center; border-bottom:1px solid var(--line);}
+  .tb-row td{padding:7px 8px; border-bottom:1px solid var(--line); cursor:pointer;}
+  .tb-row:hover td{background:rgba(31,111,100,0.05);}
+  .tb-row.tb-unalloc td{cursor:default; font-style:italic;}
+  .tb-row.tb-unalloc:hover td{background:none;}
+  /* Journal Report: every journal section uses the SAME fixed column grid, so the headers line up from one journal to the next; text columns (Label included) wrap. */
+  .bs-table.jr-table{table-layout:fixed; min-width:1100px;}
+  .jr-table th, .jr-table td{white-space:normal; overflow-wrap:anywhere; word-break:break-word; vertical-align:top;}
+  .jr-table th:nth-child(3), .jr-table td:nth-child(3){white-space:nowrap; overflow-wrap:normal; word-break:normal;} /* Account stays on one line; only Partner and Label wrap */
+  .jr-table th.bs-val, .jr-table td.bs-val{white-space:nowrap; overflow-wrap:normal; word-break:normal; text-align:right;}
+  /* separate borders: with collapsed borders the pinned header leaves a thin gap and the rows scroll through it */
+  .bs-table.tb-table{border-collapse:separate; border-spacing:0;}
+  .ls-scroll > table.tb-table > thead > tr > th{background-clip:padding-box;}
+  /* Trial Balance header = two rows (group row + Debit/Credit row). Both rows are pinned with explicit offsets, so the period row never
+     gets covered by the second row and the whole header stays solid while the table scrolls. */
+  /* the whole <thead> is pinned as ONE block (no per-row offsets), so the two header rows can never drift apart or let rows show through */
+  .ls-scroll > table.tb-table > thead{position:sticky; top:0; z-index:10;}
+  .ls-scroll > table.tb-table > thead > tr > th{position:static; top:auto; background:var(--th-bg,var(--paper-raised)); padding:7px 8px; vertical-align:middle; box-shadow:none;}
+  .ls-scroll > table.tb-table > thead > tr.tb-h1 > th{box-shadow:inset 0 -1px 0 var(--line);}
+  .ls-scroll > table.tb-table > thead > tr.tb-h1 > th.tb-acc{vertical-align:bottom; box-shadow:inset 0 -2px 0 var(--teal,var(--ink));}
+  .ls-scroll > table.tb-table > thead > tr.tb-h2 > th{box-shadow:inset 0 -2px 0 var(--teal,var(--ink));}
+  .gl-only-chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--line); border-radius:6px; background:rgba(31,111,100,0.08); font-size:calc(12.5px*var(--fs,1)); color:var(--ink); font-weight:600;}
+  .gl-only-chip b{cursor:pointer; color:var(--text-soft); font-weight:700;}
+  .gl-only-chip b:hover{color:var(--debit);}
+  .gl-total td{font-weight:800; color:var(--ink); border-top:2px solid var(--ink); padding:9px 8px;}
   .bs-val{text-align:right; font-family:'JetBrains Mono',monospace; white-space:nowrap;}
   .bs-negative{color:var(--debit);}
   .bs-link, .bs-link .bs-val{color:var(--azure);}
@@ -696,6 +725,40 @@ tbody tr:hover,.bs-row:hover td,.ls-scroll tbody tr:hover{background:var(--hover
 html[data-density=compact] th,html[data-density=compact] td{padding:5px 9px}
 html[data-density=compact] .content{padding:16px 22px}
 html[data-density=compact] .card{padding:16px}
+html[data-density=tight] th,html[data-density=tight] td{padding:3px 7px}
+html[data-density=tight] .content{padding:10px 14px}
+html[data-density=tight] .card{padding:10px}
+html[data-density=spacious] th,html[data-density=spacious] td{padding:13px 16px}
+html[data-density=spacious] .content{padding:32px 40px}
+html[data-density=spacious] .card{padding:28px}
+/* extra spacing levels: xtight < tight < compact < cozy < (comfortable = default) < relaxed < spacious < xspacious */
+html[data-density=xtight] th,html[data-density=xtight] td{padding:1px 5px}
+html[data-density=xtight] .content{padding:6px 10px}
+html[data-density=xtight] .card{padding:7px;margin-bottom:10px}
+html[data-density=xtight] .nav-item{padding-top:4px;padding-bottom:4px}
+html[data-density=xtight] body{line-height:1.3}
+html[data-density=tight] .card{margin-bottom:14px}
+html[data-density=tight] .nav-item{padding-top:5px;padding-bottom:5px}
+html[data-density=tight] body{line-height:1.4}
+html[data-density=compact] .card{margin-bottom:16px}
+html[data-density=cozy] th,html[data-density=cozy] td{padding:7px 10px}
+html[data-density=cozy] .content{padding:21px 27px}
+html[data-density=cozy] .card{padding:19px;margin-bottom:18px}
+html[data-density=relaxed] th,html[data-density=relaxed] td{padding:11px 14px}
+html[data-density=relaxed] .content{padding:28px 36px}
+html[data-density=relaxed] .card{padding:24px;margin-bottom:23px}
+html[data-density=relaxed] .nav-item{padding-top:9px;padding-bottom:9px}
+html[data-density=relaxed] body{line-height:1.6}
+html[data-density=spacious] .card{margin-bottom:28px}
+html[data-density=spacious] .nav-item{padding-top:11px;padding-bottom:11px}
+html[data-density=spacious] body{line-height:1.65}
+html[data-density=xspacious] th,html[data-density=xspacious] td{padding:17px 20px}
+html[data-density=xspacious] .content{padding:40px 52px}
+html[data-density=xspacious] .card{padding:34px;margin-bottom:36px}
+html[data-density=xspacious] .nav-item{padding-top:14px;padding-bottom:14px}
+html[data-density=xspacious] body{line-height:1.8}
+/* sidebar grows a little with the text-size slider so labels don't wrap */
+@media(min-width:901px){.sidebar,.topnav-app{width:calc(220px*(1 + (var(--fsm,1) - 1)*.85)) !important}}
 /* inputs */
 input,select,textarea{background:var(--field);border-radius:var(--r-in)}
 input:focus,select:focus,textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--focus)}
@@ -773,6 +836,7 @@ html[data-dark] .topnav-title{box-shadow:none}
 #ui-fab:hover{transform:scale(1.08) rotate(-8deg)}
 #ui-panel{position:fixed;right:18px;bottom:70px;z-index:6000;width:290px;max-width:calc(100vw - 36px);background:var(--paper-raised);color:var(--text);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 44px rgba(0,0,0,.28);padding:16px;display:none}
 #ui-panel.open{display:block}
+#ui-panel{max-height:calc(100vh - 90px);overflow-y:auto}
 #ui-panel h4{margin:0 0 10px;font:700 calc(14px*var(--fs)) var(--head-font);color:var(--ink)}
 #ui-panel .ui-lb{font-size:calc(11.5px*var(--fs));font-weight:700;color:var(--text-soft);margin:12px 0 6px}
 #ui-sws{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
@@ -781,7 +845,7 @@ html[data-dark] .topnav-title{box-shadow:none}
 .ui-sw.on::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.5)}
 #ui-tname{font-size:calc(12px*var(--fs));color:var(--text-soft);margin-top:6px}
 #ui-panel input[type=range]{padding:0;height:20px;border:none;box-shadow:none;background:transparent}
-.ui-ch{display:flex;gap:6px}.ui-ch div{flex:1;text-align:center;padding:7px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:calc(12.5px*var(--fs));font-weight:600}
+.ui-ch{display:flex;gap:6px;flex-wrap:wrap}.ui-ch div{flex:1 1 28%;text-align:center;padding:7px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:calc(12.5px*var(--fs));font-weight:600}
 .ui-ch div.on{background:var(--teal);color:#fff;border-color:var(--teal)}
 #ui-reset{margin-top:12px;font-size:calc(12px*var(--fs));color:var(--teal);cursor:pointer;text-align:center;font-weight:600}
 </style>
@@ -810,13 +874,29 @@ forestnight:{dark:1,n:'Forest Night (dark)',v:['#0C130F','#141D17','#EDF4EF','#C
 violetnight:{dark:1,n:'Violet Night (dark)',v:['#0F0D1A','#191628','#EFEDFA','#D0CCEA','#8F8AB0','#2C2745','#6C4FD0','#5238A8','#9C85F5','#B9A8FF','#14102B','#09071A','#100C26','#0F0D1A'],a:'#4B3F9E',t:'#EEEBFA',
  x:'--debit:#F0766C;--credit:#3CC592;--amber:#E0A640;--amber-light:#4A3A1A;--hover:rgba(185,168,255,.09);--th-bg:#1E1A33;--th-ink:#BDB2F0;--shadow:0 10px 26px rgba(0,0,0,.45);--shadow-soft:0 4px 14px rgba(0,0,0,.35)'},
 night:{dark:1,n:'Night (dark)',v:['#0E1424','#161E33','#EAEEF8','#CBD3E6','#8A94B0','#27314A','#3B6FD4','#2A57B0','#2BB7C4','#7FB0FF','#0B1220','#060A14','#0A101E','#0E1424'],a:'#14356B',t:'#E8EEF8',
- x:'--debit:#F0766C;--credit:#3CC592;--amber:#E0A640;--amber-light:#4A3A1A;--hover:rgba(127,176,255,.09);--th-bg:#1C2640;--th-ink:#AFC0E6;--shadow:0 10px 26px rgba(0,0,0,.45);--shadow-soft:0 4px 14px rgba(0,0,0,.35)'}
+ x:'--debit:#F0766C;--credit:#3CC592;--amber:#E0A640;--amber-light:#4A3A1A;--hover:rgba(127,176,255,.09);--th-bg:#1C2640;--th-ink:#AFC0E6;--shadow:0 10px 26px rgba(0,0,0,.45);--shadow-soft:0 4px 14px rgba(0,0,0,.35)'},
+crimson:{n:'Crimson',v:['#FBF2F2', '#FFFFFF', '#2A1012', '#3D2024', '#8A6A6E', '#F0DFE0', '#A8232F', '#781820', '#D8454F', '#FF8A92', '#5E1219', '#30080C', '#4A0F15', '#FFFFFF'],a:'#A8232F',t:'#FAE6E7'},
+sunset:{n:'Sunset Orange',v:['#FDF5EE', '#FFFFFF', '#2B1708', '#3E2A1A', '#8C7258', '#F0E2D2', '#C2570C', '#8F3E06', '#EB7C25', '#FFB36B', '#5E2D07', '#2E1503', '#4A2305', '#FFFFFF'],a:'#C2570C',t:'#FBE9D8'},
+lavender:{n:'Lavender',v:['#F7F4FC', '#FFFFFF', '#201634', '#31264A', '#7A6F96', '#E8E1F3', '#7B4FC4', '#58369A', '#9E78E6', '#C9B0FF', '#3D2468', '#1F1238', '#2F1B54', '#FFFFFF'],a:'#7B4FC4',t:'#F0E9FA'},
+mint:{n:'Mint',v:['#F0FAF6', '#FFFFFF', '#0C2A22', '#173A30', '#5A8074', '#D6EDE4', '#14946F', '#0D6B50', '#2DC49A', '#7DF0CC', '#0C4A3A', '#052A21', '#093C2F', '#FFFFFF'],a:'#14946F',t:'#E0F5EC'},
+olive:{n:'Olive',v:['#F6F6EE', '#FFFFFF', '#1F2410', '#2F361C', '#7B8160', '#E6E8D6', '#5E7320', '#435414', '#84A030', '#BFDC6A', '#2E3A0E', '#171E05', '#252F0A', '#FFFFFF'],a:'#5E7320',t:'#EEF2DC'},
+coffee:{n:'Coffee',v:['#F7F1EC', '#FFFFFF', '#241810', '#35261C', '#8A7466', '#E8DDD3', '#6F4A2F', '#4E3320', '#A4764E', '#E0B48A', '#3E2819', '#1F130A', '#32200F', '#FFFFFF'],a:'#6F4A2F',t:'#F1E6DA'},
+steel:{n:'Steel Blue',v:['#F1F4F7', '#FFFFFF', '#101A24', '#1F2D3B', '#62758A', '#DCE3EA', '#2C5F8A', '#1D4366', '#4A90C4', '#8EC5EE', '#1D3A54', '#0E2033', '#162E45', '#FFFFFF'],a:'#2C5F8A',t:'#E4EDF5'},
+sage:{n:'Sage',v:['#F3F6F2', '#FFFFFF', '#16221A', '#243428', '#68796C', '#E0E7DF', '#5F7F68', '#44604C', '#7FA38A', '#B6D8BF', '#2F4A38', '#16261C', '#243A2C', '#FFFFFF'],a:'#5F7F68',t:'#E8F1EA'},
+oceannight:{dark:1,n:'Ocean Night (dark)',v:['#0B1417', '#122026', '#E8F4F6', '#C5DADF', '#86A2AA', '#1E3239', '#0E8AA6', '#0A6A80', '#2FC0DC', '#6EE0F2', '#0D1B20', '#060E11', '#0A161A', '#0B1417'],a:'#0B6E86',t:'#E4F2F6',
+ x:'--debit:#F0766C;--credit:#3CC592;--amber:#E0A640;--amber-light:#4A3A1A;--hover:rgba(110,224,242,.08);--th-bg:#17262C;--th-ink:#9FD6E2;--shadow:0 10px 26px rgba(0,0,0,.45);--shadow-soft:0 4px 14px rgba(0,0,0,.35)'},
+crimsonnight:{dark:1,n:'Crimson Night (dark)',v:['#140C0E', '#1F1215', '#F7ECEE', '#E0C9CD', '#A58389', '#34202A', '#C23B4C', '#9A2A39', '#E5606F', '#FF9AA5', '#1C0F12', '#0E0608', '#180C0F', '#140C0E'],a:'#A8232F',t:'#FAE6E7',
+ x:'--debit:#F0766C;--credit:#3CC592;--amber:#E0A640;--amber-light:#4A3A1A;--hover:rgba(255,154,165,.08);--th-bg:#2A171B;--th-ink:#E8B0B7;--shadow:0 10px 26px rgba(0,0,0,.45);--shadow-soft:0 4px 14px rgba(0,0,0,.35)'},
+charcoal:{dark:1,n:'Charcoal (dark)',v:['#121212', '#1C1C1E', '#F2F2F2', '#D4D4D6', '#8E8E93', '#2C2C2E', '#3D7FD0', '#2C61A5', '#5BA3F0', '#8CC4FF', '#161618', '#0A0A0B', '#131315', '#121212'],a:'#2C61A5',t:'#E8EFF8',
+ x:'--debit:#F0766C;--credit:#3CC592;--amber:#E0A640;--amber-light:#4A3A1A;--hover:rgba(140,196,255,.08);--th-bg:#232326;--th-ink:#B5C7E0;--shadow:0 10px 26px rgba(0,0,0,.45);--shadow-soft:0 4px 14px rgba(0,0,0,.35)'},
+plumnight:{dark:1,n:'Plum Night (dark)',v:['#150C14', '#201220', '#F6ECF5', '#DEC9DC', '#A3849F', '#352033', '#B04A9C', '#8A3A7A', '#D870C4', '#F7A6E8', '#1B0F1A', '#0C060B', '#170B16', '#150C14'],a:'#8A2F78',t:'#F6E8F3',
+ x:'--debit:#F0766C;--credit:#3CC592;--amber:#E0A640;--amber-light:#4A3A1A;--hover:rgba(247,166,232,.08);--th-bg:#2A1828;--th-ink:#E0B4D8;--shadow:0 10px 26px rgba(0,0,0,.45);--shadow-soft:0 4px 14px rgba(0,0,0,.35)'}
 };
-var F={inter:['Inter','Space Grotesk'],plex:['IBM Plex Sans','IBM Plex Sans'],dmsans:['DM Sans','DM Sans'],roboto:['Roboto','Roboto'],opensans:['Open Sans','Open Sans'],lato:['Lato','Lato'],nunito:['Nunito Sans','Nunito Sans'],poppins:['Poppins','Poppins'],montserrat:['Montserrat','Montserrat'],segoe:['Segoe UI','Segoe UI'],cairo:['Cairo','Cairo'],tajawal:['Tajawal','Tajawal'],almarai:['Almarai','Almarai'],notoar:['Noto Sans Arabic','Noto Sans Arabic'],readex:['Readex Pro','Readex Pro'],plexar:['IBM Plex Sans Arabic','IBM Plex Sans Arabic']};
-var FN={inter:'Inter (default)',plex:'IBM Plex Sans',dmsans:'DM Sans',roboto:'Roboto',opensans:'Open Sans',lato:'Lato',nunito:'Nunito Sans',poppins:'Poppins',montserrat:'Montserrat',segoe:'Segoe UI (system)',cairo:'Cairo (Arabic)',tajawal:'Tajawal (Arabic)',almarai:'Almarai (Arabic)',notoar:'Noto Sans Arabic (Arabic)',readex:'Readex Pro (Arabic)',plexar:'IBM Plex Sans Arabic (Arabic)'};
+var F={inter:['Inter','Space Grotesk'],plex:['IBM Plex Sans','IBM Plex Sans'],dmsans:['DM Sans','DM Sans'],roboto:['Roboto','Roboto'],opensans:['Open Sans','Open Sans'],lato:['Lato','Lato'],nunito:['Nunito Sans','Nunito Sans'],poppins:['Poppins','Poppins'],montserrat:['Montserrat','Montserrat'],segoe:['Segoe UI','Segoe UI'],cairo:['Cairo','Cairo'],tajawal:['Tajawal','Tajawal'],almarai:['Almarai','Almarai'],notoar:['Noto Sans Arabic','Noto Sans Arabic'],readex:['Readex Pro','Readex Pro'],plexar:['IBM Plex Sans Arabic','IBM Plex Sans Arabic'],rubik:['Rubik','Rubik'],sourcesans:['Source Sans 3','Source Sans 3'],worksans:['Work Sans','Work Sans'],manrope:['Manrope','Manrope'],jakarta:['Plus Jakarta Sans','Plus Jakarta Sans'],mulish:['Mulish','Mulish'],kufi:['Noto Kufi Arabic','Noto Kufi Arabic'],naskh:['Noto Naskh Arabic','Noto Naskh Arabic'],elmessiri:['El Messiri','El Messiri'],mada:['Mada','Mada'],changa:['Changa','Changa'],vazir:['Vazirmatn','Vazirmatn'],tahoma:['Tahoma','Tahoma'],arial:['Arial','Arial']};
+var FN={inter:'Inter (default)',plex:'IBM Plex Sans',dmsans:'DM Sans',roboto:'Roboto',opensans:'Open Sans',lato:'Lato',nunito:'Nunito Sans',poppins:'Poppins',montserrat:'Montserrat',segoe:'Segoe UI (system)',cairo:'Cairo (Arabic)',tajawal:'Tajawal (Arabic)',almarai:'Almarai (Arabic)',notoar:'Noto Sans Arabic (Arabic)',readex:'Readex Pro (Arabic)',plexar:'IBM Plex Sans Arabic (Arabic)',rubik:'Rubik',sourcesans:'Source Sans 3',worksans:'Work Sans',manrope:'Manrope',jakarta:'Plus Jakarta Sans',mulish:'Mulish',kufi:'Noto Kufi Arabic (Arabic)',naskh:'Noto Naskh Arabic (Arabic)',elmessiri:'El Messiri (Arabic)',mada:'Mada (Arabic)',changa:'Changa (Arabic)',vazir:'Vazirmatn (Arabic)',tahoma:'Tahoma (system, Arabic)',arial:'Arial (system)'};
 var D={theme:'navy',font:'inter',size:100,density:'comfortable'},P=D;
 try{P=Object.assign({},D,JSON.parse(localStorage.getItem('acct_ui_prefs')||'{}'));}catch(e){P=Object.assign({},D);}
-if(!T[P.theme])P.theme='navy'; if(!F[P.font])P.font='inter';
+if(!T[P.theme])P.theme='navy'; if(!F[P.font])P.font='inter'; if(['xtight','tight','compact','cozy','comfortable','relaxed','spacious','xspacious'].indexOf(P.density)<0)P.density='comfortable';
 function rgb(x){return [1,3,5].map(function(i){return parseInt(x.substr(i,2),16)})}
 function mix(a,b,p){var x=rgb(a),y=rgb(b);return '#'+x.map(function(c,i){return ('0'+Math.round(c*p+y[i]*(1-p)).toString(16)).slice(-2)}).join('')}
 function al(x,a){return 'rgba('+rgb(x).join(',')+','+a+')'}
@@ -848,7 +928,7 @@ window.uiPdfCss=function(scope){
  if(!scope)c+="@page{@bottom-right{content:counter(page) ' / ' counter(pages);font:9px Arial,sans-serif;color:#8892A0}}\n";
  return c;
 };
-window.uiPdfFontLink='<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&family=DM+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Nunito+Sans:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Almarai:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap">';
+window.uiPdfFontLink='<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&family=DM+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Nunito+Sans:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Almarai:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&family=Source+Sans+3:wght@400;600;700&family=Work+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Mulish:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=El+Messiri:wght@400;500;600;700&family=Mada:wght@400;500;600;700&family=Changa:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&display=swap">';
 /* theme panel */
 function build(){
  if(document.getElementById('ui-fab'))return;
@@ -858,8 +938,8 @@ function build(){
  var fo='';for(k in FN){fo+='<option value="'+k+'">'+FN[k]+'</option>';}
  p.innerHTML='<h4>Themes & appearance</h4><div class="ui-lb">Theme</div><div id="ui-sws">'+sw+'</div><div id="ui-tname"></div>'
  +'<div class="ui-lb">Font</div><select id="ui-font">'+fo+'</select>'
- +'<div class="ui-lb">Text size: <span id="ui-sz"></span>%</div><input id="ui-size" type="range" min="85" max="125" step="5">'
- +'<div class="ui-lb">Spacing</div><div class="ui-ch" id="ui-den"><div data-d="comfortable">Comfortable</div><div data-d="compact">Compact</div></div>'
+ +'<div class="ui-lb">Text size: <span id="ui-sz"></span>%</div><input id="ui-size" type="range" min="85" max="170" step="5">'
+ +'<div class="ui-lb">Spacing</div><div class="ui-ch" id="ui-den"><div data-d="xtight">Ultra Tight</div><div data-d="tight">Tight</div><div data-d="compact">Compact</div><div data-d="cozy">Cozy</div><div data-d="comfortable">Default</div><div data-d="relaxed">Relaxed</div><div data-d="spacious">Spacious</div><div data-d="xspacious">Extra Spacious</div></div>'
  +'<div id="ui-reset">Reset to default</div>';
  document.body.appendChild(p);document.body.appendChild(fab);
  function sync(){
@@ -1051,12 +1131,16 @@ function _cmpROptionsMenu($){
       <input type="checkbox" ${$.IncludeUnposted?'checked':''} onchange="${$.p}ToggleUnposted()">
       <span>Include Unposted Entries</span>
     </label>
+    <label class="bs-menu-checkbox">
+      <input type="checkbox" ${RPT_UNFOLD[$.tab]?'checked':''} onchange="${$.p}ToggleUnfoldAll()">
+      <span>Unfold All</span>
+    </label>
   </div>`;
 }
-var _cmp_bs = { p:'bs', get IncludeUnposted(){ return bsIncludeUnposted; }, set IncludeUnposted(v){ bsIncludeUnposted=v; }, ROptionsMenu(...a){ return renderBsOptionsMenu(...a); } };
-var _cmp_pl = { p:'pl', PeriodRange(...a){ return plPeriodRange(...a); }, get PeriodMode(){ return plPeriodMode; }, set PeriodMode(v){ plPeriodMode=v; }, get PeriodCustomStart(){ return plPeriodCustomStart; }, set PeriodCustomStart(v){ plPeriodCustomStart=v; }, get PeriodCustomEnd(){ return plPeriodCustomEnd; }, set PeriodCustomEnd(v){ plPeriodCustomEnd=v; }, ComparisonRange(...a){ return plComparisonRange(...a); }, get ComparisonMode(){ return plComparisonMode; }, set ComparisonMode(v){ plComparisonMode=v; }, get ComparisonCustomStart(){ return plComparisonCustomStart; }, set ComparisonCustomStart(v){ plComparisonCustomStart=v; }, get ComparisonCustomEnd(){ return plComparisonCustomEnd; }, set ComparisonCustomEnd(v){ plComparisonCustomEnd=v; }, ApplyCustomPeriod(...a){ return plApplyCustomPeriod(...a); }, get OpenMenu(){ return plOpenMenu; }, set OpenMenu(v){ plOpenMenu=v; }, ComparisonRanges(...a){ return plComparisonRanges(...a); }, get ComparisonPeriods(){ return plComparisonPeriods; }, set ComparisonPeriods(v){ plComparisonPeriods=v; }, ApplyCustomComparison(...a){ return plApplyCustomComparison(...a); }, get IncludeUnposted(){ return plIncludeUnposted; }, set IncludeUnposted(v){ plIncludeUnposted=v; }, ROptionsMenu(...a){ return renderPlOptionsMenu(...a); } };
-var _cmp_cf = { p:'cf', ComparisonRange(...a){ return cfComparisonRange(...a); }, PeriodRange(...a){ return cfPeriodRange(...a); }, get ComparisonMode(){ return cfComparisonMode; }, set ComparisonMode(v){ cfComparisonMode=v; }, get ComparisonCustomStart(){ return cfComparisonCustomStart; }, set ComparisonCustomStart(v){ cfComparisonCustomStart=v; }, get ComparisonCustomEnd(){ return cfComparisonCustomEnd; }, set ComparisonCustomEnd(v){ cfComparisonCustomEnd=v; }, ApplyCustomPeriod(...a){ return cfApplyCustomPeriod(...a); }, get PeriodCustomStart(){ return cfPeriodCustomStart; }, set PeriodCustomStart(v){ cfPeriodCustomStart=v; }, get PeriodCustomEnd(){ return cfPeriodCustomEnd; }, set PeriodCustomEnd(v){ cfPeriodCustomEnd=v; }, get PeriodMode(){ return cfPeriodMode; }, set PeriodMode(v){ cfPeriodMode=v; }, get OpenMenu(){ return cfOpenMenu; }, set OpenMenu(v){ cfOpenMenu=v; }, ComparisonRanges(...a){ return cfComparisonRanges(...a); }, get ComparisonPeriods(){ return cfComparisonPeriods; }, set ComparisonPeriods(v){ cfComparisonPeriods=v; }, ApplyCustomComparison(...a){ return cfApplyCustomComparison(...a); }, get IncludeUnposted(){ return cfIncludeUnposted; }, set IncludeUnposted(v){ cfIncludeUnposted=v; }, ROptionsMenu(...a){ return renderCfOptionsMenu(...a); } };
-var _cmp_tx = { p:'tx', PeriodRange(...a){ return txPeriodRange(...a); }, get PeriodMode(){ return txPeriodMode; }, set PeriodMode(v){ txPeriodMode=v; }, get PeriodCustomStart(){ return txPeriodCustomStart; }, set PeriodCustomStart(v){ txPeriodCustomStart=v; }, get PeriodCustomEnd(){ return txPeriodCustomEnd; }, set PeriodCustomEnd(v){ txPeriodCustomEnd=v; }, ComparisonRange(...a){ return txComparisonRange(...a); }, get ComparisonMode(){ return txComparisonMode; }, set ComparisonMode(v){ txComparisonMode=v; }, get ComparisonCustomStart(){ return txComparisonCustomStart; }, set ComparisonCustomStart(v){ txComparisonCustomStart=v; }, get ComparisonCustomEnd(){ return txComparisonCustomEnd; }, set ComparisonCustomEnd(v){ txComparisonCustomEnd=v; }, ApplyCustomPeriod(...a){ return txApplyCustomPeriod(...a); }, get OpenMenu(){ return txOpenMenu; }, set OpenMenu(v){ txOpenMenu=v; }, ComparisonRanges(...a){ return txComparisonRanges(...a); }, get ComparisonPeriods(){ return txComparisonPeriods; }, set ComparisonPeriods(v){ txComparisonPeriods=v; }, ApplyCustomComparison(...a){ return txApplyCustomComparison(...a); }, get IncludeUnposted(){ return txIncludeUnposted; }, set IncludeUnposted(v){ txIncludeUnposted=v; }, ROptionsMenu(...a){ return renderTxOptionsMenu(...a); } };
+var _cmp_bs = { p:'bs', tab:'balance_sheet', get IncludeUnposted(){ return bsIncludeUnposted; }, set IncludeUnposted(v){ bsIncludeUnposted=v; }, ROptionsMenu(...a){ return renderBsOptionsMenu(...a); } };
+var _cmp_pl = { p:'pl', tab:'profit_loss', PeriodRange(...a){ return plPeriodRange(...a); }, get PeriodMode(){ return plPeriodMode; }, set PeriodMode(v){ plPeriodMode=v; }, get PeriodCustomStart(){ return plPeriodCustomStart; }, set PeriodCustomStart(v){ plPeriodCustomStart=v; }, get PeriodCustomEnd(){ return plPeriodCustomEnd; }, set PeriodCustomEnd(v){ plPeriodCustomEnd=v; }, ComparisonRange(...a){ return plComparisonRange(...a); }, get ComparisonMode(){ return plComparisonMode; }, set ComparisonMode(v){ plComparisonMode=v; }, get ComparisonCustomStart(){ return plComparisonCustomStart; }, set ComparisonCustomStart(v){ plComparisonCustomStart=v; }, get ComparisonCustomEnd(){ return plComparisonCustomEnd; }, set ComparisonCustomEnd(v){ plComparisonCustomEnd=v; }, ApplyCustomPeriod(...a){ return plApplyCustomPeriod(...a); }, get OpenMenu(){ return plOpenMenu; }, set OpenMenu(v){ plOpenMenu=v; }, ComparisonRanges(...a){ return plComparisonRanges(...a); }, get ComparisonPeriods(){ return plComparisonPeriods; }, set ComparisonPeriods(v){ plComparisonPeriods=v; }, ApplyCustomComparison(...a){ return plApplyCustomComparison(...a); }, get IncludeUnposted(){ return plIncludeUnposted; }, set IncludeUnposted(v){ plIncludeUnposted=v; }, ROptionsMenu(...a){ return renderPlOptionsMenu(...a); } };
+var _cmp_cf = { p:'cf', tab:'cash_flow', ComparisonRange(...a){ return cfComparisonRange(...a); }, PeriodRange(...a){ return cfPeriodRange(...a); }, get ComparisonMode(){ return cfComparisonMode; }, set ComparisonMode(v){ cfComparisonMode=v; }, get ComparisonCustomStart(){ return cfComparisonCustomStart; }, set ComparisonCustomStart(v){ cfComparisonCustomStart=v; }, get ComparisonCustomEnd(){ return cfComparisonCustomEnd; }, set ComparisonCustomEnd(v){ cfComparisonCustomEnd=v; }, ApplyCustomPeriod(...a){ return cfApplyCustomPeriod(...a); }, get PeriodCustomStart(){ return cfPeriodCustomStart; }, set PeriodCustomStart(v){ cfPeriodCustomStart=v; }, get PeriodCustomEnd(){ return cfPeriodCustomEnd; }, set PeriodCustomEnd(v){ cfPeriodCustomEnd=v; }, get PeriodMode(){ return cfPeriodMode; }, set PeriodMode(v){ cfPeriodMode=v; }, get OpenMenu(){ return cfOpenMenu; }, set OpenMenu(v){ cfOpenMenu=v; }, ComparisonRanges(...a){ return cfComparisonRanges(...a); }, get ComparisonPeriods(){ return cfComparisonPeriods; }, set ComparisonPeriods(v){ cfComparisonPeriods=v; }, ApplyCustomComparison(...a){ return cfApplyCustomComparison(...a); }, get IncludeUnposted(){ return cfIncludeUnposted; }, set IncludeUnposted(v){ cfIncludeUnposted=v; }, ROptionsMenu(...a){ return renderCfOptionsMenu(...a); } };
+var _cmp_tx = { p:'tx', tab:'tax_report', PeriodRange(...a){ return txPeriodRange(...a); }, get PeriodMode(){ return txPeriodMode; }, set PeriodMode(v){ txPeriodMode=v; }, get PeriodCustomStart(){ return txPeriodCustomStart; }, set PeriodCustomStart(v){ txPeriodCustomStart=v; }, get PeriodCustomEnd(){ return txPeriodCustomEnd; }, set PeriodCustomEnd(v){ txPeriodCustomEnd=v; }, ComparisonRange(...a){ return txComparisonRange(...a); }, get ComparisonMode(){ return txComparisonMode; }, set ComparisonMode(v){ txComparisonMode=v; }, get ComparisonCustomStart(){ return txComparisonCustomStart; }, set ComparisonCustomStart(v){ txComparisonCustomStart=v; }, get ComparisonCustomEnd(){ return txComparisonCustomEnd; }, set ComparisonCustomEnd(v){ txComparisonCustomEnd=v; }, ApplyCustomPeriod(...a){ return txApplyCustomPeriod(...a); }, get OpenMenu(){ return txOpenMenu; }, set OpenMenu(v){ txOpenMenu=v; }, ComparisonRanges(...a){ return txComparisonRanges(...a); }, get ComparisonPeriods(){ return txComparisonPeriods; }, set ComparisonPeriods(v){ txComparisonPeriods=v; }, ApplyCustomComparison(...a){ return txApplyCustomComparison(...a); }, get IncludeUnposted(){ return txIncludeUnposted; }, set IncludeUnposted(v){ txIncludeUnposted=v; }, ROptionsMenu(...a){ return renderTxOptionsMenu(...a); } };
 
 window.addEventListener('error', function(e){
   const detail = (e && e.error && (e.error.stack || e.error.message)) || e.message || 'Unknown error';
@@ -1680,6 +1764,41 @@ function applyBackwardCompatAndRender(){
       e.desc = newDesc;
     });
     state.journalPartyNamesAdded = true; saveState();
+  }
+  // One-time: entries the system already posted from Sales / Purchases / Inventory / Payments get their customer / supplier on EVERY line
+  // (they used to carry it on the receivable / payable line only). Partner balances count only receivable / payable lines, so nothing changes there.
+  if(Array.isArray(state.journal) && !state.journalPartnerAllLines){
+    const byEntry = new Map(); // entry id -> {type,id}, for stock entries that have no AR/AP line of their own
+    const note = (ids, type, id)=>{ if(id) (ids||[]).forEach(i=>{ if(!byEntry.has(i)) byEntry.set(i, {type, id}); }); };
+    (state.deliveries||[]).forEach(d=>{ const id = saleCustId(d.saleId); note(d.entryIds,'customer',id); (d.returns||[]).forEach(r=>note(r.entryIds,'customer',id)); });
+    (state.invoices||[]).forEach(inv=>(inv.credits||[]).forEach(c=>{ note(c.entryIds,'customer',inv.customerId); note(c.returnEntryIds,'customer',inv.customerId); }));
+    (state.goodsReceipts||[]).forEach(g=>{ note(g.entryIds,'supplier',g.supplierId); (g.returns||[]).forEach(r=>note(r.entryIds,'supplier',g.supplierId)); });
+    (state.purchases||[]).forEach(b=>(b.debits||[]).forEach(c=>{ note(c.entryIds,'supplier',b.supplierId); note(c.returnEntryIds,'supplier',b.supplierId); }));
+    state.journal.forEach(e=>{
+      if(['sale','purchase','receipt','payment','reversal'].indexOf(e.source)<0 || !Array.isArray(e.lines)) return;
+      const pl = e.lines.find(l=>l.partyType && l.partyId);
+      const pt = pl ? {type:pl.partyType, id:pl.partyId} : byEntry.get(e.id);
+      if(!pt) return;
+      e.lines.forEach(l=>{ if(!l.partyType || !l.partyId){ l.partyType = pt.type; l.partyId = pt.id; } });
+    });
+    state.journalPartnerAllLines = true; saveState();
+  }
+  // One-time: the customer / supplier name is removed from the Label of every line of the system's own entries (the Partner column carries it now).
+  if(Array.isArray(state.journal) && !state.journalLabelPartnerStripped){
+    state.journal.forEach(e=>{
+      if(['sale','purchase','receipt','payment','reversal'].indexOf(e.source)<0 || !Array.isArray(e.lines)) return;
+      e.lines.forEach(l=>{ if(l.desc && l.partyType && l.partyId) l.desc = stripPartyFromLabel(l.desc, partyName(l.partyType, l.partyId)); });
+    });
+    state.journalLabelPartnerStripped = true; saveState();
+  }
+  // One-time: the customer / supplier name is also removed from the entry Description of the system's own entries.
+  if(Array.isArray(state.journal) && !state.journalDescPartnerStripped){
+    state.journal.forEach(e=>{
+      if(['sale','purchase','receipt','payment','reversal'].indexOf(e.source)<0 || !e.desc || !Array.isArray(e.lines)) return;
+      const pl = e.lines.find(l=>l.partyType && l.partyId);
+      if(pl) e.desc = stripPartyFromLabel(e.desc, partyName(pl.partyType, pl.partyId));
+    });
+    state.journalDescPartnerStripped = true; saveState();
   }
   // One-time: entries the system already posted from Sales / Purchases / Inventory get Capitalized Case text and, when the Reference is blank, the
   // document id found in their description (INV-…, BILL-…, OUT-…, RET-…, ADJ-…, SCRAP-…, PAY-… etc.). A Reference somebody typed is never touched.
@@ -2392,7 +2511,7 @@ function pdfNoWrapDom(root){
   const walker = doc.createTreeWalker(root, 4 /* NodeFilter.SHOW_TEXT */, null);
   let n; while((n = walker.nextNode())){
     const par = n.parentNode;
-    if(!par || skip[par.nodeName] || (par.classList && par.classList.contains('nw'))) continue;
+    if(!par || skip[par.nodeName] || (par.classList && par.classList.contains('nw')) || (par.closest && par.closest('.ent'))) continue;
     if(/\d/.test(n.nodeValue)) nodes.push(n);
   }
   nodes.forEach(function(t){
@@ -2412,17 +2531,41 @@ function pdfNoWrapDom(root){
   });
 }
 /* Adds the no-wrap CSS + the wrapper script to the HTML of a print window just before it is written. */
+/* Measures every table of a print window with the REAL font (after fonts load), then: portrait -> landscape -> zoom-out, so columns never crowd / overlap. Self-contained: embedded into every print window by pdfProtect(). */
+function pdfFitToPage(win){
+  var d = win.document;
+  var ready = new Promise(function(res){
+    var done = false, fin = function(){ if(!done){ done = true; res(); } };
+    setTimeout(fin, 3500);
+    var go = function(){ (d.fonts && d.fonts.ready ? d.fonts.ready : Promise.resolve()).then(fin, fin); };
+    if(d.readyState === 'complete') go(); else win.addEventListener('load', go);
+  });
+  return ready.then(function(){
+    var mm = 96/25.4, avail = function(l){ return ((l?297:210) - 28) * mm - 64; };
+    var tables = [].slice.call(d.querySelectorAll('table')).filter(function(t){ return !t.closest('.meta, .tot'); });
+    var land = [].some.call(d.querySelectorAll('style'), function(st){ return /size:\s*A4 landscape/.test(st.textContent); });
+    var need = tables.map(function(t){ var w = t.style.width; t.style.width = '1px'; var n = t.offsetWidth; t.style.width = w; return n; });
+    var worst = Math.max.apply(null, need.concat([0]));
+    if(!land && worst > avail(false)){ land = true; var s2 = d.createElement('style'); s2.textContent = '@page{size:A4 landscape}'; d.head.appendChild(s2); }
+    var a = avail(land);
+    tables.forEach(function(t,i){ if(need[i] > a) t.style.zoom = Math.max(0.5, a/need[i]); });
+  });
+}
 function pdfProtect(html){
-  const add = (window.uiPdfFontLink||'') + '<style>' + PDF_NOWRAP_CSS + (window.uiPdfCss?window.uiPdfCss(''):'') + '</style><script>(' + pdfNoWrapDom.toString() + ')(document.body);<\/script>';
+  const add = (window.uiPdfFontLink||'') + '<style>' + PDF_NOWRAP_CSS + (window.uiPdfCss?window.uiPdfCss(''):'') + '</style><script>(' + pdfNoWrapDom.toString() + ')(document.body); window.__pdfFit = (' + pdfFitToPage.toString() + ')(window);<\/script>';
   const i = html.lastIndexOf('</body>');
   return i >= 0 ? html.slice(0, i) + add + html.slice(i) : html + add;
 }
 function triggerWindowPrint(win){
-  try{
-    if(win && !win.closed && typeof win.print === 'function') win.print();
-  }catch(err){
-    toast('Report opened — press Ctrl+P to print if it did not print automatically');
-  }
+  const go = function(){
+    try{
+      if(win && !win.closed && typeof win.print === 'function') win.print();
+    }catch(err){
+      toast('Report opened — press Ctrl+P to print if it did not print automatically');
+    }
+  };
+  let p = null; try{ p = win && win.__pdfFit; }catch(e){}
+  if(p && p.then) p.then(go, go); else go();
 }
 function toLocalISO(d){
   const y = d.getFullYear();
@@ -2583,14 +2726,33 @@ const SYSTEM_LABEL_SOURCES = ['sale','purchase','receipt','payment','reversal'];
    the rest of each word is left exactly as is (so INV-0001, HSBC, WH Tax keep their look). Arabic / digits are untouched. */
 function capCase(str){ return String(str==null?'':str).replace(/(^|[\s(\[\/])([a-z])/g, (m,a,b)=>a+b.toUpperCase()); }
 function withParty(desc, name){ return (name && name!=='\u2014' && String(desc).indexOf(name)<0) ? desc+' \u2014 '+name : desc; }
+/* The partner now sits on every journal line (Partner column), so a line's Label no longer repeats the customer / supplier name:
+   removes "— Name" (or "-- Name" / "- Name") and any other occurrence of the name from the label text. */
+function stripPartyFromLabel(txt, name){
+  if(!txt || !name || name==='\u2014') return txt;
+  const esc = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  let t = String(txt).replace(new RegExp('\\s*(?:\\u2014|\\u2013|--|-)\\s*'+esc, 'g'), '').replace(new RegExp(esc, 'g'), '');
+  return t.replace(/\s+/g,' ').replace(/\s*(?:\u2014|\u2013|--|-)\s*$/,'').trim();
+}
 function custNameById(id){ const c=(state.customers||[]).find(x=>x.id===id); return c?c.name:''; }
 function suppNameById(id){ const c=(state.suppliers||[]).find(x=>x.id===id); return c?c.name:''; }
+function saleCustId(saleId){ const sl=(state.sales||[]).find(x=>x.id===saleId); return sl?sl.customerId:''; }
 function saleCustName(saleId){ const sl=(state.sales||[]).find(x=>x.id===saleId); return sl?custNameById(sl.customerId):''; }
 function systemLabelFor(source, desc){ return (SYSTEM_LABEL_SOURCES.indexOf(source)>=0 && desc) ? String(desc) : ''; }
-function postEntry(date, desc, source, lines, journalId, reference){
+/* Partner on every line (Odoo logic): a sale / purchase / receipt / payment / return / credit-debit-note entry carries its customer or
+   supplier on ALL of its lines (revenue, tax, inventory, COGS, bank ...), not just the receivable / payable one. The partner comes from
+   the entry's own party line, or from the optional `partner` ({type:'customer'|'supplier', id}) for stock entries that have no AR/AP line
+   (delivery COGS, goods receipt, returns). Partner BALANCES still count only receivable / payable lines — see arApCodeSet(). */
+function postEntry(date, desc, source, lines, journalId, reference, partner){
+  let labelPartnerName = '';
   if(SYSTEM_LABEL_SOURCES.indexOf(source)>=0){
     const pl = lines.find(l=>l.partyType && l.partyId);
-    if(pl) desc = withParty(desc, partyName(pl.partyType, pl.partyId));
+    const pt = pl ? {type:pl.partyType, id:pl.partyId} : ((partner && partner.type && partner.id) ? partner : null);
+    if(pt){
+      labelPartnerName = partyName(pt.type, pt.id);
+      desc = stripPartyFromLabel(desc, labelPartnerName); // the Partner column carries the name; the description no longer repeats it
+      lines = lines.map(l=> (l.partyType && l.partyId) ? l : Object.assign({}, l, {partyType:pt.type, partyId:pt.id}));
+    }
     desc = capCase(desc);
   }
   if(isPeriodLocked(date)){
@@ -2608,7 +2770,7 @@ function postEntry(date, desc, source, lines, journalId, reference){
     journalId: journal ? journal.id : null,
     date, desc, source,
     reference: reference || '',
-    lines: lines.map(l=>({code:l.code, debit:Number(l.debit)||0, credit:Number(l.credit)||0, partyType:l.partyType||null, partyId:l.partyId||null, desc:(SYSTEM_LABEL_SOURCES.indexOf(source)>=0 ? capCase(l.desc||systemLabelFor(source, desc)) : (l.desc||systemLabelFor(source, desc))), analytic:analyticAllowedFor(l.code)?(l.analytic||''):'', ...taxFieldsOf(l)})),
+    lines: lines.map(l=>({code:l.code, debit:Number(l.debit)||0, credit:Number(l.credit)||0, partyType:l.partyType||null, partyId:l.partyId||null, desc:(SYSTEM_LABEL_SOURCES.indexOf(source)>=0 ? stripPartyFromLabel(capCase(l.desc||systemLabelFor(source, desc)), labelPartnerName) : (l.desc||systemLabelFor(source, desc))), analytic:analyticAllowedFor(l.code)?(l.analytic||''):'', ...taxFieldsOf(l)})),
     reversed:false,
     status:'posted',
     postedAt: new Date().toISOString(),
@@ -2808,6 +2970,7 @@ function ledgerIndex(){
   if(__ledgerIndexCache) return __ledgerIndexCache;
   const byAccount = new Map(), byParty = new Map(), byAnalytic = new Map();
   const groupOf = new Map(state.accounts.map(a=>[a.code, a.type]));
+  const arAp = arApCodeSet();
   postedJournal().forEach(e=>{
     e.lines.forEach(l=>{
       // Analytic Accounts: only lines on Revenue / Expense accounts count (Configuration → Analytic Accounts)
@@ -2819,7 +2982,7 @@ function ledgerIndex(){
       let a = byAccount.get(l.code);
       if(!a){ a = {debit:0, credit:0}; byAccount.set(l.code, a); }
       a.debit += l.debit; a.credit += l.credit;
-      if(l.partyType && l.partyId){
+      if(l.partyType && l.partyId && arAp.has(l.code)){
         const key = l.partyType + ':' + l.partyId;
         let p = byParty.get(key);
         if(!p){ p = {debit:0, credit:0}; byParty.set(key, p); }
@@ -2830,6 +2993,9 @@ function ledgerIndex(){
   __ledgerIndexCache = {byAccount, byParty, byAnalytic};
   return __ledgerIndexCache;
 }
+/* Codes of the Accounts Receivable / Payable accounts. A partner's balance, ledger and aging are built from these lines only, because
+   every other line of a system entry now carries the partner too (for display / filtering) and must not be counted twice. */
+function arApCodeSet(){ return new Set((state.accounts||[]).filter(a=>a.role==='ar' || a.role==='ap').map(a=>a.code)); }
 function accountTotals(code){
   return ledgerIndex().byAccount.get(code) || {debit:0, credit:0};
 }
@@ -2850,11 +3016,12 @@ function addDays(dateStr, days){
 function invoicesForParty(partyType, partyId, asOfISO){
   const isCustomer = partyType==='customer';
   const entries = [];
+  const arAp = arApCodeSet();
   postedJournal().forEach(e=>{
     if(e.reversed || e.source==='reversal') return;
     if(asOfISO && e.date > asOfISO) return; // only applied when an explicit cutoff is requested
     e.lines.forEach(l=>{
-      if(l.partyType===partyType && l.partyId===partyId) entries.push({e,l});
+      if(l.partyType===partyType && l.partyId===partyId && arAp.has(l.code)) entries.push({e,l});
     });
   });
   entries.sort((a,b)=> a.e.date===b.e.date ? String(a.e.id).localeCompare(b.e.id) : a.e.date.localeCompare(b.e.date));
@@ -3782,6 +3949,7 @@ const NAV_ACCESS = {
   glAccountCode:[()=>glAccountCode, x=>{glAccountCode=x;}],
   glAccountOrigin:[()=>glAccountOrigin, x=>{glAccountOrigin=x;}],
   generalLedgerOrigin:[()=>generalLedgerOrigin, x=>{generalLedgerOrigin=x;}],
+  glOnlyCode:[()=>glOnlyCode, x=>{glOnlyCode=x;}],
   returnedFilterSale:[()=>returnedFilterSale, x=>{returnedFilterSale=x;}],
   deliveryFilterSale:[()=>deliveryFilterSale, x=>{deliveryFilterSale=x;}],
   receiptFilterQuote:[()=>receiptFilterQuote, x=>{receiptFilterQuote=x;}],
@@ -3981,7 +4149,7 @@ function renderTopNav(){
           baseTab = 'dashboard';
           extraCrumbs.push({label:(DASH_METRIC_META[dashMetricKey]||{}).label || null, nav:`goToDashMetric('${dashMetricKey}')`});
         } else if(returnTab==='gl-account'){
-          if(glAccountOrigin==='balance_sheet' || glAccountOrigin==='profit_loss' || glAccountOrigin==='cash_flow' || glAccountOrigin==='tax_report'){
+          if(glAccountOrigin==='balance_sheet' || glAccountOrigin==='profit_loss' || glAccountOrigin==='cash_flow' || glAccountOrigin==='tax_report' || glAccountOrigin==='trial'){
             baseTab = glAccountOrigin; // Report / Account — no intermediate "General Ledger" crumb
           } else {
             baseTab = 'general_ledger';
@@ -4004,7 +4172,7 @@ function renderTopNav(){
         baseTab = 'dashboard';
         extraCrumbs.push({label:(DASH_METRIC_META[dashMetricKey]||{}).label || null, nav:null});
       } else if(currentTab==='gl-account'){
-        if(glAccountOrigin==='balance_sheet' || glAccountOrigin==='profit_loss' || glAccountOrigin==='cash_flow' || glAccountOrigin==='tax_report'){
+        if(glAccountOrigin==='balance_sheet' || glAccountOrigin==='profit_loss' || glAccountOrigin==='cash_flow' || glAccountOrigin==='tax_report' || glAccountOrigin==='trial'){
           baseTab = glAccountOrigin; // Report / Account — no intermediate "General Ledger" crumb
         } else {
           baseTab = 'general_ledger';
@@ -4187,6 +4355,7 @@ function goToDropdownChild(parentId, childId, glOrigin){
   // an account's detail), which passes glOrigin so this overview keeps
   // showing "Balance Sheet / General Ledger" and can link back to it.
   generalLedgerOrigin = (childId==='general_ledger') ? (glOrigin || null) : generalLedgerOrigin;
+  if(childId==='general_ledger') glOnlyCode = null; // opened from the menu / a crumb = the full ledger
   render();
 }
 function closeDropdown(){
@@ -4207,7 +4376,7 @@ function closeSaleActionMenu(){
     if(currentTab==='sales-form') renderSalesInPlace();
   }
 }
-document.addEventListener('click', function(){ closeDropdown(); closeGlobalSearch(); closeSaleActionMenu(); closeSaleGeneralAction(); closeNotesAction(); closeSaleFiltersPanel(); closeCustomerGeneralAction(); closeCustomerFiltersPanel(); closeSupplierGeneralAction(); closeSupplierFiltersPanel(); closeQuoteActionMenu(); closeInvoiceActionMenu(); closeBillActionMenu(); closeQuoteGeneralAction(); closeQuoteFiltersPanel(); closeAccountGeneralAction(); closeAccountFiltersPanel(); closeJournalMenus(); cfgCloseAll(); bsCloseMenus(); plCloseMenus(); txCloseMenus(); cfCloseMenus(); });
+document.addEventListener('click', function(){ closeDropdown(); closeGlobalSearch(); closeSaleActionMenu(); closeSaleGeneralAction(); closeNotesAction(); closeSaleFiltersPanel(); closeCustomerGeneralAction(); closeCustomerFiltersPanel(); closeSupplierGeneralAction(); closeSupplierFiltersPanel(); closeQuoteActionMenu(); closeInvoiceActionMenu(); closeBillActionMenu(); closeQuoteGeneralAction(); closeQuoteFiltersPanel(); closeAccountGeneralAction(); closeAccountFiltersPanel(); closeJournalMenus(); cfgCloseAll(); bsCloseMenus(); plCloseMenus(); txCloseMenus(); glCloseMenus(); tbCloseMenus(); jrCloseMenus(); pnCloseMenus(); cfCloseMenus(); });
 /* Governs the Accounts page's two inline-editing flows — the "add new
    account" row (see renderNewAccountRow / tryAutoSaveNewAccountRow) and an
    existing row opened via startEditAccount (see saveEditedAccount) — from a
@@ -4749,11 +4918,12 @@ const VIEW_RENDERERS = {
   aged_receivable: renderAgedReceivable, aged_payable: renderAgedPayable
 };
 function buildViewHTML(){
+  if(state){ ['assets','assetModels','invoices','sales','purchases','purchaseQuotes','bankAccounts','parentCategories','analyticAccounts'].forEach(k=>{ if(!Array.isArray(state[k])) state[k] = []; }); }
   invalidateLedgerCache(); // fresh per HTML build — see accountTotals()/partyBalance() below
   return (storageMode==='memory' ? memoryBanner() : '') + VIEW_RENDERERS[currentTab]();
 }
 let __renderGen = 0;
-const REPORT_COMPARISON_TABS = ['balance_sheet','profit_loss','cash_flow','tax_report'];
+const REPORT_COMPARISON_TABS = ['balance_sheet','profit_loss','cash_flow','tax_report','general_ledger','trial','journal_report','partner_ledger'];
 const REPORT_DRILL_TABS = ['gl-account','entry-detail','journal-lines'];
 let __lastReportTab = null;
 function resetReportComparison(tab){
@@ -4772,12 +4942,25 @@ function resetReportComparison(tab){
     txPeriodMode = 'this_month'; txPeriodCustomStart = monthStart; txPeriodCustomEnd = todayISO();
     txComparisonMode = 'none'; txComparisonPeriods = 1; txComparisonCustomStart = todayISO(); txComparisonCustomEnd = todayISO();
     txIncludeUnposted = false; txOpenMenu = null; txReportKind = 'vat';
+  } else if(tab==='general_ledger'){
+    glPeriodMode = 'this_fy'; glPeriodCustomStart = monthStart; glPeriodCustomEnd = todayISO();
+    glIncludeUnposted = false; glUnfoldAll = false; glJournalIds = new Set(); glOpenAccounts = new Set(); glShown = {}; glOpenMenu = null; glSearch = '';
+  } else if(tab==='trial'){
+    tbPeriodMode = 'this_fy'; tbPeriodCustomStart = monthStart; tbPeriodCustomEnd = todayISO();
+    tbIncludeUnposted = false; tbHideZero = true; tbJournalIds = new Set(); tbOpenMenu = null; tbSearch = '';
+  } else if(tab==='journal_report'){
+    jrPeriodMode = 'this_fy'; jrPeriodCustomStart = monthStart; jrPeriodCustomEnd = todayISO();
+    jrIncludeUnposted = false; jrJournalIds = new Set(); jrOpenMenu = null; jrSearch = ''; jrUnfoldAll = false; jrOpened = new Set();
+  } else if(tab==='partner_ledger'){
+    pnPeriodMode = 'this_fy'; pnPeriodCustomStart = monthStart; pnPeriodCustomEnd = todayISO();
+    pnIncludeUnposted = false; pnUnfoldAll = false; pnAccountKind = 'both'; pnJournalIds = new Set(); pnOpenPartners = new Set(); pnShown = {}; pnOpenMenu = null; pnSearch = '';
   } else if(tab==='cash_flow'){
     cfPeriodMode = 'this_month'; cfPeriodCustomStart = monthStart; cfPeriodCustomEnd = todayISO();
     cfComparisonMode = 'none'; cfComparisonPeriods = 1; cfComparisonCustomStart = todayISO(); cfComparisonCustomEnd = todayISO();
     cfIncludeUnposted = false; cfOpenMenu = null;
   }
-  bsClosedGroups.clear(); // collapsed Parent-Account groups (shared by all three statements)
+  bsOpenGroups.clear(); // open Parent-Account groups (shared by all four statements) — back to everything folded
+  if(RPT_UNFOLD.hasOwnProperty(tab)) RPT_UNFOLD[tab] = false; // Options → Unfold All goes back to its default too
 }
 function render(){
   // Full page transition — use this for actual navigation (switching tabs/
@@ -4898,8 +5081,22 @@ function renderQuiet(){
     __renderGen++; // cancel any pending render() swap so it can't land after this
     const v = document.getElementById('view');
     v.classList.remove('view-fade-out'); // a cancelled render() swap must not leave the page invisible
+    // Keep the scroll position (page + any inner table scroll box) when refreshing the SAME page in place,
+    // so expanding/collapsing a row never jumps back to the top. Skipped if the tab itself changed.
+    const keep = (currentTab === __lastFullyRenderedTab);
+    const contentEl = v.closest('.content');
+    const topPos = (keep && contentEl) ? contentEl.scrollTop : 0;
+    const innerPos = keep ? Array.from(v.querySelectorAll('.ls-scroll')).map(e=>[e.scrollTop, e.scrollLeft]) : [];
     v.innerHTML = buildViewHTML();
     growAllJeTextareas();
+    if(keep){
+      const restore = ()=>{
+        if(contentEl) contentEl.scrollTop = topPos;
+        v.querySelectorAll('.ls-scroll').forEach((e,i)=>{ if(innerPos[i]){ e.scrollTop = innerPos[i][0]; e.scrollLeft = innerPos[i][1]; } });
+      };
+      restore();
+      requestAnimationFrame(restore);
+    }
   }catch(err){
     showFatalError(err.stack || err.message);
   }
@@ -6271,16 +6468,21 @@ function downloadAccountsImportTemplate(){
     widths: {'Acc Code':12,'Account Name':32,'Account Group':16,'Account Type':24,'Parent Account Name':28}
   });
 }
+/* One shared lazy-loader for the SheetJS (XLSX) library: runs onReady straight away when it is already loaded, otherwise shows
+   loadingMsg, injects the CDN script and then runs onReady (or shows errMsg and runs onFail). Replaces nine identical copies. */
+function loadXlsxThen(loadingMsg, errMsg, onReady, onFail){
+  if(typeof XLSX !== 'undefined'){ onReady(); return; }
+  toast(loadingMsg);
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  script.onload = onReady;
+  script.onerror = function(){ toast(errMsg); if(onFail) onFail(); };
+  document.head.appendChild(script);
+}
 function importAccountsExcelFile(input){
   const file = input.files[0];
   if(!file) return;
-  if(typeof XLSX !== 'undefined'){ readAccountsExcelFile(file); return; }
-  toast('Loading import tool...');
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  script.onload = function(){ readAccountsExcelFile(file); };
-  script.onerror = function(){ toast('Could not load the import tool — check your internet connection'); input.value=''; };
-  document.head.appendChild(script);
+  loadXlsxThen('Loading import tool...', 'Could not load the import tool — check your internet connection', function(){ readAccountsExcelFile(file); }, function(){ input.value=''; });
 }
 function readAccountsExcelFile(file){
   const reader = new FileReader();
@@ -6767,13 +6969,7 @@ function cfgTemplate(pid){
   downloadTemplateWithLists(Object.assign({header: P.templateHeader, file: P.file+'-import-template.xlsx'}, extra));
 }
 function cfgWithXlsx(input, cb){
-  if(typeof XLSX !== 'undefined'){ cb(); return; }
-  toast('Loading import tool...');
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  script.onload = cb;
-  script.onerror = function(){ toast('Could not load the import tool — check your internet connection'); input.value = ''; };
-  document.head.appendChild(script);
+  loadXlsxThen('Loading import tool...', 'Could not load the import tool — check your internet connection', cb, function(){ input.value = ''; });
 }
 function cfgImportFile(pid, input){
   const file = input.files[0];
@@ -8010,6 +8206,8 @@ function printJournalEntry(entryId){
       <td class="wrap">${escHtml(lineTaxLabel(l)||'No Tax')}</td>
     </tr>`;
   }).join('');
+  const jeCols = [{pct:17,label:'Account',wrap:true},{pct:10,label:'Partner',wrap:true},{pct:29,label:'Label',wrap:true},{pct:10,label:'Analytic',wrap:true},{pct:12,label:'Debit',num:true},{pct:12,label:'Credit',num:true},{pct:10,label:'Tax',wrap:true}];
+  const jeFit = pdfFitWidths(jeCols, e.lines.map(l=>['','','','',fmt(l.debit),fmt(l.credit),'']).concat([['','','','',state.currency+' '+fmt(totalD),state.currency+' '+fmt(totalC),'']]));
   const win = window.open('', '_blank', 'width=900,height=1000');
   if(!win){ toast('Please allow pop-ups to print the entry'); return; }
   const serialTitle = e.status==='draft' ? '' : ' — '+escHtml(e.id); // a Draft hasn't consumed a Journal serial yet, so leave that spot blank rather than printing its DRAFT-#### placeholder id
@@ -8025,14 +8223,14 @@ function printJournalEntry(entryId){
   .sub{ font-size:13px; color:#6B7685; margin-bottom:22px; }
   .hdr{ display:flex; gap:40px; margin-bottom:20px; font-size:13px; }
   .hdr div span{ display:block; color:#6B7685; font-size:11px; text-transform:uppercase; letter-spacing:.3px; margin-bottom:2px; }
-  table{ width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
   thead th{ border-bottom:2px solid #1B2430; font-size:11px; color:#6B7685; font-weight:700; padding:6px 8px 8px; text-align:left; }
   thead th.num{ text-align:right; }
-  td{ padding:6px 8px; border-bottom:1px solid #E4E8EC; white-space:nowrap; overflow:visible; text-overflow:clip; }
+  td{ padding:6px 8px; border-bottom:1px solid #E4E8EC; white-space:nowrap; }
   tfoot td{ font-weight:700; border-top:2px solid #1B2430; border-bottom:none; padding-top:10px; }
-  .num{ text-align:right; font-family:'Courier New',monospace; }
-  td.wrap{ white-space:normal; word-break:break-word; overflow:visible; text-overflow:clip; }
-  @page{ margin:18mm 14mm; }
+  .num{ text-align:right; font-family:'Courier New',monospace; min-width:92px; }
+  td.wrap{ white-space:normal; overflow-wrap:anywhere; min-width:70px; } td.ent{ min-width:0; } tbody.grand tr{ page-break-inside:avoid; break-inside:avoid; } tbody.grand td{ font-weight:800; border-top:2px solid #1B2430; border-bottom:none; } tr.grp-total td{ font-weight:700; border-top:1.5px solid #1B2430; background:#F3F6F9; } tr.grp-total{ page-break-inside:avoid; break-inside:avoid; }
+  @page{ margin:18mm 14mm;${jeFit.landscape ? ' size:A4 landscape;' : ''} }
 </style>
 </head>
 <body>
@@ -8045,7 +8243,7 @@ function printJournalEntry(entryId){
     <div><span>Journal</span>${escHtml(journalName)}</div>
   </div>
   <table>
-    <colgroup><col style="width:17%;"><col style="width:10%;"><col style="width:29%;"><col style="width:10%;"><col style="width:12%;"><col style="width:12%;"><col style="width:10%;"></colgroup>
+    <colgroup>${jeFit.widths.map(w=>`<col style="width:${w};">`).join('')}</colgroup>
     <thead><tr><th>Account</th><th>Partner</th><th>Label</th><th>Analytic</th><th class="num">Debit</th><th class="num">Credit</th><th>Tax</th></tr></thead>
     <tbody>${rowsHtml}</tbody>
     <tfoot><tr><td colspan="4"></td><td class="num">${state.currency} ${fmt(totalD)}</td><td class="num">${state.currency} ${fmt(totalC)}</td><td></td></tr></tfoot>
@@ -9692,13 +9890,7 @@ function downloadSalesImportTemplate(){
 function importSalesExcelFile(input){
   const file = input.files[0];
   if(!file) return;
-  if(typeof XLSX !== 'undefined'){ readSalesExcelFile(file); return; }
-  toast('Loading import tool...');
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  script.onload = function(){ readSalesExcelFile(file); };
-  script.onerror = function(){ toast('Could not load the import tool — check your internet connection'); input.value=''; };
-  document.head.appendChild(script);
+  loadXlsxThen('Loading import tool...', 'Could not load the import tool — check your internet connection', function(){ readSalesExcelFile(file); }, function(){ input.value=''; });
 }
 /* Reads back either of the two layouts the Action menu can produce: the full
    "Export" round-trip (identified by an "Invoice #" column) or the blank
@@ -10541,7 +10733,7 @@ function printSaleInvoice(){
   table.items thead th{ border-bottom:2px solid #1B2430; font-size:11px; color:#6B7685; font-weight:700; padding:6px 8px 8px; text-align:left; }
   table.items thead th.num{ text-align:right; }
   table.items td{ padding:6px 8px; border-bottom:1px solid #E4E8EC; }
-  .num{ text-align:right; font-family:'Courier New',monospace; } td.wrap{ word-break:break-word; }
+  .num{ text-align:right; font-family:'Courier New',monospace; min-width:92px; } td.wrap{ word-break:break-word; }
   .tot{ width:300px; margin:16px 0 0 auto; font-size:13px; }
   .tot div{ display:flex; justify-content:space-between; padding:5px 4px; color:#4B5563; }
   .tot .grand{ font-weight:700; color:#1B2430; border-top:2px solid #1B2430; margin-top:4px; padding-top:9px; font-size:15px; }
@@ -10640,7 +10832,7 @@ function applySaleRecord(s, opts){
     const cogsLines = [];
     cogsBy.forEach((amt, an)=>{ if(amt>0) cogsLines.push({code:codeFor('cogs'), debit:amt, credit:0, analytic:an}); });
     cogsLines.push({code:codeFor('inventory'), debit:0, credit:cogs});
-    const cogsEntry = postEntry(s.date, 'Cost of goods sold — '+(opts.refId||s.id), 'sale', cogsLines, journalIdFor('inventoryValuation'), opts.refId||s.id);
+    const cogsEntry = postEntry(s.date, 'Cost of goods sold — '+(opts.refId||s.id), 'sale', cogsLines, journalIdFor('inventoryValuation'), opts.refId||s.id, {type:'customer', id:s.customerId});
     entryIds.push(cogsEntry.id);
   }
   if(!opts.skipStock) s.items.forEach(it=>{
@@ -10782,7 +10974,7 @@ function openDocsPrintWindow(docTitle, pages, popupLabel){
   table.items thead th{ border-bottom:2px solid #1B2430; font-size:11px; color:#6B7685; font-weight:700; padding:6px 8px 8px; text-align:left; }
   table.items thead th.num{ text-align:right; }
   table.items td{ padding:6px 8px; border-bottom:1px solid #E4E8EC; }
-  .num{ text-align:right; font-family:'Courier New',monospace; } td.wrap{ word-break:break-word; }
+  .num{ text-align:right; font-family:'Courier New',monospace; min-width:92px; } td.wrap{ word-break:break-word; }
   .tot{ width:300px; margin:16px 0 0 auto; font-size:13px; }
   .tot div{ display:flex; justify-content:space-between; padding:5px 4px; color:#4B5563; }
   .tot .grand{ font-weight:700; color:#1B2430; border-top:2px solid #1B2430; margin-top:4px; padding-top:9px; font-size:15px; }
@@ -11109,7 +11301,7 @@ function submitValidateDelivery(id){
     const lines = [];
     cogsBy.forEach((amt,an)=>{ if(amt>0) lines.push({code:codeFor('cogs'), debit:amt, credit:0, analytic:an}); });
     lines.push({code:codeFor('inventory'), debit:0, credit:cogs});
-    d.entryIds.push(postEntry(date, withParty('Cost of goods sold — '+d.id, saleCustName(d.saleId)), 'sale', lines, journalIdFor('inventoryValuation'), d.id).id);
+    d.entryIds.push(postEntry(date, withParty('Cost of goods sold — '+d.id, saleCustName(d.saleId)), 'sale', lines, journalIdFor('inventoryValuation'), d.id, {type:'customer', id:saleCustId(d.saleId)}).id);
   }
   d.items = doneItems; d.status = 'done'; d.doneDate = date;
   let msg = 'Delivery '+d.id+' validated — stock out and COGS posted';
@@ -11273,7 +11465,7 @@ function submitValidateReturn(id){
   if(val>0){
     const lines = [{code:codeFor('inventory'), debit:val, credit:0}];
     by.forEach((amt,an)=>{ if(amt>0) lines.push({code:codeFor('cogs'), debit:0, credit:amt, analytic:an}); });
-    ids.push(postEntry(date, withParty('Return '+r.id+(r.creditNoteId?' — credit note '+r.creditNoteId:''), saleCustName(d.saleId)), 'sale', lines, journalIdFor('inventoryValuation'), r.id).id);
+    ids.push(postEntry(date, withParty('Return '+r.id+(r.creditNoteId?' — credit note '+r.creditNoteId:''), saleCustName(d.saleId)), 'sale', lines, journalIdFor('inventoryValuation'), r.id, {type:'customer', id:saleCustId(d.saleId)}).id);
   }
   r.status = 'done'; r.doneDate = date; r.items = doneItems; r.entryIds = ids;
   if(left.length) d.returns.push({id:returnUid(), date, status:'ready', items:left, entryIds:[], viaCreditNote:r.viaCreditNote, creditNoteId:r.creditNoteId, backorderOf:r.id});
@@ -11832,13 +12024,7 @@ function downloadQuotesImportTemplate(){
 function importQuotesExcelFile(input){
   const file = input.files[0];
   if(!file) return;
-  if(typeof XLSX !== 'undefined'){ readQuotesExcelFile(file); return; }
-  toast('Loading import tool...');
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  script.onload = function(){ readQuotesExcelFile(file); };
-  script.onerror = function(){ toast('Could not load the import tool — check your internet connection'); input.value=''; };
-  document.head.appendChild(script);
+  loadXlsxThen('Loading import tool...', 'Could not load the import tool — check your internet connection', function(){ readQuotesExcelFile(file); }, function(){ input.value=''; });
 }
 /* Reads back either of the two layouts the Action menu can produce: the full
    "Export" round-trip (identified by a "Quotation #" column) or the blank
@@ -12330,7 +12516,7 @@ function printQuoteDocument(){
   table.items thead th{ border-bottom:2px solid #1B2430; font-size:11px; color:#6B7685; font-weight:700; padding:6px 8px 8px; text-align:left; }
   table.items thead th.num{ text-align:right; }
   table.items td{ padding:6px 8px; border-bottom:1px solid #E4E8EC; }
-  .num{ text-align:right; font-family:'Courier New',monospace; } td.wrap{ word-break:break-word; }
+  .num{ text-align:right; font-family:'Courier New',monospace; min-width:92px; } td.wrap{ word-break:break-word; }
   .tot{ width:300px; margin:16px 0 0 auto; font-size:13px; }
   .tot div{ display:flex; justify-content:space-between; padding:5px 4px; color:#4B5563; }
   .tot .grand{ font-weight:700; color:#1B2430; border-top:2px solid #1B2430; margin-top:4px; padding-top:9px; font-size:15px; }
@@ -12505,7 +12691,7 @@ function submitValidateReceipt(id){
     if(it.qty-q[i]>1e-9) rest.push({productId:it.productId, qty:it.qty-q[i], cost:it.cost});
   });
   r.entryIds = [];
-  if(val>0) r.entryIds.push(postEntry(date, withParty('Goods received — '+r.id, suppNameById(r.supplierId)), 'purchase', [{code:codeFor('inventory'), debit:val, credit:0},{code:RECEIPT_INTERIM_CODE, debit:0, credit:val}], journalIdFor('inventoryValuation'), r.id).id);
+  if(val>0) r.entryIds.push(postEntry(date, withParty('Goods received — '+r.id, suppNameById(r.supplierId)), 'purchase', [{code:codeFor('inventory'), debit:val, credit:0},{code:RECEIPT_INTERIM_CODE, debit:0, credit:val}], journalIdFor('inventoryValuation'), r.id, {type:'supplier', id:r.supplierId}).id);
   r.items = done; r.status = 'done'; r.doneDate = date;
   let msg = 'Receipt '+r.id+' validated — stock in';
   if(rest.length){
@@ -12788,7 +12974,7 @@ function submitValidateReceiptReturn(id){
     if(rest>1e-9) left.push({productId:it.productId, qty:rest, demand:rest, cost});
   });
   const ids = [];
-  if(val>0) ids.push(postEntry(date, withParty('Return '+r.id+(r.debitNoteId?' — debit note '+r.debitNoteId:''), suppNameById(g.supplierId)), 'purchase', [{code:RECEIPT_INTERIM_CODE, debit:val, credit:0},{code:codeFor('inventory'), debit:0, credit:val}], journalIdFor('inventoryValuation'), r.id).id);
+  if(val>0) ids.push(postEntry(date, withParty('Return '+r.id+(r.debitNoteId?' — debit note '+r.debitNoteId:''), suppNameById(g.supplierId)), 'purchase', [{code:RECEIPT_INTERIM_CODE, debit:val, credit:0},{code:codeFor('inventory'), debit:0, credit:val}], journalIdFor('inventoryValuation'), r.id, {type:'supplier', id:g.supplierId}).id);
   r.status = 'done'; r.doneDate = date; r.items = doneItems; r.entryIds = ids;
   if(left.length) g.returns.push({id:uid('RTV','receipt_ret'), date, status:'ready', items:left, entryIds:[], viaDebitNote:r.viaDebitNote, debitNoteId:r.debitNoteId, backorderOf:r.id});
   saveState(); toast('Return validated'+(left.length?' — the rest stays open as a backorder':'')+' — stock out and inventory value reversed'); render();
@@ -13024,7 +13210,7 @@ function applyInvoiceCredit(inv, qty){
   if(val>0){
     const rl = [{code:codeFor('inventory'), debit:val, credit:0}];
     by.forEach((amt,an)=>{ if(amt>0) rl.push({code:codeFor('cogs'), debit:0, credit:amt, analytic:an}); });
-    const re = postEntry(date, withParty('Return — credit note '+noteId+' for '+inv.id, custNameById(inv.customerId)), 'sale', rl, journalIdFor('inventoryValuation'), noteId); retIds.push(re.id);
+    const re = postEntry(date, withParty('Return — credit note '+noteId+' for '+inv.id, custNameById(inv.customerId)), 'sale', rl, journalIdFor('inventoryValuation'), noteId, {type:'customer', id:inv.customerId}); retIds.push(re.id);
   }
   perD.forEach((items,d)=>{ d.returns = d.returns||[]; d.returns.push({id:returnUid(), date, status:'ready', items, entryIds:[], viaCreditNote:inv.id, creditNoteId:noteId}); });
   inv.credits = inv.credits||[];
@@ -14435,13 +14621,7 @@ function downloadCustomersImportTemplate(){
 function importCustomersExcelFile(input){
   const file = input.files[0];
   if(!file) return;
-  if(typeof XLSX !== 'undefined'){ readCustomersExcelFile(file); return; }
-  toast('Loading import tool...');
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  script.onload = function(){ readCustomersExcelFile(file); };
-  script.onerror = function(){ toast('Could not load the import tool — check your internet connection'); input.value=''; };
-  document.head.appendChild(script);
+  loadXlsxThen('Loading import tool...', 'Could not load the import tool — check your internet connection', function(){ readCustomersExcelFile(file); }, function(){ input.value=''; });
 }
 /* Reads back either layout the Action menu can produce: the full "Export"
    round-trip (identified by a "Customer ID" column) or the blank "Export
@@ -14843,13 +15023,7 @@ function downloadSuppliersImportTemplate(){
 function importSuppliersExcelFile(input){
   const file = input.files[0];
   if(!file) return;
-  if(typeof XLSX !== 'undefined'){ readSuppliersExcelFile(file); return; }
-  toast('Loading import tool...');
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  script.onload = function(){ readSuppliersExcelFile(file); };
-  script.onerror = function(){ toast('Could not load the import tool — check your internet connection'); input.value=''; };
-  document.head.appendChild(script);
+  loadXlsxThen('Loading import tool...', 'Could not load the import tool — check your internet connection', function(){ readSuppliersExcelFile(file); }, function(){ input.value=''; });
 }
 /* Reads back either layout the Action menu can produce: the full "Export"
    round-trip (identified by a "Supplier ID" column) or the blank "Export
@@ -15044,30 +15218,218 @@ function deleteSupplierFromForm(id){
   backToSuppliersList();
 }
 
-/* ============================= TRIAL BALANCE ============================= */
+/* ============================= TRIAL BALANCE (Odoo logic) =============================
+   Same behaviour as Odoo's Accounting > Reporting > Trial Balance:
+   - one row per account with three column pairs: Initial Balance (everything before the period start), the selected Period
+     (gross Debit / Credit moved inside it) and End Balance (initial + period);
+   - Initial / End balances are shown net: a net-debit balance sits in the Debit column, a net-credit balance in the Credit column;
+   - Balance Sheet accounts (asset / liability / equity) carry their initial balance from the beginning of time, Profit & Loss
+     accounts (revenue / expense) only from the start of the fiscal year the period falls in, and the Profit & Loss result of the
+     earlier fiscal years that is not yet closed shows as an "Unallocated Earnings" line — so the report always balances, like Odoo;
+   - accounts with no balance and no activity are always hidden (automatic, no option); a Total row closes the report;
+   - toolbar: PDF / XLSX, Search, Period (follows the Fiscal Year setup), Journals filter, Options (Include Unposted Entries; zero lines are always hidden);
+   - click an account to open its General Ledger detail, click an entry there to open it. */
+const TB_PL_GROUPS = ['revenue','expense'];
+let tbOpenMenu = null;            // 'period' | 'journals' | 'options' | null
+let tbPeriodMode = 'this_fy';     // Odoo opens the Trial Balance on the current financial year
+let tbPeriodCustomStart = toLocalISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+let tbPeriodCustomEnd = todayISO();
+let tbIncludeUnposted = false;
+let tbHideZero = true;          // always on: zero lines are hidden automatically (no option in the menu)
+let tbJournalIds = new Set();     // empty = all journals ('none' = entries without a journal)
+let tbSearch = '';
+function tbRenderInPlace(){
+  if(currentTab!=='trial'){ renderQuiet(); return; }
+  const contentEl = document.getElementById('view').closest('.content');
+  const top = contentEl ? contentEl.scrollTop : 0;
+  const inner = Array.from(document.querySelectorAll('#view .ls-scroll')).map(e=>[e.scrollTop, e.scrollLeft]);
+  const restore = ()=>{
+    if(contentEl) contentEl.scrollTop = top;
+    document.querySelectorAll('#view .ls-scroll').forEach((e,i)=>{ if(inner[i]){ e.scrollTop = inner[i][0]; e.scrollLeft = inner[i][1]; } });
+  };
+  renderQuiet();
+  restore();
+  requestAnimationFrame(restore);
+}
+var _cmp_tb = { p:'tb', get PeriodMode(){ return tbPeriodMode; }, set PeriodMode(v){ tbPeriodMode=v; }, get PeriodCustomStart(){ return tbPeriodCustomStart; }, set PeriodCustomStart(v){ tbPeriodCustomStart=v; }, get PeriodCustomEnd(){ return tbPeriodCustomEnd; }, set PeriodCustomEnd(v){ tbPeriodCustomEnd=v; }, get OpenMenu(){ return tbOpenMenu; }, set OpenMenu(v){ tbOpenMenu=v; } };
+function tbPeriodRange(){ return _cmpPeriodRange(_cmp_tb); }
+function tbPeriodLabel(){
+  if(tbPeriodMode==='custom') return `Custom (${formatDateDisplay(tbPeriodCustomStart)} \u2013 ${formatDateDisplay(tbPeriodCustomEnd)})`;
+  return TX_PERIOD_LABELS[tbPeriodMode];
+}
+function tbJournalsLabel(){
+  if(!tbJournalIds.size) return 'All';
+  if(tbJournalIds.size===1){ const id = [...tbJournalIds][0]; const j = state.journalsConfig.find(x=>x.id===id); return j ? j.name : 'No Journal'; }
+  return tbJournalIds.size + ' selected';
+}
+function tbToggleMenu(name, e){ if(e) e.stopPropagation(); tbOpenMenu = (tbOpenMenu===name) ? null : name; tbRenderInPlace(); }
+function tbCloseMenus(){ if(tbOpenMenu){ tbOpenMenu = null; if(currentTab==='trial') tbRenderInPlace(); } }
+function tbSetPeriodMode(mode){ tbPeriodMode = mode; tbOpenMenu = null; tbRenderInPlace(); }
+function tbApplyCustomPeriod(a, b){ return _cmpApplyCustomPeriod(_cmp_tb, a, b); }
+function tbToggleUnposted(){ tbIncludeUnposted = !tbIncludeUnposted; tbRenderInPlace(); }
+function tbToggleJournal(id){
+  if(id==='__all__') tbJournalIds.clear();
+  else if(tbJournalIds.has(id)) tbJournalIds.delete(id); else tbJournalIds.add(id);
+  tbRenderInPlace();
+}
+function tbOnSearch(el){
+  tbSearch = el.value; const pos = el.selectionStart;
+  tbRenderInPlace();
+  const i = document.getElementById('tb-search');
+  if(i){ i.focus(); try{ i.setSelectionRange(pos, pos); }catch(e){} }
+}
+
+/* One pass over the journal -> per-account initial balance + period Debit / Credit, then End Balance. */
+function tbData(){
+  const {start, end} = tbPeriodRange();
+  const fyStart = fiscalYearDateRange(fiscalYearForYmKey(start.slice(0,7))).fyStart;
+  const entries = tbIncludeUnposted ? state.journal : postedJournal();
+  const typeOf = new Map(state.accounts.map(a=>[a.code, a.type]));
+  const byCode = new Map();
+  let unalloc = 0; // P&L result of the earlier fiscal years
+  entries.forEach(e=>{
+    if(e.date > end) return;
+    if(tbJournalIds.size && !tbJournalIds.has(e.journalId || 'none')) return;
+    (e.lines||[]).forEach(l=>{
+      const d = Number(l.debit)||0, c = Number(l.credit)||0;
+      let o = byCode.get(l.code);
+      if(!o){ o = {code:l.code, initD:0, initC:0, debit:0, credit:0}; byCode.set(l.code, o); }
+      if(e.date < start){
+        if(TB_PL_GROUPS.includes(typeOf.get(l.code)) && e.date < fyStart){ unalloc += d - c; return; } // P&L accounts restart every fiscal year
+        o.initD += d; o.initC += c;
+      } else {
+        o.debit += d; o.credit += c;
+      }
+    });
+  });
+  const order = state.accounts.map(a=>a.code);
+  const codes = new Set(order);
+  byCode.forEach((v,k)=>codes.add(k));
+  const sorted = [...codes].sort((a,b)=>{ const ia = order.indexOf(a), ib = order.indexOf(b); return (ia<0?1e9:ia)-(ib<0?1e9:ib) || String(a).localeCompare(String(b)); });
+  const rows = [];
+  const tot = {initD:0, initC:0, debit:0, credit:0, endD:0, endC:0};
+  const push = (code, name, init, debit, credit, extra)=>{
+    const endBal = init + debit - credit;
+    const row = Object.assign({code, name, init, debit, credit, endBal,
+      initD: init>0 ? init : 0, initC: init<0 ? -init : 0, endD: endBal>0 ? endBal : 0, endC: endBal<0 ? -endBal : 0}, extra||{});
+    const isZero = Math.abs(init)<0.005 && Math.abs(debit)<0.005 && Math.abs(credit)<0.005 && Math.abs(endBal)<0.005;
+    if(isZero && tbHideZero) return;
+    rows.push(row);
+    tot.initD += row.initD; tot.initC += row.initC; tot.debit += debit; tot.credit += credit; tot.endD += row.endD; tot.endC += row.endC;
+  };
+  sorted.forEach(code=>{
+    const o = byCode.get(code) || {initD:0, initC:0, debit:0, credit:0};
+    const acct = accountByCode(code);
+    push(code, acct ? acct.name : '', o.initD - o.initC, o.debit, o.credit);
+  });
+  if(Math.abs(unalloc) >= 0.005) push('', 'Unallocated Earnings', unalloc, 0, 0, {unalloc:true});
+  return {start, end, rows, tot};
+}
+function tbApplySearch(d){
+  const q = tbSearch.trim().toLowerCase();
+  if(!q) return d;
+  const rows = d.rows.filter(r=>(r.code+' '+r.name).toLowerCase().includes(q));
+  const tot = {initD:0, initC:0, debit:0, credit:0, endD:0, endC:0};
+  rows.forEach(r=>{ tot.initD+=r.initD; tot.initC+=r.initC; tot.debit+=r.debit; tot.credit+=r.credit; tot.endD+=r.endD; tot.endC+=r.endC; });
+  return Object.assign({}, d, {rows, tot});
+}
+
+function periodMenuHtml(p, mode, cs, ce, labels){
+  return `<div class="bs-menu" onclick="event.stopPropagation();">
+    ${['this_month','this_quarter','this_fy'].map(k=>`<div class="bs-menu-item ${mode===k?'active':''}" onclick="${p}SetPeriodMode('${k}')">${labels[k]}</div>`).join('')}
+    <div class="bs-menu-divider"></div>
+    ${['last_month','last_quarter','last_fy'].map(k=>`<div class="bs-menu-item ${mode===k?'active':''}" onclick="${p}SetPeriodMode('${k}')">${labels[k]}</div>`).join('')}
+    <div class="bs-menu-divider"></div>
+    <div class="bs-menu-item bs-menu-custom ${mode==='custom'?'active':''}">
+      <div style="margin-bottom:6px;">Custom</div>
+      <div style="display:flex; gap:6px;">
+        <input type="date" id="${p}-period-start-input" value="${cs}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
+        <input type="date" id="${p}-period-end-input" value="${ce}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
+      </div>
+      <button class="small" style="margin-top:6px; width:100%;" onclick="${p}ApplyCustomPeriod(document.getElementById('${p}-period-start-input').value, document.getElementById('${p}-period-end-input').value)">Apply</button>
+    </div>
+  </div>`;
+}
+function renderTbPeriodMenu(){ return periodMenuHtml('tb', tbPeriodMode, tbPeriodCustomStart, tbPeriodCustomEnd, TX_PERIOD_LABELS); }
+function journalsMenuHtml(p, ids){
+  const hasNone = state.journal.some(e=>!e.journalId);
+  return `<div class="bs-menu" onclick="event.stopPropagation();">
+    <label class="bs-menu-checkbox"><input type="checkbox" ${!ids.size?'checked':''} onchange="${p}ToggleJournal('__all__')"><span>All Journals</span></label>
+    <div class="bs-menu-divider"></div>
+    ${state.journalsConfig.map(j=>`<label class="bs-menu-checkbox"><input type="checkbox" ${ids.has(j.id)?'checked':''} onchange="${p}ToggleJournal('${j.id}')"><span>${escHtml(j.name)}</span></label>`).join('')}
+    ${hasNone?`<label class="bs-menu-checkbox"><input type="checkbox" ${ids.has('none')?'checked':''} onchange="${p}ToggleJournal('none')"><span>No Journal</span></label>`:''}
+  </div>`;
+}
+function renderTbJournalsMenu(){ return journalsMenuHtml('tb', tbJournalIds); }
+function renderTbOptionsMenu(){
+  return `<div class="bs-menu" onclick="event.stopPropagation();">
+    <label class="bs-menu-checkbox"><input type="checkbox" ${tbIncludeUnposted?'checked':''} onchange="tbToggleUnposted()"><span>Include Unposted Entries</span></label>
+  </div>`;
+}
+
+/* PDF / XLSX = the report exactly as it is on screen (same period, journals, search, unposted and hide-zero settings). */
+const TB_EXPORT_COLUMNS = [{label:'Account',width:'28%',wrap:true},{label:'Initial Debit',num:true,width:'12%'},{label:'Initial Credit',num:true,width:'12%'},{label:'Period Debit',num:true,width:'12%'},{label:'Period Credit',num:true,width:'12%'},{label:'End Debit',num:true,width:'12%'},{label:'End Credit',num:true,width:'12%'}];
+function tbExportData(){
+  const d = tbApplySearch(tbData());
+  const nz = v => Math.abs(v) >= 0.005 ? v : '';
+  const rows = d.rows.map(r=>[(r.code ? r.code+' \u2014 ' : '')+r.name, nz(r.initD), nz(r.initC), nz(r.debit), nz(r.credit), nz(r.endD), nz(r.endC)]);
+  return {d, rows, totals:['Total', d.tot.initD, d.tot.initC, d.tot.debit, d.tot.credit, d.tot.endD, d.tot.endC]};
+}
+function tbSubtitle(d){ return 'Trial Balance \u2014 '+d.start+' to '+d.end+' \u2014 '+(tbIncludeUnposted?'All Entries':'Posted Entries')+' \u2014 Journals: '+tbJournalsLabel()+(tbSearch.trim()?' \u2014 Search: '+tbSearch.trim():''); }
+function tbPrintReport(){
+  const x = tbExportData();
+  if(!x.rows.length){ toast('Nothing to print for this period'); return; }
+  printSimpleTableReport('Trial Balance', tbSubtitle(x.d), TB_EXPORT_COLUMNS, x.rows, x.totals);
+}
+function tbExportExcel(){
+  const x = tbExportData();
+  if(!x.rows.length){ toast('Nothing to export for this period'); return; }
+  exportSimpleTableReportExcel('Trial Balance', tbSubtitle(x.d), TB_EXPORT_COLUMNS, x.rows, 'trial-balance-'+x.d.start+'-to-'+x.d.end+'.xlsx', x.totals);
+}
+
 function renderTrial(){
-  let totalD=0, totalC=0;
-  const rows = state.accounts.map(a=>{
-    const t = accountTotals(a.code);
-    const normal = ['asset','expense'].includes(a.type) ? t.debit-t.credit : t.credit-t.debit;
-    const debitCol = normal>=0 && ['asset','expense'].includes(a.type) ? normal : (normal<0 && !['asset','expense'].includes(a.type) ? -normal : 0);
-    const creditCol = normal>=0 && !['asset','expense'].includes(a.type) ? normal : (normal<0 && ['asset','expense'].includes(a.type) ? -normal : 0);
-    totalD += debitCol; totalC += creditCol;
-    return {a, debitCol, creditCol};
-  }).filter(r=>r.debitCol!==0 || r.creditCol!==0);
-  const balanced = Math.round(totalD*100)===Math.round(totalC*100);
+  const d = tbApplySearch(tbData());
+  const optionsLabel = (tbIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only');
+  const cell = v => Math.abs(v) >= 0.005 ? fmt(v) : '';
+  const balanced = Math.round(d.tot.endD*100)===Math.round(d.tot.endC*100) && Math.round(d.tot.initD*100)===Math.round(d.tot.initC*100) && Math.round(d.tot.debit*100)===Math.round(d.tot.credit*100);
+  const body = d.rows.map(r=>`<tr class="tb-row${r.unalloc?' tb-unalloc':''}" ${r.unalloc?'':`onclick="tbOpenLedger('${r.code}')"`}>
+      <td>${r.code?`<span class="mono">${escHtml(r.code)}</span> \u2014 `:''}${escHtml(r.name)}</td>
+      <td class="bs-val">${cell(r.initD)}</td><td class="bs-val">${cell(r.initC)}</td>
+      <td class="bs-val">${cell(r.debit)}</td><td class="bs-val">${cell(r.credit)}</td>
+      <td class="bs-val">${cell(r.endD)}</td><td class="bs-val">${cell(r.endC)}</td></tr>`).join('');
   return `
-    <div class="topbar rep-bar"><div><h2>Trial Balance</h2><div class="sub">Total debit and credit balances across all accounts</div></div></div>
-    <div class="card">
-      <div class="ls-scroll" style="overflow-x:auto;"><table><thead><tr><th>Code</th><th>Account name</th><th>Type</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead><tbody>
-      ${rows.map(r=>`<tr><td class="mono">${r.a.code}</td><td>${r.a.name}</td><td><span class="badge ${r.a.type}">${typeLabel(r.a.type)}</span></td>
-      <td class="num">${fmt(r.debitCol)}</td><td class="num">${fmt(r.creditCol)}</td></tr>`).join('')}
-      </tbody>
-      <tfoot><tr style="font-weight:800; border-top:2px solid var(--ink);">
-        <td colspan="3">Total</td><td class="num">${fmt(totalD)}</td><td class="num">${fmt(totalC)}</td>
-      </tr></tfoot>
+    <div class="bs-toolbar">
+      <div class="bs-toolbar-left">
+        <button class="bs-pdf-btn" onclick="tbPrintReport()">\ud83d\udda8 PDF</button>
+        <button class="bs-xlsx-btn" onclick="tbExportExcel()">\u2b07 XLSX</button>
+      </div>
+      <input id="tb-search" type="search" placeholder="Search..." value="${escHtml(tbSearch)}" oninput="tbOnSearch(this)" onclick="event.stopPropagation()" style="flex:1 1 160px; min-width:120px; width:auto; padding:7px 10px; border:1px solid var(--line); border-radius:6px; font-size:calc(13.5px*var(--fs,1));">
+      <div class="bs-toolbar-right">
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${tbOpenMenu==='period'?' open':''}" onclick="tbToggleMenu('period', event)">\ud83d\udcc5 Period: <b>${tbPeriodLabel()}</b></button>
+          ${tbOpenMenu==='period' ? renderTbPeriodMenu() : ''}
+        </div>
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${tbOpenMenu==='journals'?' open':''}" onclick="tbToggleMenu('journals', event)">\ud83d\udcd2 Journals: <b>${escHtml(tbJournalsLabel())}</b></button>
+          ${tbOpenMenu==='journals' ? renderTbJournalsMenu() : ''}
+        </div>
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${tbOpenMenu==='options'?' open':''}" onclick="tbToggleMenu('options', event)">\u25be Options: <b>${optionsLabel}</b></button>
+          ${tbOpenMenu==='options' ? renderTbOptionsMenu() : ''}
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:22px 26px;">
+      ${d.rows.length===0 ? (tbSearch.trim() ? '<div class="empty">No results for "'+escHtml(tbSearch.trim())+'"</div>' : '<div class="empty">No journal activity in this period</div>') :
+      `<div class="ls-scroll" style="overflow-x:auto;"><table class="bs-table tb-table">
+        <thead>
+          <tr class="tb-h1"><th rowspan="2" class="tb-acc" style="text-align:left;">Account</th><th colspan="2" class="tb-grp">Initial Balance</th><th colspan="2" class="tb-grp">${formatDateDisplay(d.start)} \u2013 ${formatDateDisplay(d.end)}</th><th colspan="2" class="tb-grp">End Balance</th></tr>
+          <tr class="tb-h2"><th>Debit</th><th>Credit</th><th>Debit</th><th>Credit</th><th>Debit</th><th>Credit</th></tr>
+        </thead>
+        <tbody>${body}</tbody>
+        <tfoot><tr class="gl-total"><td>Total</td><td class="bs-val">${fmt(d.tot.initD)}</td><td class="bs-val">${fmt(d.tot.initC)}</td><td class="bs-val">${fmt(d.tot.debit)}</td><td class="bs-val">${fmt(d.tot.credit)}</td><td class="bs-val">${fmt(d.tot.endD)}</td><td class="bs-val">${fmt(d.tot.endC)}</td></tr></tfoot>
       </table></div>
-      <div class="total-line"><span class="${balanced?'balanced':'unbalanced'}">${balanced?'✓ Trial balance is balanced':'⚠ Not balanced — review your entries'}</span></div>
+      ${balanced ? '' : '<div class="total-line"><span class="unbalanced">\u26a0 Not Balanced \u2014 Review Your Entries</span></div>'}`}
     </div>
   `;
 }
@@ -15311,12 +15673,33 @@ function bsPriorYearsEarnings(asOfISO, includeUnposted){
   });
   return totalRevenue - totalCogs - totalExpense;
 }
-/* Which Parent Account Name groups are collapsed (key: "<type>:<parentName>").
-   Everything starts expanded so every account shows under its group right away. */
-let bsClosedGroups = new Set();
+/* Which Parent Account Name groups are open (key: "<type>:<parentName>"). Same logic as the General Ledger: every group starts FOLDED
+   (one row per group); Options -> "Unfold All" opens them all. The screen, the PDF and the XLSX all follow this same state. */
+let bsOpenGroups = new Set();
+/* "Unfold All" (Options menu), one flag per statement: ON = every group is open. Clicking a group while it is ON leaves Unfold All,
+   keeps every other group open and folds only the one clicked. Turning it OFF folds every group again. */
+const RPT_UNFOLD = {balance_sheet:false, profit_loss:false, cash_flow:false, tax_report:false};
+const RPT_UNFOLD_TREES = {balance_sheet:()=>balanceSheetTreeData(), profit_loss:()=>plTreeData(), cash_flow:()=>cashFlowTreeData(), tax_report:()=>txTreeData()};
+function rptGroupOpen(tab, groupKey){ return !!RPT_UNFOLD[tab] || bsOpenGroups.has(groupKey); }
+function rptGroupKeys(nodes, out){ (nodes||[]).forEach(n=>{ if(n.arrow && n.groupKey) out.push(n.groupKey); if(n.children) rptGroupKeys(n.children, out); }); return out; }
+function rptToggleUnfoldAll(tab){
+  RPT_UNFOLD[tab] = !RPT_UNFOLD[tab];
+  bsOpenGroups.clear();
+  renderQuiet();
+}
+function bsToggleUnfoldAll(){ rptToggleUnfoldAll('balance_sheet'); }
+function plToggleUnfoldAll(){ rptToggleUnfoldAll('profit_loss'); }
+function cfToggleUnfoldAll(){ rptToggleUnfoldAll('cash_flow'); }
+function txToggleUnfoldAll(){ rptToggleUnfoldAll('tax_report'); }
 function bsToggleGroup(key, e){
   if(e){ e.stopPropagation(); e.preventDefault(); }
-  if(bsClosedGroups.has(key)) bsClosedGroups.delete(key); else bsClosedGroups.add(key);
+  if(RPT_UNFOLD[currentTab]){ // leaving "Unfold All": every other group stays open, this one folds
+    RPT_UNFOLD[currentTab] = false;
+    let keys = [];
+    try{ keys = rptGroupKeys(RPT_UNFOLD_TREES[currentTab](), []); }catch(err){}
+    bsOpenGroups = new Set(keys);
+    bsOpenGroups.delete(key);
+  } else if(bsOpenGroups.has(key)) bsOpenGroups.delete(key); else bsOpenGroups.add(key);
   renderQuiet();
 }
 /* Builds the live Balance Sheet tree straight from the Chart of Accounts and
@@ -15352,7 +15735,7 @@ function balanceSheetTreeData(){
       const value = rows.reduce((s,r)=>s+r.v,0);
       const cmpValues = cmpDates.map((_,i)=>rows.reduce((s,r)=>s+r.cvs[i],0));
       groupNodes.push({
-        label:key, value, cmpValues, level:1, bold:true, arrow:true, open:!bsClosedGroups.has(groupKey), groupKey,
+        label:key, value, cmpValues, level:1, bold:true, arrow:true, open:rptGroupOpen('balance_sheet', groupKey), groupKey,
         children: rows.map(r=>({label:`${r.account.code} — ${r.account.name}`, value:r.v, cmpValues:r.cvs, level:2, code:r.account.code, link:true}))
       });
     });
@@ -15421,7 +15804,7 @@ function renderBsNode(n, showCmp, interactive, originTab){
     cmpCells += `<td class="${cls.join(' ')}">${has?fmtLE(cv):''}</td>`;
   }
   const rowAttrs = !interactive ? '' : (n.arrow ? ` onclick="bsToggleGroup('${n.groupKey}', event)" style="cursor:pointer;"`
-    : (n.code ? ` onclick="goToGLAccount('${n.code}', '${originTab||''}')" style="cursor:pointer;"` : ''));
+    : (n.code ? ` onclick="reportOpenLedger('${n.code}', '${originTab||''}')" style="cursor:pointer;"` : ''));
   let html = `<tr class="${rowClasses.join(' ')}"${rowAttrs}>
     <td><div class="bs-label${n.level?` bs-lvl-${n.level}`:''}${n.code?' bs-link':''}">${arrowChar?`<span class="bs-arrow">${arrowChar}</span>`:''}<span>${escHtml(n.label)}</span></div></td>
     <td class="${valClasses.join(' ')}">${hasVal?fmtLE(n.value):''}</td>
@@ -15443,7 +15826,7 @@ function bsFlattenForExport(nodes, showCmp){
     for(let i=0;i<showCmp;i++) row.push((cvals[i]!==null&&cvals[i]!==undefined)?cvals[i]:'');
     if(showCmp===1) row.push(bsPctChange(n.value, cvals[0]));
     rows.push(row);
-    if(n.children) rows = rows.concat(bsFlattenForExport(n.children, showCmp));
+    if(n.children && n.open!==false) rows = rows.concat(bsFlattenForExport(n.children, showCmp)); // folded group = one row, like on screen
   });
   return rows;
 }
@@ -15459,31 +15842,75 @@ function bsFlattenForExport(nodes, showCmp){
    multiple lines instead of being clipped); rows: array of arrays — a plain
    value for text columns, a real number (or '' to stay blank) for num
    columns, formatted with fmt() here at render time. */
-function printSimpleTableReport(title, subtitle, columns, rows, totals){
+/* ---- PDF column fitting (shared by every fixed-layout PDF table): a number column is never narrower than its longest value
+   (Courier 12.5px ~ 7.6px / char + padding), so big amounts can never run into the next column. Text columns that wrap share what is left;
+   when they would get too narrow for portrait, the page switches to landscape. cols = [{pct,num,wrap,label}], rowsDisp = display strings. ---- */
+function pdfFitWidths(cols, rowsDisp, forceLandscape){
+  const need = cols.map((c,i)=>{
+    let maxLen = 0;
+    for(let r=0;r<rowsDisp.length;r++){ const v = rowsDisp[r][i]; const n = v==null ? 0 : String(v).length; if(n>maxLen) maxLen = n; }
+    const hdr = String(c.label||'').length*6.8;
+    return c.num ? Math.max(maxLen*7.6, hdr)+20 : Math.max(maxLen*7, hdr)+20;
+  });
+  const layout = avail=>{
+    const px = new Array(cols.length).fill(0);
+    let fixed = 0, wrapWeight = 0, wrapCount = 0;
+    cols.forEach((c,i)=>{
+      if(c.wrap){ wrapWeight += c.pct; wrapCount++; return; }
+      // numbers: at least what they need; other unwrapped text: its need (capped), but never less than the given share
+      const given = c.pct/100*avail;
+      px[i] = c.num ? Math.max(need[i], given) : Math.max(Math.min(need[i], avail*0.35), given);
+      fixed += px[i];
+    });
+    const remaining = avail - fixed;
+    const ok = wrapCount ? remaining >= 70*wrapCount : fixed <= avail;
+    cols.forEach((c,i)=>{ if(c.wrap) px[i] = Math.max(remaining, 70*wrapCount) * (c.pct/wrapWeight); });
+    const sum = px.reduce((a,b)=>a+b,0);
+    return {ok, widths:px.map(v=>(v/sum*100).toFixed(2)+'%')};
+  };
+  if(!forceLandscape){ const l = layout(620); if(l.ok) return {widths:l.widths, landscape:false}; }
+  return {widths:layout(950).widths, landscape:true};
+}
+function printSimpleTableReport(title, subtitle, columns, rows, totals, opts){
   const companyName = (state.company && state.company.name) || '';
   const win = window.open('', '_blank', 'width=900,height=1000');
   if(!win){ toast('Please allow pop-ups to print the report'); return; }
   const hasWidths = columns.some(c=>c.width);
-  const colgroupHtml = hasWidths ? '<colgroup>'+columns.map(c=>`<col style="width:${c.width||'auto'};">`).join('')+'</colgroup>' : '';
+  const fit = (hasWidths && columns.every(c=>c.width)) ? pdfFitWidths(
+    columns.map(c=>({pct:parseFloat(c.width)||10, num:!!c.num, wrap:!!c.wrap, label:c.label})),
+    rows.concat(totals?[totals]:[]).map(r=>r.map((v,i)=>(columns[i] && columns[i].num && typeof v==='number') ? fmt(v) : (v==null?'':v))),
+    !!(opts && opts.landscape)) : null;
+  const colgroupHtml = hasWidths ? '<colgroup>'+columns.map((c,i)=>`<col style="width:${fit ? fit.widths[i] : (c.width||'auto')};">`).join('')+'</colgroup>' : '';
   const theadHtml = '<tr>'+columns.map(c=>`<th${c.num?' class="num"':''}>${escHtml(c.label)}</th>`).join('')+'</tr>';
-  const rowHtml = r=>'<tr>'+r.map((v,i)=>{
+  const rowHtml = r=>{
+    let span = 1;
+    if(opts && opts.groupSpan && typeof r[0]==='string' && r[0]!==''){
+      let k = 1; while(k<columns.length && !(columns[k] && columns[k].num) && (r[k]===''||r[k]==null)) k++;
+      if(k>1 && k<columns.length && columns[k] && columns[k].num) span = k;
+    }
+    const isGrpTotal = !!(opts && opts.groupSpan && span>1 && /^Total\b/.test(r[0]));
+    return '<tr'+(isGrpTotal?' class="grp-total"':'')+'>'+r.map((v,i)=>{
+    if(i>0 && i<span) return '';
     const c = columns[i];
     const display = (c && c.num && typeof v==='number') ? fmt(v) : (v==null?'':v);
     /* Numbers, dates and document numbers (PINV-0001, 2026-10-03, 1,234.50 …) are never broken across lines, even in a wrapping column. */
     const dsp = String(display);
     const unbreakable = typeof v==='number' || /^\s*[-−+]?[\d,]*\.?\d+%?\s*$/.test(dsp) || /^\s*\d{4}-\d{2}-\d{2}(?:[ T][\d:]+)?\s*$/.test(dsp) || /^\s*[A-Za-z]{1,8}[-/]?\d[\w\-/]*\s*$/.test(dsp);
-    const cls = [c&&c.num?'num':'', c&&c.wrap&&!unbreakable?'wrap':''].filter(Boolean).join(' ');
-    return `<td${cls?` class="${cls}"`:''}>${escHtml(display)}</td>`;
-  }).join('')+'</tr>';
+    /* Entry / document-number columns always wrap (at / and -), in every PDF report, so they stay narrow and leave the room to the Label. */
+    const isEnt = !!(c && !c.num && (c.entry || /\bentry\b|^number$/i.test(c.label||'')) && dsp!=='' && !/^\s*\d{4}-\d{2}-\d{2}/.test(dsp));
+    const cls = [c&&c.num?'num':'', isEnt?'wrap ent':(c&&c.wrap&&!unbreakable?'wrap':'')].filter(Boolean).join(' ');
+    const html = isEnt ? escHtml(display).replace(/([\/\-])(?=[^\s])/g,'$1<wbr>') : escHtml(display);
+    return `<td${cls?` class="${cls}"`:''}${i===0&&span>1?` colspan="${span}"`:''}>${html}</td>`;
+  }).join('')+'</tr>'; };
   const rowsHtml = rows.map(rowHtml).join('');
-  const totalsHtml = totals ? `<tfoot><tr style="font-weight:800; border-top:2px solid #1B2430;">${
+  const totalsHtml = totals ? `<tbody class="grand"><tr style="font-weight:800; border-top:2px solid #1B2430;">${
     totals.map((v,i)=>{
       const c = columns[i];
       const cls = c&&c.num?'num':'';
       const display = (c && c.num && typeof v==='number') ? fmt(v) : (v==null?'':v);
       return `<td${cls?` class="${cls}"`:''}>${escHtml(display)}</td>`;
     }).join('')
-  }</tr></tfoot>` : '';
+  }</tr></tbody>` : '';
   win.document.write(pdfProtect(`<!DOCTYPE html>
 <html>
 <head>
@@ -15494,13 +15921,13 @@ function printSimpleTableReport(title, subtitle, columns, rows, totals){
   body{ font-family:'Inter',Arial,sans-serif; color:#1B2430; margin:32px; }
   h1{ font-family:'Space Grotesk',Arial,sans-serif; font-size:22px; font-weight:700; margin:0 0 2px; }
   .sub{ font-size:13px; color:#6B7685; margin-bottom:22px; }
-  table{ width:100%; border-collapse:collapse; font-size:12.5px;${hasWidths?' table-layout:fixed;':''} }
+  table{ width:100%; border-collapse:collapse; font-size:12.5px; }
   thead th{ border-bottom:2px solid #1B2430; font-size:11px; color:#6B7685; font-weight:700; padding:6px 8px 8px; text-align:left; }
   thead th.num{ text-align:right; }
-  td{ padding:6px 8px; border-bottom:1px solid #E4E8EC; white-space:nowrap; overflow:visible; text-overflow:clip; }
-  td.num{ text-align:right; font-family:'Courier New',monospace; }
-  td.wrap{ white-space:normal; word-break:break-word; overflow:visible; text-overflow:clip; }
-  @page{ margin:18mm 14mm; }
+  td{ padding:6px 8px; border-bottom:1px solid #E4E8EC; white-space:nowrap; }
+  td.num{ text-align:right; font-family:'Courier New',monospace; min-width:92px; }
+  td.wrap{ white-space:normal; overflow-wrap:anywhere; min-width:70px; } td.ent{ min-width:0; } tbody.grand tr{ page-break-inside:avoid; break-inside:avoid; } tbody.grand td{ font-weight:800; border-top:2px solid #1B2430; border-bottom:none; } tr.grp-total td{ font-weight:700; border-top:1.5px solid #1B2430; background:#F3F6F9; } tr.grp-total{ page-break-inside:avoid; break-inside:avoid; }
+  @page{ margin:18mm 14mm;${(fit ? fit.landscape : (opts && opts.landscape)) ? ' size:A4 landscape;' : ''} }
 </style>
 </head>
 <body>
@@ -15533,16 +15960,7 @@ function printSimpleTableReport(title, subtitle, columns, rows, totals){
    keep on write — if a column opens without wrapping, select it and turn on
    Home → Wrap Text once; the column is already sized to fit the text either way. */
 function exportSimpleTableReportExcel(title, subtitle, columns, rows, filename, totals){
-  if(typeof XLSX === 'undefined'){
-    toast('Loading export tool...');
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    script.onload = function(){ buildSimpleTableReportWorkbook(title, subtitle, columns, rows, filename, totals); };
-    script.onerror = function(){ toast('Could not load the export tool — check your internet connection'); };
-    document.head.appendChild(script);
-    return;
-  }
-  buildSimpleTableReportWorkbook(title, subtitle, columns, rows, filename, totals);
+  loadXlsxThen('Loading export tool...', 'Could not load the export tool — check your internet connection', function(){ buildSimpleTableReportWorkbook(title, subtitle, columns, rows, filename, totals); });
 }
 function buildSimpleTableReportWorkbook(title, subtitle, columns, rows, filename, totals){
   const header = columns.map(c=>c.label);
@@ -15578,34 +15996,155 @@ function buildSimpleTableReportWorkbook(title, subtitle, columns, rows, filename
   XLSX.writeFile(wb, filename);
   toast('Excel file downloaded');
 }
-/* ---- Journal Report: flattened one-row-per-line export/print ---- */
-const JOURNAL_REPORT_COLUMNS = [{label:'Date',width:'8%'},{label:'Entry #',width:'10%',wrap:true},{label:'Journal',width:'10%',wrap:true},{label:'Account',width:'15%',wrap:true},{label:'Partner',width:'10%',wrap:true},{label:'Label',width:'15%',wrap:true},{label:'Tax',width:'14%',wrap:true},{label:'Debit',num:true,width:'9%'},{label:'Credit',num:true,width:'9%'}];
-function journalReportRows(){
-  const posted = postedJournal().slice().sort((a,b)=> a.date===b.date ? String(a.id).localeCompare(b.id) : a.date.localeCompare(b.date)); // oldest → newest
-  const rows = [];
-  posted.forEach(e=>{
-    e.lines.forEach((l,i)=>{
+/* ============================= JOURNAL REPORT (Odoo "Journals Audit" logic) =============================
+   Same behaviour as Odoo's Accounting > Reporting > Journals Audit:
+   - one section per Journal (only journals that have entries in the period), listing every journal item of its entries
+     (Date / Entry / Account / Partner / Label / Tax / Debit / Credit), entries sorted by date then number;
+   - each journal section closes with its Total Debit / Credit;
+   - toolbar: PDF / XLSX, Search, Period (follows the Fiscal Year setup), Journals filter, Options (Include Unposted Entries, Unfold All);
+   - journals open folded; Options -> Unfold All opens them all, or click a journal header to fold / unfold it; click an entry number to open the entry. */
+let jrOpenMenu = null;            // 'period' | 'journals' | 'options' | null
+let jrPeriodMode = 'this_fy';
+let jrPeriodCustomStart = toLocalISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+let jrPeriodCustomEnd = todayISO();
+let jrIncludeUnposted = false;
+let jrJournalIds = new Set();     // empty = all journals ('none' = entries without a journal)
+let jrSearch = '';
+let jrUnfoldAll = false;          // Options -> Unfold All (default: every journal folded)
+let jrOpened = new Set();         // journals the user opened one by one
+function jrRenderInPlace(){
+  if(currentTab!=='journal_report'){ renderQuiet(); return; }
+  const contentEl = document.getElementById('view').closest('.content');
+  const top = contentEl ? contentEl.scrollTop : 0;
+  const restore = ()=>{ if(contentEl) contentEl.scrollTop = top; };
+  renderQuiet();
+  restore();
+  requestAnimationFrame(restore);
+}
+var _cmp_jr = { p:'jr', get PeriodMode(){ return jrPeriodMode; }, set PeriodMode(v){ jrPeriodMode=v; }, get PeriodCustomStart(){ return jrPeriodCustomStart; }, set PeriodCustomStart(v){ jrPeriodCustomStart=v; }, get PeriodCustomEnd(){ return jrPeriodCustomEnd; }, set PeriodCustomEnd(v){ jrPeriodCustomEnd=v; }, get OpenMenu(){ return jrOpenMenu; }, set OpenMenu(v){ jrOpenMenu=v; } };
+function jrPeriodRange(){ return _cmpPeriodRange(_cmp_jr); }
+function jrPeriodLabel(){
+  if(jrPeriodMode==='custom') return `Custom (${formatDateDisplay(jrPeriodCustomStart)} \u2013 ${formatDateDisplay(jrPeriodCustomEnd)})`;
+  return TX_PERIOD_LABELS[jrPeriodMode];
+}
+function jrJournalsLabel(){
+  if(!jrJournalIds.size) return 'All';
+  if(jrJournalIds.size===1){ const id = [...jrJournalIds][0]; const j = state.journalsConfig.find(x=>x.id===id); return j ? j.name : 'No Journal'; }
+  return jrJournalIds.size + ' selected';
+}
+function jrToggleMenu(name, e){ if(e) e.stopPropagation(); jrOpenMenu = (jrOpenMenu===name) ? null : name; jrRenderInPlace(); }
+function jrCloseMenus(){ if(jrOpenMenu){ jrOpenMenu = null; if(currentTab==='journal_report') jrRenderInPlace(); } }
+function jrSetPeriodMode(mode){ jrPeriodMode = mode; jrOpenMenu = null; jrRenderInPlace(); }
+function jrApplyCustomPeriod(a, b){ return _cmpApplyCustomPeriod(_cmp_jr, a, b); }
+function jrToggleUnposted(){ jrIncludeUnposted = !jrIncludeUnposted; jrRenderInPlace(); }
+function jrToggleJournal(id){
+  if(id==='__all__') jrJournalIds.clear();
+  else if(jrJournalIds.has(id)) jrJournalIds.delete(id); else jrJournalIds.add(id);
+  jrRenderInPlace();
+}
+function jrToggleFold(key){
+  if(jrUnfoldAll){ jrUnfoldAll = false; jrOpened = new Set(jrData().groups.map(g=>g.key)); jrOpened.delete(key); }
+  else if(jrOpened.has(key)) jrOpened.delete(key); else jrOpened.add(key);
+  jrRenderInPlace();
+}
+function jrToggleUnfoldAll(){ jrUnfoldAll = !jrUnfoldAll; jrOpened = new Set(); jrRenderInPlace(); }
+function jrOnSearch(el){
+  jrSearch = el.value; const pos = el.selectionStart;
+  jrRenderInPlace();
+  const i = document.getElementById('jr-search');
+  if(i){ i.focus(); try{ i.setSelectionRange(pos, pos); }catch(e){} }
+}
+function renderJrPeriodMenu(){ return periodMenuHtml('jr', jrPeriodMode, jrPeriodCustomStart, jrPeriodCustomEnd, TX_PERIOD_LABELS); }
+function renderJrJournalsMenu(){ return journalsMenuHtml('jr', jrJournalIds); }
+function renderJrOptionsMenu(){
+  return `<div class="bs-menu" onclick="event.stopPropagation();">
+    <label class="bs-menu-checkbox"><input type="checkbox" ${jrIncludeUnposted?'checked':''} onchange="jrToggleUnposted()"><span>Include Unposted Entries</span></label>
+    <label class="bs-menu-checkbox"><input type="checkbox" ${jrUnfoldAll?'checked':''} onchange="jrToggleUnfoldAll()"><span>Unfold All</span></label>
+  </div>`;
+}
+
+/* One pass: entries of the period -> grouped per journal (journal order of Configuration -> Journals), with totals and applied taxes. */
+function jrData(){
+  const {start, end} = jrPeriodRange();
+  const q = jrSearch.trim().toLowerCase();
+  const entries = jrIncludeUnposted ? state.journal : postedJournal();
+  const groups = new Map();
+  entries.forEach(e=>{
+    if(e.date < start || e.date > end) return;
+    const key = e.journalId || 'none';
+    if(jrJournalIds.size && !jrJournalIds.has(key)) return;
+    const lines = (e.lines||[]).map(l=>{
       const acct = accountByCode(l.code);
-      rows.push([e.date, e.id, journalNameOf(e), acct?acct.code+' — '+acct.name:(l.code||''), l.partyType?partyName(l.partyType,l.partyId):'', l.desc||'', lineTaxLabel(l), numOrZero(l.debit), numOrZero(l.credit)]);
+      return {
+        account: acct ? acct.code+' \u2014 '+acct.name : (l.code||''),
+        partner: l.partyType ? partyName(l.partyType, l.partyId) : '',
+        label: l.desc || e.desc || '',
+        tax: lineTaxLabel(l) || '',
+        debit: Number(l.debit)||0, credit: Number(l.credit)||0, raw:l
+      };
     });
+    if(q){
+      const hay = (e.id+' '+(e.reference||'')+' '+(e.desc||'')+' '+lines.map(x=>x.account+' '+x.partner+' '+x.label+' '+x.tax).join(' ')).toLowerCase();
+      if(!hay.includes(q)) return;
+    }
+    let g = groups.get(key);
+    if(!g){
+      const j = state.journalsConfig.find(x=>x.id===key);
+      g = {key, name: j ? j.name : 'No Journal', code: j ? j.code : '', type: j ? journalTypeLabel(j.type) : '', entries:[], debit:0, credit:0};
+      groups.set(key, g);
+    }
+    g.entries.push({id:e.id, date:e.date, desc:e.desc||'', reference:e.reference||'', draft:e.status==='draft', reversed:!!e.reversed, lines});
+    lines.forEach(x=>{ g.debit += x.debit; g.credit += x.credit; });
   });
-  return rows;
+  const order = state.journalsConfig.map(j=>j.id);
+  const list = [...groups.values()].sort((a,b)=>{ const ia = order.indexOf(a.key), ib = order.indexOf(b.key); return (ia<0?1e9:ia)-(ib<0?1e9:ib); });
+  let debit = 0, credit = 0;
+  list.forEach(g=>{
+    g.entries.sort((a,b)=> a.date===b.date ? String(a.id).localeCompare(String(b.id)) : a.date.localeCompare(b.date));
+    debit += g.debit; credit += g.credit;
+  });
+  return {start, end, groups:list, debit, credit};
 }
-/* Total Debit / Total Credit row for the Journal Report — printed once, at the end of the report. */
-function journalReportTotalsRow(){
-  const rows = journalReportRows();
-  return ['Total','','','','','','', rows.reduce((t,r)=>t+r[7],0), rows.reduce((t,r)=>t+r[8],0)];
+
+/* PDF / XLSX = the report exactly as it is on screen (same logic as the General Ledger): same period / journals / search / unposted settings;
+   a journal that is unfolded on screen is unfolded in the file (its journal items), a folded one stays one row with its Total Debit / Credit. */
+/* The PDF is printed in landscape with wide Debit / Credit columns so the numbers never run into each other. */
+const JOURNAL_REPORT_COLUMNS = [{label:'Journal / Entry',width:'9%',wrap:true,entry:true},{label:'Date',width:'8%'},{label:'Account',width:'17%',wrap:true},{label:'Partner',width:'11%',wrap:true},{label:'Label',width:'33%',wrap:true},{label:'Tax',width:'5%',wrap:true},{label:'Debit',num:true,width:'8.5%'},{label:'Credit',num:true,width:'8.5%'}];
+function jrIsOpen(g){ return jrUnfoldAll || jrOpened.has(g.key) || jrSearch.trim()!==''; }
+/* forPdf: an unfolded journal prints its name, its entries, then ONE 'Total — <journal>' row at its end (the total belongs to the journal, not to a page);
+   a folded journal stays a single row carrying its totals. The XLSX keeps the original layout. */
+function jrExportData(forPdf){
+  const d = jrData();
+  const rows = [];
+  d.groups.forEach(g=>{
+    const gName = g.name + (g.code?' ('+g.code+')':'');
+    const open = jrIsOpen(g);
+    rows.push(forPdf && open ? [gName, '', '', '', '', '', '', ''] : [gName, '', '', '', '', '', g.debit, g.credit]);
+    if(!open) return;
+    g.entries.forEach(e=>{
+      e.lines.forEach((l,i)=>{
+        rows.push([i===0 ? e.id+(e.draft?' (Draft)':'')+(e.reversed?' (Reversed)':'') : '', i===0 ? e.date : '', l.account, l.partner, l.label, l.tax, l.debit||'', l.credit||'']);
+      });
+    });
+    if(forPdf) rows.push(['Total \u2014 '+gName, '', '', '', '', '', g.debit, g.credit]);
+  });
+  return {d, rows, totals:['Total', '', '', '', '', '', d.debit, d.credit]};
 }
+function jrSubtitle(d){ return 'Journal Report \u2014 '+d.start+' to '+d.end+' \u2014 '+(jrIncludeUnposted?'All Entries':'Posted Entries')+' \u2014 Journals: '+jrJournalsLabel()+(jrSearch.trim()?' \u2014 Search: '+jrSearch.trim():''); }
 function printJournalReport(){
-  printSimpleTableReport('Journal Report', postedJournal().length+' posted entries', JOURNAL_REPORT_COLUMNS, journalReportRows(), journalReportTotalsRow());
+  const x = jrExportData(true);
+  if(!x.rows.length){ toast('Nothing to print for this period'); return; }
+  printSimpleTableReport('Journal Report', jrSubtitle(x.d), JOURNAL_REPORT_COLUMNS, x.rows, x.totals, {landscape:true, groupSpan:true});
 }
 function exportJournalReportExcel(){
-  exportSimpleTableReportExcel('Journal Report', 'Full list of posted journal entries', JOURNAL_REPORT_COLUMNS, journalReportRows(), 'journal-report.xlsx', journalReportTotalsRow());
+  const x = jrExportData();
+  if(!x.rows.length){ toast('Nothing to export for this period'); return; }
+  exportSimpleTableReportExcel('Journal Report', jrSubtitle(x.d), JOURNAL_REPORT_COLUMNS, x.rows, 'journal-report-'+x.d.start+'-to-'+x.d.end+'.xlsx', x.totals);
 }
 /* ---- General Ledger account detail: same Date/Number/Partner/Label/
    Analytic/Debit/Credit/Balance columns shown on screen (dashMetricAccountLedgerCard
    above), for its PDF/XLSX buttons. ---- */
-const ACCOUNT_LEDGER_COLUMNS = [{label:'Date',width:'8%'},{label:'Number',width:'10%',wrap:true},{label:'Journal',width:'11%',wrap:true},{label:'Partner',width:'11%',wrap:true},{label:'Label',width:'21%',wrap:true},{label:'Analytic',width:'10%',wrap:true},{label:'Debit',num:true,width:'9.5%'},{label:'Credit',num:true,width:'9.5%'},{label:'Balance',num:true,width:'10%'}];
+const ACCOUNT_LEDGER_COLUMNS = [{label:'Date',width:'8%'},{label:'Number',width:'8%',wrap:true,entry:true},{label:'Journal',width:'10%',wrap:true},{label:'Partner',width:'11%',wrap:true},{label:'Label',width:'26%',wrap:true},{label:'Analytic',width:'10%',wrap:true},{label:'Debit',num:true,width:'9.5%'},{label:'Credit',num:true,width:'9.5%'},{label:'Balance',num:true,width:'10%'}];
 function accountLedgerExportRows(code){
   const acct = accountByCode(code);
   return generalLedgerAccountLines(code, acct?acct.type:null).map(l=>[l.date, l.id, journalNameOf(l.id), l.partyType?partyName(l.partyType,l.partyId):'', l.desc||'', l.analytic||'', numOrZero(l.debit), numOrZero(l.credit), Number(l.balance)||0]);
@@ -15627,29 +16166,6 @@ function exportAccountLedgerExcel(code){
   const acct = accountByCode(code);
   if(!acct) return;
   exportSimpleTableReportExcel(acct.code+' — '+acct.name, 'General Ledger', ACCOUNT_LEDGER_COLUMNS, accountLedgerExportRows(code), 'general-ledger-'+acct.code+'.xlsx', accountLedgerTotalsRow(code));
-}
-/* ---- Partner Ledger: same Date/Entry/Description/Debit/Credit/Balance
-   columns shown on screen (renderPartnerLedger above), for its PDF/XLSX buttons. ---- */
-const PARTNER_LEDGER_COLUMNS = [{label:'Date',width:'10%'},{label:'Entry',width:'12%',wrap:true},{label:'Journal',width:'14%',wrap:true},{label:'Description',width:'28%',wrap:true},{label:'Debit',num:true,width:'12%'},{label:'Credit',num:true,width:'12%'},{label:'Balance',num:true,width:'12%'}];
-function partnerLedgerExportRows(type, id){
-  return partnerLedgerLines(type, id).map(l=>[l.date, l.id, journalNameOf(l.id), l.desc||'', numOrZero(l.debit), numOrZero(l.credit), Number(l.balance)||0]);
-}
-/* Total Debit / Total Credit / closing Balance row for one partner's ledger — printed once, at the end of the report. */
-function partnerLedgerTotalsRow(type, id){
-  const rows = partnerLedgerExportRows(type, id);
-  return ['Total','','','', rows.reduce((t,r)=>t+r[4],0), rows.reduce((t,r)=>t+r[5],0), rows.length ? rows[rows.length-1][6] : 0];
-}
-function printPartnerLedger(){
-  const list = plPartnerType==='customer' ? state.customers : state.suppliers;
-  const p = list.find(x=>x.id===plPartnerId);
-  if(!p) return;
-  printSimpleTableReport('Partner Ledger — '+p.name, plPartnerType==='customer'?'Customer':'Supplier', PARTNER_LEDGER_COLUMNS, partnerLedgerExportRows(plPartnerType, plPartnerId), partnerLedgerTotalsRow(plPartnerType, plPartnerId));
-}
-function exportPartnerLedgerExcel(){
-  const list = plPartnerType==='customer' ? state.customers : state.suppliers;
-  const p = list.find(x=>x.id===plPartnerId);
-  if(!p) return;
-  exportSimpleTableReportExcel('Partner Ledger — '+p.name, plPartnerType==='customer'?'Customer':'Supplier', PARTNER_LEDGER_COLUMNS, partnerLedgerExportRows(plPartnerType, plPartnerId), 'partner-ledger-'+p.name.replace(/[^a-z0-9]+/gi,'-')+'.xlsx', partnerLedgerTotalsRow(plPartnerType, plPartnerId));
 }
 function bsPrintReport(){
   const asOf = bsAsOfDate();
@@ -15714,7 +16230,7 @@ function renderBalanceSheet(){
   const showCmp = cmpDates.length;
   const tree = balanceSheetTreeData();
   const asOfLabel = bsAsOfMode==='custom' ? formatDateDisplay(bsAsOfCustomDate) : BS_ASOF_LABELS[bsAsOfMode];
-  const optionsLabel = bsIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only';
+  const optionsLabel = (bsIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only') + (RPT_UNFOLD.balance_sheet ? ' \u00b7 Unfolded' : '');
   const exportHeader = cmpExportHeader('Balance', showCmp);
   return `
     <div class="bs-toolbar">
@@ -15789,7 +16305,7 @@ function profitLossData(startISO, endISO){
    Same toolbar pattern as the Balance Sheet above (Period / Comparison / Options menus,
    PDF + XLSX buttons, collapsible Parent-Account-Name groups, clickable account rows,
    optional % Change column) — reuses the Balance Sheet's generic tree renderer
-   (renderBsNode), group-collapse state (bsClosedGroups/bsToggleGroup) and % Change
+   (renderBsNode), group open/fold state (bsOpenGroups/bsToggleGroup) and % Change
    helper (bsPctChange) since none of those are actually Balance-Sheet-specific.
    Only the data (a date *range* instead of a single "as of" date) and the section
    labels differ. */
@@ -15960,35 +16476,21 @@ function plComparisonLabel(){
   if(plComparisonMode==='custom') return `Custom (${formatDateDisplay(plComparisonCustomStart)} \u2013 ${formatDateDisplay(plComparisonCustomEnd)})`;
   return cmpModeLabel(plComparisonMode, plComparisonPeriods, PL_COMPARISON_LABELS);
 }
-function renderPlPeriodMenu(){
+function renderPlPeriodMenu(){ return periodMenuHtml('pl', plPeriodMode, plPeriodCustomStart, plPeriodCustomEnd, PL_PERIOD_LABELS); }
+function comparisonMenuHtml(p, mode, periods, labels, cs, ce){
   return `<div class="bs-menu" onclick="event.stopPropagation();">
-    ${['this_month','this_quarter','this_fy'].map(k=>`<div class="bs-menu-item ${plPeriodMode===k?'active':''}" onclick="plSetPeriodMode('${k}')">${PL_PERIOD_LABELS[k]}</div>`).join('')}
-    <div class="bs-menu-divider"></div>
-    ${['last_month','last_quarter','last_fy'].map(k=>`<div class="bs-menu-item ${plPeriodMode===k?'active':''}" onclick="plSetPeriodMode('${k}')">${PL_PERIOD_LABELS[k]}</div>`).join('')}
-    <div class="bs-menu-divider"></div>
-    <div class="bs-menu-item bs-menu-custom ${plPeriodMode==='custom'?'active':''}">
+    ${cmpMenuItems(p, mode, periods, labels)}
+    <div class="bs-menu-item bs-menu-custom ${mode==='custom'?'active':''}">
       <div style="margin-bottom:6px;">Custom</div>
       <div style="display:flex; gap:6px;">
-        <input type="date" id="pl-period-start-input" value="${plPeriodCustomStart}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-        <input type="date" id="pl-period-end-input" value="${plPeriodCustomEnd}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
+        <input type="date" id="${p}-cmp-start-input" value="${cs}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
+        <input type="date" id="${p}-cmp-end-input" value="${ce}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
       </div>
-      <button class="small" style="margin-top:6px; width:100%;" onclick="plApplyCustomPeriod(document.getElementById('pl-period-start-input').value, document.getElementById('pl-period-end-input').value)">Apply</button>
+      <button class="small" style="margin-top:6px; width:100%;" onclick="${p}ApplyCustomComparison(document.getElementById('${p}-cmp-start-input').value, document.getElementById('${p}-cmp-end-input').value)">Apply</button>
     </div>
   </div>`;
 }
-function renderPlComparisonMenu(){
-  return `<div class="bs-menu" onclick="event.stopPropagation();">
-    ${cmpMenuItems('pl', plComparisonMode, plComparisonPeriods, PL_COMPARISON_LABELS)}
-    <div class="bs-menu-item bs-menu-custom ${plComparisonMode==='custom'?'active':''}">
-      <div style="margin-bottom:6px;">Custom</div>
-      <div style="display:flex; gap:6px;">
-        <input type="date" id="pl-cmp-start-input" value="${plComparisonCustomStart}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-        <input type="date" id="pl-cmp-end-input" value="${plComparisonCustomEnd}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-      </div>
-      <button class="small" style="margin-top:6px; width:100%;" onclick="plApplyCustomComparison(document.getElementById('pl-cmp-start-input').value, document.getElementById('pl-cmp-end-input').value)">Apply</button>
-    </div>
-  </div>`;
-}
+function renderPlComparisonMenu(){ return comparisonMenuHtml('pl', plComparisonMode, plComparisonPeriods, PL_COMPARISON_LABELS, plComparisonCustomStart, plComparisonCustomEnd); }
 function renderPlOptionsMenu(){ return _cmpROptionsMenu(_cmp_pl); }
 /* Builds the live Profit & Loss tree for the selected Period (and, if a
    Comparison is on, a second value per row/section for that range) — REVENUE
@@ -15996,6 +16498,14 @@ function renderPlOptionsMenu(){ return _cmpROptionsMenu(_cmp_pl); }
    Balance Sheet's ASSETS/LIABILITIES/EQUITY, with GROSS PROFIT and NET PROFIT
    as grand-total rows (no children), same shape as the Balance Sheet's
    LIABILITIES + EQUITY row — so it reuses renderBsNode() as-is. */
+/* Profit and Loss amounts = opening balance + the period's movement, like the General Ledger does for Revenue / Expense accounts:
+   the opening balance is everything posted from the start of the fiscal year (of the period's first day) up to the day before the
+   period starts, so e.g. This Month / This Quarter show the year-to-date balance at the end of that month / quarter. A period that
+   already starts on or before its fiscal year's first day (This / Last Financial Year, or a custom range spanning years) is unchanged. */
+function plOpeningStart(startISO){
+  const fyStart = fiscalYearDateRange(fiscalYearForYmKey(startISO.slice(0,7))).fyStart;
+  return fyStart < startISO ? fyStart : startISO;
+}
 function plTreeData(){
   const {start, end} = plPeriodRange();
   const includeUnposted = plIncludeUnposted;
@@ -16019,10 +16529,10 @@ function plTreeData(){
     order.forEach(key=>{
       const accts = groups[key];
       const rows = accts.map(a=>{
-        const t = plCfAccountTotalsForRange(a.code, start, end, includeUnposted);
+        const t = plCfAccountTotalsForRange(a.code, plOpeningStart(start), end, includeUnposted);
         const v = type==='revenue' ? (t.credit-t.debit) : (t.debit-t.credit);
         const cvs = cmps.map(cmp=>{
-          const tc = plCfAccountTotalsForRange(a.code, cmp.start, cmp.end, includeUnposted);
+          const tc = plCfAccountTotalsForRange(a.code, plOpeningStart(cmp.start), cmp.end, includeUnposted);
           return type==='revenue' ? (tc.credit-tc.debit) : (tc.debit-tc.credit);
         });
         return {account:a, v, cvs};
@@ -16032,7 +16542,7 @@ function plTreeData(){
       const value = rows.reduce((s,r)=>s+r.v,0);
       const cmpValues = cmps.map((_,i)=>rows.reduce((s,r)=>s+r.cvs[i],0));
       groupNodes.push({
-        label:key, value, cmpValues, level:1, bold:true, arrow:true, open:!bsClosedGroups.has(groupKey), groupKey,
+        label:key, value, cmpValues, level:1, bold:true, arrow:true, open:rptGroupOpen('profit_loss', groupKey), groupKey,
         children: rows.map(r=>({label:`${r.account.code} \u2014 ${r.account.name}`, value:r.v, cmpValues:r.cvs, level:2, code:r.account.code, link:true}))
       });
     });
@@ -16122,7 +16632,7 @@ function renderProfitLoss(){
   const cmps = plComparisonRanges();
   const showCmp = cmps.length;
   const tree = plTreeData();
-  const optionsLabel = plIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only';
+  const optionsLabel = (plIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only') + (RPT_UNFOLD.profit_loss ? ' \u00b7 Unfolded' : '');
   const exportHeader = cmpExportHeader('Amount', showCmp);
   return `
     <div class="bs-toolbar">
@@ -16233,35 +16743,8 @@ function cfComparisonLabel(){
   if(cfComparisonMode==='custom') return `Custom (${formatDateDisplay(cfComparisonCustomStart)} – ${formatDateDisplay(cfComparisonCustomEnd)})`;
   return cmpModeLabel(cfComparisonMode, cfComparisonPeriods, CF_COMPARISON_LABELS);
 }
-function renderCfPeriodMenu(){
-  return `<div class="bs-menu" onclick="event.stopPropagation();">
-    ${['this_month','this_quarter','this_fy'].map(k=>`<div class="bs-menu-item ${cfPeriodMode===k?'active':''}" onclick="cfSetPeriodMode('${k}')">${CF_PERIOD_LABELS[k]}</div>`).join('')}
-    <div class="bs-menu-divider"></div>
-    ${['last_month','last_quarter','last_fy'].map(k=>`<div class="bs-menu-item ${cfPeriodMode===k?'active':''}" onclick="cfSetPeriodMode('${k}')">${CF_PERIOD_LABELS[k]}</div>`).join('')}
-    <div class="bs-menu-divider"></div>
-    <div class="bs-menu-item bs-menu-custom ${cfPeriodMode==='custom'?'active':''}">
-      <div style="margin-bottom:6px;">Custom</div>
-      <div style="display:flex; gap:6px;">
-        <input type="date" id="cf-period-start-input" value="${cfPeriodCustomStart}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-        <input type="date" id="cf-period-end-input" value="${cfPeriodCustomEnd}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-      </div>
-      <button class="small" style="margin-top:6px; width:100%;" onclick="cfApplyCustomPeriod(document.getElementById('cf-period-start-input').value, document.getElementById('cf-period-end-input').value)">Apply</button>
-    </div>
-  </div>`;
-}
-function renderCfComparisonMenu(){
-  return `<div class="bs-menu" onclick="event.stopPropagation();">
-    ${cmpMenuItems('cf', cfComparisonMode, cfComparisonPeriods, CF_COMPARISON_LABELS)}
-    <div class="bs-menu-item bs-menu-custom ${cfComparisonMode==='custom'?'active':''}">
-      <div style="margin-bottom:6px;">Custom</div>
-      <div style="display:flex; gap:6px;">
-        <input type="date" id="cf-cmp-start-input" value="${cfComparisonCustomStart}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-        <input type="date" id="cf-cmp-end-input" value="${cfComparisonCustomEnd}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-      </div>
-      <button class="small" style="margin-top:6px; width:100%;" onclick="cfApplyCustomComparison(document.getElementById('cf-cmp-start-input').value, document.getElementById('cf-cmp-end-input').value)">Apply</button>
-    </div>
-  </div>`;
-}
+function renderCfPeriodMenu(){ return periodMenuHtml('cf', cfPeriodMode, cfPeriodCustomStart, cfPeriodCustomEnd, CF_PERIOD_LABELS); }
+function renderCfComparisonMenu(){ return comparisonMenuHtml('cf', cfComparisonMode, cfComparisonPeriods, CF_COMPARISON_LABELS, cfComparisonCustomStart, cfComparisonCustomEnd); }
 function renderCfOptionsMenu(){ return _cmpROptionsMenu(_cmp_cf); }
 /* A non-cash account's share of cash movement over a range: summed, over every
    entry in range that touches at least one Cash/Bank line, of this account's
@@ -16329,7 +16812,7 @@ function cashFlowTreeData(){
       const value = rows.reduce((s,r)=>s+r.v,0);
       const cmpValues = cmps.map((_,i)=>rows.reduce((s,r)=>s+r.cvs[i],0));
       groupNodes.push({
-        label:key, value, cmpValues, level:1, bold:true, arrow:true, open:!bsClosedGroups.has(groupKey), groupKey,
+        label:key, value, cmpValues, level:1, bold:true, arrow:true, open:rptGroupOpen('cash_flow', groupKey), groupKey,
         children: rows.map(r=>({label:`${r.account.code} — ${r.account.name}`, value:r.v, cmpValues:r.cvs, level:2, code:r.account.code, link:true}))
       });
     });
@@ -16420,7 +16903,7 @@ function renderCashFlow(){
   const cmps = cfComparisonRanges();
   const showCmp = cmps.length;
   const tree = cashFlowTreeData();
-  const optionsLabel = cfIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only';
+  const optionsLabel = (cfIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only') + (RPT_UNFOLD.cash_flow ? ' \u00b7 Unfolded' : '');
   const exportHeader = cmpExportHeader('Amount', showCmp);
   return `
     <div class="bs-toolbar">
@@ -16542,47 +17025,21 @@ function txComparisonLabel(){
   if(txComparisonMode==='custom') return `Custom (${formatDateDisplay(txComparisonCustomStart)} \u2013 ${formatDateDisplay(txComparisonCustomEnd)})`;
   return cmpModeLabel(txComparisonMode, txComparisonPeriods, TX_COMPARISON_LABELS);
 }
-function renderTxPeriodMenu(){
-  return `<div class="bs-menu" onclick="event.stopPropagation();">
-    ${['this_month','this_quarter','this_fy'].map(k=>`<div class="bs-menu-item ${txPeriodMode===k?'active':''}" onclick="txSetPeriodMode('${k}')">${TX_PERIOD_LABELS[k]}</div>`).join('')}
-    <div class="bs-menu-divider"></div>
-    ${['last_month','last_quarter','last_fy'].map(k=>`<div class="bs-menu-item ${txPeriodMode===k?'active':''}" onclick="txSetPeriodMode('${k}')">${TX_PERIOD_LABELS[k]}</div>`).join('')}
-    <div class="bs-menu-divider"></div>
-    <div class="bs-menu-item bs-menu-custom ${txPeriodMode==='custom'?'active':''}">
-      <div style="margin-bottom:6px;">Custom</div>
-      <div style="display:flex; gap:6px;">
-        <input type="date" id="tx-period-start-input" value="${txPeriodCustomStart}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-        <input type="date" id="tx-period-end-input" value="${txPeriodCustomEnd}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-      </div>
-      <button class="small" style="margin-top:6px; width:100%;" onclick="txApplyCustomPeriod(document.getElementById('tx-period-start-input').value, document.getElementById('tx-period-end-input').value)">Apply</button>
-    </div>
-  </div>`;
-}
-function renderTxComparisonMenu(){
-  return `<div class="bs-menu" onclick="event.stopPropagation();">
-    ${cmpMenuItems('tx', txComparisonMode, txComparisonPeriods, TX_COMPARISON_LABELS)}
-    <div class="bs-menu-item bs-menu-custom ${txComparisonMode==='custom'?'active':''}">
-      <div style="margin-bottom:6px;">Custom</div>
-      <div style="display:flex; gap:6px;">
-        <input type="date" id="tx-cmp-start-input" value="${txComparisonCustomStart}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-        <input type="date" id="tx-cmp-end-input" value="${txComparisonCustomEnd}" style="flex:1; width:auto; padding:5px 7px; font-size:max(9px,calc(11.5px*var(--fs,1)));">
-      </div>
-      <button class="small" style="margin-top:6px; width:100%;" onclick="txApplyCustomComparison(document.getElementById('tx-cmp-start-input').value, document.getElementById('tx-cmp-end-input').value)">Apply</button>
-    </div>
-  </div>`;
-}
+function renderTxPeriodMenu(){ return periodMenuHtml('tx', txPeriodMode, txPeriodCustomStart, txPeriodCustomEnd, TX_PERIOD_LABELS); }
+function renderTxComparisonMenu(){ return comparisonMenuHtml('tx', txComparisonMode, txComparisonPeriods, TX_COMPARISON_LABELS, txComparisonCustomStart, txComparisonCustomEnd); }
 function renderTxOptionsMenu(){ return _cmpROptionsMenu(_cmp_tx); }
 /* ============================= TAX REPORT (statement, toolbar-driven) =============================
    Built exactly like Profit and Loss: same toolbar (PDF / XLSX, Period, Comparison, Options), same collapsible tree
    (renderBsNode), same % Change + multi-period comparison columns, same click-through to the account ledger.
-   Amounts are the net movement on each tax's linked account (Configuration -> Taxes) for the selected period, so every
-   figure ties to the General Ledger: Sales tax = credits - debits (collected), Purchase tax = debits - credits (paid). */
+   Amounts are the BALANCE of each tax's linked account (Configuration -> Taxes) at the end of the selected period: the opening
+   balance (everything posted before the period starts) plus the period's own movement -- exactly the General Ledger's closing
+   balance for that account, so every figure ties to it: Sales tax = credits - debits (collected), Purchase tax = debits - credits (paid). */
 function taxAmountForRange(tax, startISO, endISO, includeUnposted){
   const sharedAccount = (state.taxes||[]).filter(t=>t.accountCode===tax.accountCode).length>1; // two taxes on one account: split by the tax chosen on each line
   const entries = includeUnposted ? state.journal : postedJournal();
   let net = 0;
   entries.forEach(e=>{
-    if(e.date<startISO || e.date>endISO) return;
+    if(e.date>endISO) return; // no lower bound: the opening balance (before startISO) is carried into the period's movement
     if(isFiscalYearAdjustmentEntry(e)) return;
     (e.lines||[]).forEach(l=>{
       if(l.code!==tax.accountCode) return;
@@ -16606,7 +17063,7 @@ function txTreeData(){
       const groupKey = 'tax'+types.join('+')+':'+t.id;
       const child = {label: acct ? `${acct.code} \u2014 ${acct.name}` : (t.accountCode||'\u2014'), value:v, cmpValues:cvs, level:2};
       if(acct){ child.code = t.accountCode; child.link = true; }
-      children.push({label:`${t.name} (${Number(t.rate)||0}%)`, value:v, cmpValues:cvs, level:1, bold:true, arrow:true, open:!bsClosedGroups.has(groupKey), groupKey, children:[child]});
+      children.push({label:`${t.name} (${Number(t.rate)||0}%)`, value:v, cmpValues:cvs, level:1, bold:true, arrow:true, open:rptGroupOpen('tax_report', groupKey), groupKey, children:[child]});
     });
     const total = children.reduce((s,g)=>s+g.value,0);
     const cmpTotal = cmps.map((_,i)=>children.reduce((s,g)=>s+g.cmpValues[i],0));
@@ -16687,7 +17144,7 @@ function renderTaxReport(){
   const cmps = txComparisonRanges();
   const showCmp = cmps.length;
   const tree = txTreeData();
-  const optionsLabel = txIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only';
+  const optionsLabel = (txIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only') + (RPT_UNFOLD.tax_report ? ' \u00b7 Unfolded' : '');
   const exportHeader = cmpExportHeader('Amount', showCmp);
   return `
     <div class="bs-toolbar">
@@ -16768,33 +17225,292 @@ let generalLedgerOrigin = null;
    Profit and Loss statements): opens a sub-screen for just that one
    account's full posting history — same breadcrumb pattern as Journal
    Entries → entry-detail and the Dashboard metric drill-downs. */
+/* Trial Balance -> click an account: opens the General Ledger on that account only, with the Trial Balance's own period / journals /
+   unposted setting, its journal items unfolded, and "Trial Balance / General Ledger" in the trail. */
+function tbOpenLedger(code){
+  glPeriodMode = tbPeriodMode; glPeriodCustomStart = tbPeriodCustomStart; glPeriodCustomEnd = tbPeriodCustomEnd;
+  glIncludeUnposted = tbIncludeUnposted;
+  glJournalIds = new Set(tbJournalIds);
+  glUnfoldAll = false; glSearch = ''; glOpenMenu = null; tbOpenMenu = null;
+  glOnlyCode = code;
+  glOpenAccounts = new Set([code]); glShown = {}; glShown[code] = GL_PAGE;
+  generalLedgerOrigin = 'trial';
+  entryDetailId = null; entryDetailReturn = null;
+  currentTab = 'general_ledger';
+  render();
+}
+/* Balance Sheet / Profit and Loss / Cash Flow Statement / Tax Report -> click an account row: same behaviour as the Trial Balance
+   (tbOpenLedger). Opens the General Ledger on that account only, using the period (and the Include Unposted option) selected on the
+   report you clicked from, its journal items unfolded, and "<Report> / General Ledger" in the trail (the report crumb links back).
+   The Balance Sheet is an "as of" report, so its period runs from the start of the fiscal year of the as-of date up to that date --
+   the General Ledger carries the earlier balance as the account's Initial Balance, so the closing balance matches the report. */
+function reportOpenLedger(code, originTab){
+  if(originTab==='balance_sheet'){
+    const asOf = bsAsOfDate();
+    glPeriodMode = 'custom';
+    glPeriodCustomStart = fiscalYearDateRange(fiscalYearForYmKey(asOf.slice(0,7))).fyStart;
+    glPeriodCustomEnd = asOf;
+    glIncludeUnposted = bsIncludeUnposted; bsOpenMenu = null;
+  } else if(originTab==='profit_loss'){
+    glPeriodMode = plPeriodMode; glPeriodCustomStart = plPeriodCustomStart; glPeriodCustomEnd = plPeriodCustomEnd;
+    glIncludeUnposted = plIncludeUnposted; plOpenMenu = null;
+  } else if(originTab==='cash_flow'){
+    glPeriodMode = cfPeriodMode; glPeriodCustomStart = cfPeriodCustomStart; glPeriodCustomEnd = cfPeriodCustomEnd;
+    glIncludeUnposted = cfIncludeUnposted; cfOpenMenu = null;
+  } else if(originTab==='tax_report'){
+    glPeriodMode = txPeriodMode; glPeriodCustomStart = txPeriodCustomStart; glPeriodCustomEnd = txPeriodCustomEnd;
+    glIncludeUnposted = txIncludeUnposted; txOpenMenu = null;
+  } else { goToGLAccount(code, originTab); return; }
+  glJournalIds = new Set();
+  glUnfoldAll = false; glSearch = ''; glOpenMenu = null;
+  glOnlyCode = code;
+  glOpenAccounts = new Set([code]); glShown = {}; glShown[code] = GL_PAGE;
+  generalLedgerOrigin = originTab;
+  entryDetailId = null; entryDetailReturn = null;
+  currentTab = 'general_ledger';
+  render();
+}
 function goToGLAccount(code, originTab){
   glAccountCode = code;
   glAccountOrigin = originTab || null;
   currentTab = 'gl-account';
   render();
 }
-function renderGeneralLedger(){
-  const accountsWithActivity = state.accounts.filter(a=>{
-    const t = accountTotals(a.code);
-    return t.debit!==0 || t.credit!==0;
+/* ============================= GENERAL LEDGER (Odoo logic) =============================
+   Same behaviour as Odoo's Accounting > Reporting > General Ledger:
+   - one collapsible row per account (code + name) with its Debit / Credit for the selected Period and the closing Balance;
+   - unfolding an account shows its "Initial Balance" (everything before the period start) and then every journal item of the period
+     (Date, Communication, Partner, Debit, Credit and a running Balance that starts from the initial balance), 80 at a time with "Load more";
+   - Balance Sheet accounts (asset / liability / equity) carry their initial balance from the beginning of time, Profit & Loss accounts
+     (revenue / expense) only from the start of the fiscal year the period falls in — exactly like Odoo;
+   - accounts with no activity in the period and a zero initial balance are hidden; a Total row closes the report;
+   - toolbar: PDF / XLSX, Period, Journals filter, Options (Include Unposted Entries, Unfold All). Click an entry to open it. */
+const GL_PL_GROUPS = ['revenue','expense'];
+const GL_PAGE = 80;
+let glOpenMenu = null;            // 'period' | 'journals' | 'options' | null
+let glPeriodMode = 'this_fy';     // same presets as the other reports; Odoo opens the General Ledger on the current financial year
+let glPeriodCustomStart = toLocalISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+let glPeriodCustomEnd = todayISO();
+let glIncludeUnposted = false;
+let glUnfoldAll = false;
+let glJournalIds = new Set();     // empty = all journals ('none' = entries without a journal)
+let glOpenAccounts = new Set();   // unfolded account codes
+let glShown = {};                 // code -> how many journal items are loaded
+let glSearch = '';                // search box: account code/name, entry number, communication, partner
+let glOnlyCode = null;            // set when opened from a Trial Balance row: only this account is listed (chip in the toolbar clears it)
+function glResetOpen(){ glOpenAccounts.clear(); glShown = {}; if(glOnlyCode){ glOpenAccounts.add(glOnlyCode); glShown[glOnlyCode] = GL_PAGE; } }
+function glClearOnly(){ glOnlyCode = null; glOpenAccounts.clear(); glShown = {}; glRenderInPlace(); }
+/* In-place refresh that keeps the scroll position. The GL table lives inside its own scroll box (.ls-scroll) and the page inside
+   .content; a plain renderQuiet() rebuilds both, which sent the view back to the top and hid the account's journal items
+   that had just been unfolded. Same approach as cfgRenderInPlace(). */
+function glRenderInPlace(){
+  if(currentTab!=='general_ledger'){ renderQuiet(); return; }
+  const contentEl = document.getElementById('view').closest('.content');
+  const top = contentEl ? contentEl.scrollTop : 0;
+  const inner = Array.from(document.querySelectorAll('#view .ls-scroll')).map(e=>[e.scrollTop, e.scrollLeft]);
+  const restore = ()=>{
+    if(contentEl) contentEl.scrollTop = top;
+    document.querySelectorAll('#view .ls-scroll').forEach((e,i)=>{ if(inner[i]){ e.scrollTop = inner[i][0]; e.scrollLeft = inner[i][1]; } });
+  };
+  renderQuiet();
+  restore();
+  requestAnimationFrame(restore);
+}
+var _cmp_gl = { p:'gl', get PeriodMode(){ return glPeriodMode; }, set PeriodMode(v){ glPeriodMode=v; }, get PeriodCustomStart(){ return glPeriodCustomStart; }, set PeriodCustomStart(v){ glPeriodCustomStart=v; }, get PeriodCustomEnd(){ return glPeriodCustomEnd; }, set PeriodCustomEnd(v){ glPeriodCustomEnd=v; }, get OpenMenu(){ return glOpenMenu; }, set OpenMenu(v){ glOpenMenu=v; } };
+const GL_PERIOD_LABELS = TX_PERIOD_LABELS;
+function glPeriodRange(){ return _cmpPeriodRange(_cmp_gl); }
+function glPeriodLabel(){
+  if(glPeriodMode==='custom') return `Custom (${formatDateDisplay(glPeriodCustomStart)} \u2013 ${formatDateDisplay(glPeriodCustomEnd)})`;
+  return GL_PERIOD_LABELS[glPeriodMode];
+}
+function glJournalsLabel(){
+  if(!glJournalIds.size) return 'All';
+  if(glJournalIds.size===1){ const id = [...glJournalIds][0]; const j = state.journalsConfig.find(x=>x.id===id); return j ? j.name : 'No Journal'; }
+  return glJournalIds.size + ' selected';
+}
+function glToggleMenu(name, e){ if(e) e.stopPropagation(); glOpenMenu = (glOpenMenu===name) ? null : name; glRenderInPlace(); }
+function glCloseMenus(){ if(glOpenMenu){ glOpenMenu = null; if(currentTab==='general_ledger') glRenderInPlace(); } }
+function glSetPeriodMode(mode){ glPeriodMode = mode; glOpenMenu = null; glResetOpen(); glRenderInPlace(); }
+function glApplyCustomPeriod(a, b){ glResetOpen(); return _cmpApplyCustomPeriod(_cmp_gl, a, b); }
+function glToggleUnposted(){ glIncludeUnposted = !glIncludeUnposted; glRenderInPlace(); }
+function glToggleUnfoldAll(){ glUnfoldAll = !glUnfoldAll; glResetOpen(); glRenderInPlace(); }
+function glToggleJournal(id){
+  if(id==='__all__') glJournalIds.clear();
+  else if(glJournalIds.has(id)) glJournalIds.delete(id); else glJournalIds.add(id);
+  glRenderInPlace();
+}
+function glToggleAccount(code, e){
+  if(e) e.stopPropagation();
+  if(glUnfoldAll){ // leaving "Unfold All": every other account stays open, this one folds
+    glUnfoldAll = false;
+    glOpenAccounts = new Set(glData().rows.map(r=>r.code));
+    glOpenAccounts.delete(code);
+  } else if(glOpenAccounts.has(code)){ glOpenAccounts.delete(code); }
+  else { glOpenAccounts.add(code); glShown[code] = GL_PAGE; }
+  glRenderInPlace();
+}
+function glOnSearch(el){
+  glSearch = el.value; const pos = el.selectionStart;
+  glRenderInPlace();
+  const i = document.getElementById('gl-search');
+  if(i){ i.focus(); try{ i.setSelectionRange(pos, pos); }catch(e){} }
+}
+/* Search: an account whose code/name matches is shown whole; otherwise only the accounts that have matching journal items are
+   shown, unfolded, with just those items (running balances stay the real ones). */
+function glApplySearch(d){
+  if(glOnlyCode){
+    const one = d.rows.filter(r=>r.code===glOnlyCode);
+    d = Object.assign({}, d, {rows:one, totals:{debit:one.reduce((a,r)=>a+r.debit,0), credit:one.reduce((a,r)=>a+r.credit,0), balance:one.reduce((a,r)=>a+r.balance,0)}});
+  }
+  const q = glSearch.trim().toLowerCase();
+  if(!q) return d;
+  const rows = []; let tD = 0, tC = 0, tB = 0;
+  d.rows.forEach(r=>{
+    const accHit = (r.code+' '+r.name).toLowerCase().includes(q);
+    const lines = accHit ? r.lines : r.lines.filter(l=>(l.id+' '+l.label+' '+l.partner).toLowerCase().includes(q));
+    if(!accHit && !lines.length) return;
+    rows.push(Object.assign({}, r, {lines, searchOpen: !accHit}));
+    tD += r.debit; tC += r.credit; tB += r.balance;
   });
-  const glTotalD = accountsWithActivity.reduce((sum,a)=>sum+accountTotals(a.code).debit, 0);
-  const glTotalC = accountsWithActivity.reduce((sum,a)=>sum+accountTotals(a.code).credit, 0);
+  return Object.assign({}, d, {rows, totals:{debit:tD, credit:tC, balance:tB}});
+}
+function glLoadMore(code, e){ if(e) e.stopPropagation(); glShown[code] = (glShown[code]||GL_PAGE) + GL_PAGE; glRenderInPlace(); }
+
+/* One pass over the journal -> per-account initial balance, period journal items (with running balance) and period totals. */
+function glData(){
+  const {start, end} = glPeriodRange();
+  const fyStart = fiscalYearDateRange(fiscalYearForYmKey(start.slice(0,7))).fyStart;
+  const entries = glIncludeUnposted ? state.journal : postedJournal();
+  const typeOf = new Map(state.accounts.map(a=>[a.code, a.type]));
+  const byCode = new Map();
+  entries.forEach(e=>{
+    if(e.date > end) return;
+    if(glJournalIds.size && !glJournalIds.has(e.journalId || 'none')) return;
+    (e.lines||[]).forEach(l=>{
+      const d = Number(l.debit)||0, c = Number(l.credit)||0;
+      let o = byCode.get(l.code);
+      if(!o){ o = {code:l.code, initD:0, initC:0, debit:0, credit:0, lines:[]}; byCode.set(l.code, o); }
+      if(e.date < start){
+        if(GL_PL_GROUPS.includes(typeOf.get(l.code)) && e.date < fyStart) return; // P&L accounts restart every fiscal year
+        o.initD += d; o.initC += c;
+      } else {
+        o.debit += d; o.credit += c;
+        o.lines.push({date:e.date, id:e.id, label:(l.desc||e.desc||''), partner:(l.partyType ? partyName(l.partyType, l.partyId) : ''),
+          debit:d, credit:c, reversed:!!e.reversed, draft:e.status==='draft'});
+      }
+    });
+  });
+  const rows = [];
+  let tD = 0, tC = 0, tBal = 0;
+  const order = state.accounts.map(a=>a.code);
+  [...byCode.keys()].sort((a,b)=>{ const ia = order.indexOf(a), ib = order.indexOf(b); return (ia<0?1e9:ia)-(ib<0?1e9:ib) || String(a).localeCompare(String(b)); }).forEach(code=>{
+    const o = byCode.get(code);
+    const init = o.initD - o.initC;
+    if(!o.lines.length && Math.abs(init) < 0.005) return; // nothing to show for this account in the period
+    o.lines.sort((x,y)=> x.date===y.date ? String(x.id).localeCompare(String(y.id)) : x.date.localeCompare(y.date));
+    let bal = init;
+    o.lines.forEach(l=>{ bal += l.debit - l.credit; l.balance = bal; });
+    const acct = accountByCode(code);
+    o.init = init; o.balance = bal; o.name = acct ? acct.name : '';
+    rows.push(o);
+    tD += o.debit; tC += o.credit; tBal += bal;
+  });
+  return {start, end, rows, totals:{debit:tD, credit:tC, balance:tBal}};
+}
+
+function renderGlPeriodMenu(){ return periodMenuHtml('gl', glPeriodMode, glPeriodCustomStart, glPeriodCustomEnd, GL_PERIOD_LABELS); }
+function renderGlJournalsMenu(){ return journalsMenuHtml('gl', glJournalIds); }
+function renderGlOptionsMenu(){
+  return `<div class="bs-menu" onclick="event.stopPropagation();">
+    <label class="bs-menu-checkbox"><input type="checkbox" ${glIncludeUnposted?'checked':''} onchange="glToggleUnposted()"><span>Include Unposted Entries</span></label>
+    <label class="bs-menu-checkbox"><input type="checkbox" ${glUnfoldAll?'checked':''} onchange="glToggleUnfoldAll()"><span>Unfold All</span></label>
+  </div>`;
+}
+
+/* PDF / XLSX = the report exactly as it is on screen: same columns, same accounts (after Search / Journals / Period / Unposted), the accounts
+   that are unfolded on screen are unfolded in the file (Initial Balance + the journal items currently loaded), folded ones stay one row. */
+const GL_EXPORT_COLUMNS = [{label:'Account / Entry',width:'12%',wrap:true,entry:true},{label:'Date',width:'9%'},{label:'Communication',width:'36%',wrap:true},{label:'Partner',width:'14%',wrap:true},{label:'Debit',num:true,width:'9.5%'},{label:'Credit',num:true,width:'9.5%'},{label:'Balance',num:true,width:'11%'}];
+function glIsOpen(r){ return glUnfoldAll || glOpenAccounts.has(r.code) || !!r.searchOpen; }
+function glExportData(){
+  const d = glApplySearch(glData()), rows = [];
+  d.rows.forEach(r=>{
+    rows.push([r.code+' \u2014 '+r.name, '', '', '', r.debit, r.credit, r.balance]);
+    if(!glIsOpen(r)) return;
+    rows.push(['Initial Balance', '', '', '', r.initD, r.initC, r.init]);
+    const shown = Math.min(r.lines.length, glShown[r.code] || GL_PAGE);
+    r.lines.slice(0, shown).forEach(l=>{
+      rows.push([l.id, l.date, l.label+(l.reversed?' (Reversed)':'')+(l.draft?' (Unposted)':''), l.partner, l.debit||'', l.credit||'', l.balance]);
+    });
+  });
+  return {d, rows, totals:['Total','','','', d.totals.debit, d.totals.credit, d.totals.balance]};
+}
+function glSubtitle(d){ return 'General Ledger \u2014 '+d.start+' to '+d.end+' \u2014 '+(glIncludeUnposted?'All Entries':'Posted Entries')+' \u2014 Journals: '+glJournalsLabel()+(glOnlyCode?' \u2014 Account: '+glOnlyCode:'')+(glSearch.trim()?' \u2014 Search: '+glSearch.trim():''); }
+function glPrintReport(){
+  const x = glExportData();
+  if(!x.rows.length){ toast('Nothing to print for this period'); return; }
+  printSimpleTableReport('General Ledger', glSubtitle(x.d), GL_EXPORT_COLUMNS, x.rows, x.totals, {groupSpan:true});
+}
+function glExportExcel(){
+  const x = glExportData();
+  if(!x.rows.length){ toast('Nothing to export for this period'); return; }
+  exportSimpleTableReportExcel('General Ledger', glSubtitle(x.d), GL_EXPORT_COLUMNS, x.rows, 'general-ledger-'+x.d.start+'-to-'+x.d.end+'.xlsx', x.totals);
+}
+
+function glBalCls(v){ return 'bs-val' + (v < -0.004 ? ' bs-negative' : ''); }
+function renderGeneralLedger(){
+  const d = glApplySearch(glData());
+  const optionsLabel = (glIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only') + (glUnfoldAll ? ' \u00b7 Unfolded' : '');
+  const th = (t, left) => `<th${left?' style="text-align:left;"':''}>${t}</th>`;
+  let body = '';
+  d.rows.forEach(r=>{
+    const open = glIsOpen(r);
+    body += `<tr class="gl-acc" onclick="glToggleAccount('${r.code}', event)">
+      <td colspan="4"><span class="bs-arrow">${open?'\u25bc':'\u25b6'}</span> ${escHtml(r.code)} \u2014 ${escHtml(r.name)}</td>
+      <td class="bs-val">${fmt(r.debit)}</td><td class="bs-val">${fmt(r.credit)}</td><td class="${glBalCls(r.balance)}">${fmt(r.balance)}</td></tr>`;
+    if(!open) return;
+    body += `<tr class="gl-sub"><td colspan="4" style="padding-left:30px; font-style:italic;">Initial Balance</td>
+      <td class="bs-val">${fmt(r.initD)}</td><td class="bs-val">${fmt(r.initC)}</td><td class="${glBalCls(r.init)}">${fmt(r.init)}</td></tr>`;
+    const shown = Math.min(r.lines.length, glShown[r.code] || GL_PAGE);
+    r.lines.slice(0, shown).forEach(l=>{
+      body += `<tr class="gl-line" onclick="goToEntryDetail('${l.id}')" style="cursor:pointer;">
+        <td class="bs-link" style="padding-left:30px;">${escHtml(l.id)}</td><td style="white-space:nowrap;">${l.date}</td>
+        <td style="white-space:normal; word-break:break-word; min-width:240px; max-width:460px;">${escHtml(l.label)}${l.reversed?' <span class="badge reversal">Reversed</span>':''}${l.draft?' <span class="badge">Unposted</span>':''}</td>
+        <td>${escHtml(l.partner)}</td>
+        <td class="bs-val">${l.debit?fmt(l.debit):''}</td><td class="bs-val">${l.credit?fmt(l.credit):''}</td><td class="${glBalCls(l.balance)}">${fmt(l.balance)}</td></tr>`;
+    });
+    if(shown < r.lines.length){
+      body += `<tr class="gl-more"><td colspan="7" style="padding-left:30px;"><a style="cursor:pointer; color:var(--azure);" onclick="glLoadMore('${r.code}', event)">Load more... (${r.lines.length - shown} remaining)</a></td></tr>`;
+    }
+  });
   return `
-    <div class="topbar rep-bar"><div><h2>General Ledger</h2><div class="sub">Every posting, account by account</div></div></div>
-    <div class="card">
-      ${accountsWithActivity.length===0?'<div class="empty">No journal activity yet</div>':
-      `<div class="ls-scroll" style="overflow-x:auto;"><table><thead><tr><th>Account</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>
-      ${accountsWithActivity.map(a=>{
-        const t = accountTotals(a.code);
-        const balance = t.debit - t.credit;
-        return `<tr style="cursor:pointer;" onclick="goToGLAccount('${a.code}', '${generalLedgerOrigin||''}')"><td>${a.code} — ${a.name} <span class="badge ${a.type}" style="margin-left:8px;">${typeLabel(a.type)}</span></td><td class="num">${fmt(t.debit)}</td><td class="num">${fmt(t.credit)}</td><td class="num">${fmt(balance)}</td></tr>`;
-      }).join('')}
-      </tbody>
-      <tfoot><tr style="font-weight:800; border-top:2px solid var(--ink);">
-        <td>Total</td><td class="num">${fmt(glTotalD)}</td><td class="num">${fmt(glTotalC)}</td><td class="num">${fmt(glTotalD-glTotalC)}</td>
-      </tr></tfoot>
+    <div class="bs-toolbar">
+      <div class="bs-toolbar-left">
+        <button class="bs-pdf-btn" onclick="glPrintReport()">\ud83d\udda8 PDF</button>
+        <button class="bs-xlsx-btn" onclick="glExportExcel()">\u2b07 XLSX</button>
+        ${glOnlyCode ? `<span class="gl-only-chip">${escHtml(glOnlyCode)} \u2014 ${escHtml((accountByCode(glOnlyCode)||{}).name||'')} <b title="Show all accounts" onclick="glClearOnly()">\u2715</b></span>` : ''}
+      </div>
+      <input id="gl-search" type="search" placeholder="Search..." value="${escHtml(glSearch)}" oninput="glOnSearch(this)" onclick="event.stopPropagation()" style="flex:1 1 160px; min-width:120px; width:auto; padding:7px 10px; border:1px solid var(--line); border-radius:6px; font-size:calc(13.5px*var(--fs,1));">
+      <div class="bs-toolbar-right">
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${glOpenMenu==='period'?' open':''}" onclick="glToggleMenu('period', event)">\ud83d\udcc5 Period: <b>${glPeriodLabel()}</b></button>
+          ${glOpenMenu==='period' ? renderGlPeriodMenu() : ''}
+        </div>
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${glOpenMenu==='journals'?' open':''}" onclick="glToggleMenu('journals', event)">\ud83d\udcd2 Journals: <b>${escHtml(glJournalsLabel())}</b></button>
+          ${glOpenMenu==='journals' ? renderGlJournalsMenu() : ''}
+        </div>
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${glOpenMenu==='options'?' open':''}" onclick="glToggleMenu('options', event)">\u25be Options: <b>${optionsLabel}</b></button>
+          ${glOpenMenu==='options' ? renderGlOptionsMenu() : ''}
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:22px 26px;">
+      ${d.rows.length===0 ? (glSearch.trim() ? '<div class="empty">No results for "'+escHtml(glSearch.trim())+'"</div>' : '<div class="empty">No journal activity in this period</div>') :
+      `<div class="ls-scroll" style="overflow-x:auto;"><table class="bs-table">
+        <thead><tr>${th('Account / Entry', true)}${th('Date', true)}${th('Communication', true)}${th('Partner', true)}${th('Debit')}${th('Credit')}${th('Balance')}</tr></thead>
+        <tbody>${body}</tbody>
+        <tfoot><tr class="gl-total"><td colspan="4">Total</td><td class="bs-val">${fmt(d.totals.debit)}</td><td class="bs-val">${fmt(d.totals.credit)}</td><td class="${glBalCls(d.totals.balance)}">${fmt(d.totals.balance)}</td></tr></tfoot>
       </table></div>`}
     </div>
   `;
@@ -16814,85 +17530,291 @@ function renderGLAccountDetail(){
 }
 
 function renderJournalReport(){
-  const posted = postedJournal();
-  const totalD = posted.reduce((s,e)=>s+e.lines.reduce((s2,l)=>s2+l.debit,0),0);
-  const totalC = posted.reduce((s,e)=>s+e.lines.reduce((s2,l)=>s2+l.credit,0),0);
+  const d = jrData();
+  const optionsLabel = (jrIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only') + (jrUnfoldAll ? ' \u00b7 Unfolded' : '');
+  const cur = state.currency;
+  const section = g=>{
+    const open = jrIsOpen(g);
+    const body = g.entries.map(e=>e.lines.map((l,i)=>`<tr>
+        <td style="white-space:nowrap;">${i===0?e.date:''}</td>
+        <td>${i===0?`<a href="#" class="mono" onclick="goToEntryDetail('${e.id}'); return false;">${escHtml(e.id)}</a>${e.draft?' <span class="badge draft">Draft</span>':''}${e.reversed?' <span class="badge reversal">Reversed</span>':''}`:''}</td>
+        <td>${escHtml(l.account)}</td><td>${escHtml(l.partner)}</td><td>${escHtml(l.label)}</td><td>${escHtml(l.tax)}</td>
+        <td class="bs-val">${l.debit?fmt(l.debit):''}</td><td class="bs-val">${l.credit?fmt(l.credit):''}</td></tr>`).join('')).join('');
+    return `<div style="margin-bottom:26px;">
+      <div onclick="jrToggleFold('${g.key}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding:9px 4px; border-bottom:2px solid var(--ink);">
+        <div style="font-weight:800; color:var(--ink);">${open?'\u25be':'\u25b8'} ${escHtml(g.name)}${g.code?` <span class="mono" style="font-weight:600;">(${escHtml(g.code)})</span>`:''}${g.type?` <span class="badge">${escHtml(g.type)}</span>`:''}</div>
+        <div style="font-size:calc(12.5px*var(--fs,1)); color:var(--text-soft);">Debit ${cur}${fmt(g.debit)} \u2014 Credit ${cur}${fmt(g.credit)}</div>
+      </div>
+      ${open?`<div class="ls-scroll" style="overflow-x:auto;"><table class="bs-table tb-table jr-table">
+        <colgroup><col style="width:9.5%;"><col style="width:10.5%;"><col style="width:24%;"><col style="width:11%;"><col style="width:17%;"><col style="width:9%;"><col style="width:9.5%;"><col style="width:9.5%;"></colgroup>
+        <thead><tr><th style="text-align:left;">Date</th><th style="text-align:left;">Entry</th><th style="text-align:left;">Account</th><th style="text-align:left;">Partner</th><th style="text-align:left;">Label</th><th style="text-align:left;">Tax</th><th class="bs-val">Debit</th><th class="bs-val">Credit</th></tr></thead>
+        <tbody>${body}</tbody>
+        <tfoot><tr class="gl-total"><td colspan="6">Total ${escHtml(g.name)}</td><td class="bs-val">${fmt(g.debit)}</td><td class="bs-val">${fmt(g.credit)}</td></tr></tfoot>
+      </table></div>`:''}
+    </div>`;
+  };
   return `
-    <div class="topbar rep-bar"><div><h2>Journal Report</h2><div class="sub">Full list of posted journal entries — ${posted.length} entries</div></div>
-      ${posted.length?`<div style="display:flex; gap:8px;"><button class="bs-pdf-btn" onclick="printJournalReport()">🖨 PDF</button><button class="bs-xlsx-btn" onclick="exportJournalReportExcel()">⬇ XLSX</button></div>`:''}
-    </div>
-    <div class="card">
-      ${posted.length===0?'<div class="empty">No entries yet</div>':
-      posted.slice().sort((a,b)=> a.date===b.date ? String(a.id).localeCompare(b.id) : a.date.localeCompare(b.date)).map(e=>`
-      <div class="journal-entry">
-        <div class="je-head">
-          <div><span class="je-id">${e.id}</span> — ${e.date} — ${e.desc} ${e.reversed?'<span class="badge reversal">Reversed</span>':''}</div>
-          <div>${sourceBadge(e.source)}</div>
+    <div class="bs-toolbar">
+      <div class="bs-toolbar-left">
+        <button class="bs-pdf-btn" onclick="printJournalReport()">\ud83d\udda8 PDF</button>
+        <button class="bs-xlsx-btn" onclick="exportJournalReportExcel()">\u2b07 XLSX</button>
+      </div>
+      <input id="jr-search" type="search" placeholder="Search..." value="${escHtml(jrSearch)}" oninput="jrOnSearch(this)" onclick="event.stopPropagation()" style="flex:1 1 160px; min-width:120px; width:auto; padding:7px 10px; border:1px solid var(--line); border-radius:6px; font-size:calc(13.5px*var(--fs,1));">
+      <div class="bs-toolbar-right">
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${jrOpenMenu==='period'?' open':''}" onclick="jrToggleMenu('period', event)">\ud83d\udcc5 Period: <b>${jrPeriodLabel()}</b></button>
+          ${jrOpenMenu==='period' ? renderJrPeriodMenu() : ''}
         </div>
-        <table><thead><tr><th class="num" style="width:6%;">#</th><th>Account</th><th>Tax</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead><tbody>
-        ${e.lines.map((l,i)=>`<tr><td class="num">${i+1}</td><td>${l.code} — ${(accountByCode(l.code)||{}).name||''} ${l.partyType?`<span class="party-tag">(${partyName(l.partyType,l.partyId)})</span>`:''}${l.desc?`<div class="party-tag">${l.desc}</div>`:''}</td><td>${escHtml(lineTaxLabel(l)||'\u2014')}</td><td class="num">${fmt(l.debit)}</td><td class="num">${fmt(l.credit)}</td></tr>`).join('')}
-        </tbody></table>
-      </div>`).join('')}
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${jrOpenMenu==='journals'?' open':''}" onclick="jrToggleMenu('journals', event)">\ud83d\udcd2 Journals: <b>${escHtml(jrJournalsLabel())}</b></button>
+          ${jrOpenMenu==='journals' ? renderJrJournalsMenu() : ''}
+        </div>
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${jrOpenMenu==='options'?' open':''}" onclick="jrToggleMenu('options', event)">\u25be Options: <b>${optionsLabel}</b></button>
+          ${jrOpenMenu==='options' ? renderJrOptionsMenu() : ''}
+        </div>
+      </div>
     </div>
-    <div class="card">
-      <div class="total-line"><span>Total Debit: <span class="amt">${state.currency}${fmt(totalD)}</span></span><span>Total Credit: <span class="amt">${state.currency}${fmt(totalC)}</span></span></div>
+    <div class="card" style="padding:22px 26px;">
+      <div style="margin-bottom:14px;"><h2 style="margin:0;">Journal Report</h2><div class="sub">${formatDateDisplay(d.start)} \u2013 ${formatDateDisplay(d.end)}</div></div>
+      ${d.groups.length===0 ? (jrSearch.trim() ? '<div class="empty">No results for "'+escHtml(jrSearch.trim())+'"</div>' : '<div class="empty">No journal entries in this period</div>') : d.groups.map(section).join('')}
     </div>
   `;
 }
 
 /* ============================= PARTNER REPORTS ============================= */
-let plPartnerType = 'customer';
-let plPartnerId = '';
-function partnerLedgerLines(type, id){
-  const rows = [];
-  postedJournal().forEach(e=>{
-    e.lines.forEach((l,li)=>{
-      if(l.partyType===type && l.partyId===id) rows.push({date:e.date, id:e.id, desc:e.desc, reversed:e.reversed, debit:l.debit, credit:l.credit});
+/* ============================= PARTNER LEDGER (Odoo logic) =============================
+   Same behaviour as Odoo's Accounting > Reporting > Partner Ledger:
+   - one collapsible row per partner (customers and suppliers together) with its Debit / Credit for the selected Period and the closing Balance;
+   - unfolding a partner shows its "Initial Balance" (everything before the period start) and then every Receivable / Payable journal item
+     of the period (Date, Journal, Account, Communication, Debit, Credit and a running Balance that starts from the initial balance), 80 at a time;
+   - only Receivable / Payable accounts count (Options: Receivable and Payable / Receivable / Payable); partners with no activity in the period
+     and a zero initial balance are hidden; a Total row closes the report;
+   - toolbar: PDF / XLSX, Search, Period, Journals filter, Account filter, Options (Include Unposted Entries, Unfold All). Click an entry to open it. */
+const PN_PAGE = 80;
+let pnOpenMenu = null;            // 'period' | 'journals' | 'account' | 'options' | null
+let pnPeriodMode = 'this_fy';
+let pnPeriodCustomStart = toLocalISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+let pnPeriodCustomEnd = todayISO();
+let pnIncludeUnposted = false;
+let pnUnfoldAll = false;
+let pnAccountKind = 'both';       // 'both' | 'ar' | 'ap'
+let pnJournalIds = new Set();     // empty = all journals ('none' = entries without a journal)
+let pnOpenPartners = new Set();   // unfolded partner keys
+let pnShown = {};                 // key -> how many journal items are loaded
+let pnSearch = '';
+const PN_KIND_LABELS = {both:'Receivable and Payable', ar:'Receivable', ap:'Payable'};
+function pnResetOpen(){ pnOpenPartners.clear(); pnShown = {}; }
+function pnRenderInPlace(){
+  if(currentTab!=='partner_ledger'){ renderQuiet(); return; }
+  const contentEl = document.getElementById('view').closest('.content');
+  const top = contentEl ? contentEl.scrollTop : 0;
+  const inner = Array.from(document.querySelectorAll('#view .ls-scroll')).map(e=>[e.scrollTop, e.scrollLeft]);
+  const restore = ()=>{
+    if(contentEl) contentEl.scrollTop = top;
+    document.querySelectorAll('#view .ls-scroll').forEach((e,i)=>{ if(inner[i]){ e.scrollTop = inner[i][0]; e.scrollLeft = inner[i][1]; } });
+  };
+  renderQuiet();
+  restore();
+  requestAnimationFrame(restore);
+}
+var _cmp_pn = { p:'pn', get PeriodMode(){ return pnPeriodMode; }, set PeriodMode(v){ pnPeriodMode=v; }, get PeriodCustomStart(){ return pnPeriodCustomStart; }, set PeriodCustomStart(v){ pnPeriodCustomStart=v; }, get PeriodCustomEnd(){ return pnPeriodCustomEnd; }, set PeriodCustomEnd(v){ pnPeriodCustomEnd=v; }, get OpenMenu(){ return pnOpenMenu; }, set OpenMenu(v){ pnOpenMenu=v; } };
+function pnPeriodRange(){ return _cmpPeriodRange(_cmp_pn); }
+function pnPeriodLabel(){
+  if(pnPeriodMode==='custom') return `Custom (${formatDateDisplay(pnPeriodCustomStart)} \u2013 ${formatDateDisplay(pnPeriodCustomEnd)})`;
+  return TX_PERIOD_LABELS[pnPeriodMode];
+}
+function pnJournalsLabel(){
+  if(!pnJournalIds.size) return 'All';
+  if(pnJournalIds.size===1){ const id = [...pnJournalIds][0]; const j = state.journalsConfig.find(x=>x.id===id); return j ? j.name : 'No Journal'; }
+  return pnJournalIds.size + ' selected';
+}
+function pnToggleMenu(name, e){ if(e) e.stopPropagation(); pnOpenMenu = (pnOpenMenu===name) ? null : name; pnRenderInPlace(); }
+function pnCloseMenus(){ if(pnOpenMenu){ pnOpenMenu = null; if(currentTab==='partner_ledger') pnRenderInPlace(); } }
+function pnSetPeriodMode(mode){ pnPeriodMode = mode; pnOpenMenu = null; pnResetOpen(); pnRenderInPlace(); }
+function pnApplyCustomPeriod(a, b){ pnResetOpen(); return _cmpApplyCustomPeriod(_cmp_pn, a, b); }
+function pnToggleUnposted(){ pnIncludeUnposted = !pnIncludeUnposted; pnRenderInPlace(); }
+function pnToggleUnfoldAll(){ pnUnfoldAll = !pnUnfoldAll; pnResetOpen(); pnRenderInPlace(); }
+function pnSetAccountKind(k){ pnAccountKind = k; pnOpenMenu = null; pnResetOpen(); pnRenderInPlace(); }
+function pnToggleJournal(id){
+  if(id==='__all__') pnJournalIds.clear();
+  else if(pnJournalIds.has(id)) pnJournalIds.delete(id); else pnJournalIds.add(id);
+  pnRenderInPlace();
+}
+function pnTogglePartner(key, e){
+  if(e) e.stopPropagation();
+  if(pnUnfoldAll){ // leaving "Unfold All": every other partner stays open, this one folds
+    pnUnfoldAll = false;
+    pnOpenPartners = new Set(pnData().rows.map(r=>r.key));
+    pnOpenPartners.delete(key);
+  } else if(pnOpenPartners.has(key)){ pnOpenPartners.delete(key); }
+  else { pnOpenPartners.add(key); pnShown[key] = PN_PAGE; }
+  pnRenderInPlace();
+}
+function pnOnSearch(el){
+  pnSearch = el.value; const pos = el.selectionStart;
+  pnRenderInPlace();
+  const i = document.getElementById('pn-search');
+  if(i){ i.focus(); try{ i.setSelectionRange(pos, pos); }catch(e){} }
+}
+function pnLoadMore(key, e){ if(e) e.stopPropagation(); pnShown[key] = (pnShown[key]||PN_PAGE) + PN_PAGE; pnRenderInPlace(); }
+/* Search: a partner whose name matches is shown whole; otherwise only the partners that have matching journal items are shown, unfolded,
+   with just those items (running balances stay the real ones). */
+function pnApplySearch(d){
+  const q = pnSearch.trim().toLowerCase();
+  if(!q) return d;
+  const rows = []; let tD = 0, tC = 0, tB = 0;
+  d.rows.forEach(r=>{
+    const hit = r.name.toLowerCase().includes(q);
+    const lines = hit ? r.lines : r.lines.filter(l=>(l.id+' '+l.label+' '+l.journal+' '+l.account).toLowerCase().includes(q));
+    if(!hit && !lines.length) return;
+    rows.push(Object.assign({}, r, {lines, searchOpen: !hit}));
+    tD += r.debit; tC += r.credit; tB += r.balance;
+  });
+  return Object.assign({}, d, {rows, totals:{debit:tD, credit:tC, balance:tB}});
+}
+/* One pass over the journal -> per-partner initial balance, period journal items (with running balance) and period totals. */
+function pnData(){
+  const {start, end} = pnPeriodRange();
+  const entries = pnIncludeUnposted ? state.journal : postedJournal();
+  const roles = pnAccountKind==='both' ? ['ar','ap'] : [pnAccountKind];
+  const acctOf = new Map((state.accounts||[]).filter(a=>roles.includes(a.role)).map(a=>[a.code, a]));
+  const byKey = new Map();
+  entries.forEach(e=>{
+    if(e.date > end) return;
+    if(pnJournalIds.size && !pnJournalIds.has(e.journalId || 'none')) return;
+    (e.lines||[]).forEach(l=>{
+      const acct = acctOf.get(l.code);
+      if(!acct) return;
+      const d = Number(l.debit)||0, c = Number(l.credit)||0;
+      const key = (l.partyId ? (l.partyType||'customer')+':'+l.partyId : 'none');
+      let o = byKey.get(key);
+      if(!o){
+        o = {key, name: l.partyId ? partyName(l.partyType, l.partyId) : 'Unknown partner', type: l.partyId ? l.partyType : '', initD:0, initC:0, debit:0, credit:0, lines:[]};
+        byKey.set(key, o);
+      }
+      if(e.date < start){ o.initD += d; o.initC += c; }
+      else {
+        o.debit += d; o.credit += c;
+        o.lines.push({date:e.date, id:e.id, journal:journalNameOf(e), account:acct.code+' \u2014 '+acct.name, label:(l.desc||e.desc||''),
+          debit:d, credit:c, reversed:!!e.reversed, draft:e.status==='draft'});
+      }
     });
   });
-  rows.sort((a,b)=> a.date===b.date ? String(a.id).localeCompare(b.id) : a.date.localeCompare(b.date));
-  let bal = 0;
-  // Same system-wide convention as the General Ledger: net debit shows
-  // positive, net credit shows negative.
-  return rows.map(r=>{
-    bal += r.debit - r.credit;
-    return {...r, balance:bal};
+  const rows = [];
+  let tD = 0, tC = 0, tBal = 0;
+  [...byKey.values()].sort((a,b)=> a.name.localeCompare(b.name) || a.key.localeCompare(b.key)).forEach(o=>{
+    const init = o.initD - o.initC;
+    if(!o.lines.length && Math.abs(init) < 0.005) return; // nothing to show for this partner in the period
+    o.lines.sort((x,y)=> x.date===y.date ? String(x.id).localeCompare(String(y.id)) : x.date.localeCompare(y.date));
+    let bal = init;
+    o.lines.forEach(l=>{ bal += l.debit - l.credit; l.balance = bal; });
+    o.init = init; o.balance = bal;
+    rows.push(o);
+    tD += o.debit; tC += o.credit; tBal += bal;
   });
+  return {start, end, rows, totals:{debit:tD, credit:tC, balance:tBal}};
 }
-function setPartnerLedgerType(type){
-  plPartnerType = type;
-  const list = type==='customer' ? state.customers : state.suppliers;
-  plPartnerId = list.length ? list[0].id : '';
-  renderPartnerLedgerInPlace();
+function renderPnPeriodMenu(){ return periodMenuHtml('pn', pnPeriodMode, pnPeriodCustomStart, pnPeriodCustomEnd, TX_PERIOD_LABELS); }
+function renderPnJournalsMenu(){ return journalsMenuHtml('pn', pnJournalIds); }
+function renderPnAccountMenu(){
+  return `<div class="bs-menu" onclick="event.stopPropagation();">
+    ${Object.keys(PN_KIND_LABELS).map(k=>`<div class="bs-menu-item ${pnAccountKind===k?'active':''}" onclick="pnSetAccountKind('${k}')">${PN_KIND_LABELS[k]}</div>`).join('')}
+  </div>`;
 }
-function setPartnerLedgerId(id){ plPartnerId = id; renderPartnerLedgerInPlace(); }
-function renderPartnerLedgerInPlace(){ document.getElementById('view').innerHTML = renderPartnerLedger(); }
+function renderPnOptionsMenu(){
+  return `<div class="bs-menu" onclick="event.stopPropagation();">
+    <label class="bs-menu-checkbox"><input type="checkbox" ${pnIncludeUnposted?'checked':''} onchange="pnToggleUnposted()"><span>Include Unposted Entries</span></label>
+    <label class="bs-menu-checkbox"><input type="checkbox" ${pnUnfoldAll?'checked':''} onchange="pnToggleUnfoldAll()"><span>Unfold All</span></label>
+  </div>`;
+}
+/* PDF / XLSX = the report exactly as it is on screen: same partners (after Search / Journals / Period / Account / Unposted); the partners that are
+   unfolded on screen are unfolded in the file (Initial Balance + the journal items currently loaded), folded ones stay one row. */
+const PN_EXPORT_COLUMNS = [{label:'Partner / Entry',width:'11%',wrap:true,entry:true},{label:'Date',width:'8%'},{label:'Journal',width:'10%',wrap:true},{label:'Account',width:'15%',wrap:true},{label:'Communication',width:'25%',wrap:true},{label:'Debit',num:true,width:'10%'},{label:'Credit',num:true,width:'10%'},{label:'Balance',num:true,width:'11%'}];
+function pnIsOpen(r){ return pnUnfoldAll || pnOpenPartners.has(r.key) || !!r.searchOpen; }
+function pnExportData(){
+  const d = pnApplySearch(pnData()), rows = [];
+  d.rows.forEach(r=>{
+    rows.push([r.name, '', '', '', '', r.debit, r.credit, r.balance]);
+    if(!pnIsOpen(r)) return;
+    rows.push(['Initial Balance', '', '', '', '', r.initD, r.initC, r.init]);
+    const shown = Math.min(r.lines.length, pnShown[r.key] || PN_PAGE);
+    r.lines.slice(0, shown).forEach(l=>{
+      rows.push([l.id, l.date, l.journal, l.account, l.label+(l.reversed?' (Reversed)':'')+(l.draft?' (Unposted)':''), l.debit||'', l.credit||'', l.balance]);
+    });
+  });
+  return {d, rows, totals:['Total','','','','', d.totals.debit, d.totals.credit, d.totals.balance]};
+}
+function pnSubtitle(d){ return 'Partner Ledger \u2014 '+d.start+' to '+d.end+' \u2014 '+(pnIncludeUnposted?'All Entries':'Posted Entries')+' \u2014 '+PN_KIND_LABELS[pnAccountKind]+' \u2014 Journals: '+pnJournalsLabel()+(pnSearch.trim()?' \u2014 Search: '+pnSearch.trim():''); }
+function printPartnerLedger(){
+  const x = pnExportData();
+  if(!x.rows.length){ toast('Nothing to print for this period'); return; }
+  printSimpleTableReport('Partner Ledger', pnSubtitle(x.d), PN_EXPORT_COLUMNS, x.rows, x.totals, {landscape:true, groupSpan:true});
+}
+function exportPartnerLedgerExcel(){
+  const x = pnExportData();
+  if(!x.rows.length){ toast('Nothing to export for this period'); return; }
+  exportSimpleTableReportExcel('Partner Ledger', pnSubtitle(x.d), PN_EXPORT_COLUMNS, x.rows, 'partner-ledger-'+x.d.start+'-to-'+x.d.end+'.xlsx', x.totals);
+}
 function renderPartnerLedger(){
-  const list = plPartnerType==='customer' ? state.customers : state.suppliers;
-  if(!plPartnerId && list.length) plPartnerId = list[0].id;
-  const lines = plPartnerId ? partnerLedgerLines(plPartnerType, plPartnerId) : []; // oldest → newest
-  const ending = lines.length ? lines[lines.length-1].balance : 0;
+  const d = pnApplySearch(pnData());
+  const optionsLabel = (pnIncludeUnposted ? 'Include Unposted Entries' : 'Posted Entries Only') + (pnUnfoldAll ? ' \u00b7 Unfolded' : '');
+  const th = (t, left) => `<th${left?' style="text-align:left;"':''}>${t}</th>`;
+  let body = '';
+  d.rows.forEach(r=>{
+    const open = pnIsOpen(r);
+    const tag = r.type ? ` <span class="badge">${r.type==='supplier'?'Supplier':'Customer'}</span>` : '';
+    body += `<tr class="gl-acc" onclick="pnTogglePartner('${escHtml(r.key)}', event)">
+      <td colspan="5"><span class="bs-arrow">${open?'\u25bc':'\u25b6'}</span> ${escHtml(r.name)}${tag}</td>
+      <td class="bs-val">${fmt(r.debit)}</td><td class="bs-val">${fmt(r.credit)}</td><td class="${glBalCls(r.balance)}">${fmt(r.balance)}</td></tr>`;
+    if(!open) return;
+    body += `<tr class="gl-sub"><td colspan="5" style="padding-left:30px; font-style:italic;">Initial Balance</td>
+      <td class="bs-val">${fmt(r.initD)}</td><td class="bs-val">${fmt(r.initC)}</td><td class="${glBalCls(r.init)}">${fmt(r.init)}</td></tr>`;
+    const shown = Math.min(r.lines.length, pnShown[r.key] || PN_PAGE);
+    r.lines.slice(0, shown).forEach(l=>{
+      body += `<tr class="gl-line" onclick="goToEntryDetail('${l.id}')" style="cursor:pointer;">
+        <td class="bs-link" style="padding-left:30px;">${escHtml(l.id)}</td><td style="white-space:nowrap;">${l.date}</td>
+        <td>${escHtml(l.journal)}</td><td>${escHtml(l.account)}</td>
+        <td style="white-space:normal; word-break:break-word; min-width:220px; max-width:420px;">${escHtml(l.label)}${l.reversed?' <span class="badge reversal">Reversed</span>':''}${l.draft?' <span class="badge">Unposted</span>':''}</td>
+        <td class="bs-val">${l.debit?fmt(l.debit):''}</td><td class="bs-val">${l.credit?fmt(l.credit):''}</td><td class="${glBalCls(l.balance)}">${fmt(l.balance)}</td></tr>`;
+    });
+    if(shown < r.lines.length){
+      body += `<tr class="gl-more"><td colspan="8" style="padding-left:30px;"><a style="cursor:pointer; color:var(--azure);" onclick="pnLoadMore('${escHtml(r.key)}', event)">Load more... (${r.lines.length - shown} remaining)</a></td></tr>`;
+    }
+  });
   return `
-    <div class="topbar rep-bar">
-      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <select title="Partner type" onchange="setPartnerLedgerType(this.value)" style="padding:7px 10px; border:1px solid var(--line); border-radius:6px; font-size:calc(13.5px*var(--fs,1)); width:auto; min-width:150px;">
-          <option value="customer" ${plPartnerType==='customer'?'selected':''}>Customer</option>
-          <option value="supplier" ${plPartnerType==='supplier'?'selected':''}>Supplier</option>
-        </select>
-        <select title="${plPartnerType==='customer'?'Customer':'Supplier'}" onchange="setPartnerLedgerId(this.value)" style="padding:7px 10px; border:1px solid var(--line); border-radius:6px; font-size:calc(13.5px*var(--fs,1)); width:auto; min-width:150px;">
-          ${list.length===0?'<option value="">None</option>':list.map(p=>`<option value="${p.id}" ${plPartnerId===p.id?'selected':''}>${p.name}</option>`).join('')}
-        </select>
+    <div class="bs-toolbar">
+      <div class="bs-toolbar-left">
+        <button class="bs-pdf-btn" onclick="printPartnerLedger()">\ud83d\udda8 PDF</button>
+        <button class="bs-xlsx-btn" onclick="exportPartnerLedgerExcel()">\u2b07 XLSX</button>
       </div>
-      ${lines.length?`<div style="display:flex; gap:8px;"><button class="bs-pdf-btn" onclick="printPartnerLedger()">🖨 PDF</button><button class="bs-xlsx-btn" onclick="exportPartnerLedgerExcel()">⬇ XLSX</button></div>`:''}
+      <input id="pn-search" type="search" placeholder="Search..." value="${escHtml(pnSearch)}" oninput="pnOnSearch(this)" onclick="event.stopPropagation()" style="flex:1 1 160px; min-width:120px; width:auto; padding:7px 10px; border:1px solid var(--line); border-radius:6px; font-size:calc(13.5px*var(--fs,1));">
+      <div class="bs-toolbar-right">
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${pnOpenMenu==='period'?' open':''}" onclick="pnToggleMenu('period', event)">\ud83d\udcc5 Period: <b>${pnPeriodLabel()}</b></button>
+          ${pnOpenMenu==='period' ? renderPnPeriodMenu() : ''}
+        </div>
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${pnOpenMenu==='journals'?' open':''}" onclick="pnToggleMenu('journals', event)">\ud83d\udcd2 Journals: <b>${escHtml(pnJournalsLabel())}</b></button>
+          ${pnOpenMenu==='journals' ? renderPnJournalsMenu() : ''}
+        </div>
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${pnOpenMenu==='account'?' open':''}" onclick="pnToggleMenu('account', event)">\ud83d\udc65 Account: <b>${PN_KIND_LABELS[pnAccountKind]}</b></button>
+          ${pnOpenMenu==='account' ? renderPnAccountMenu() : ''}
+        </div>
+        <div class="bs-menu-wrap">
+          <button class="bs-menu-btn${pnOpenMenu==='options'?' open':''}" onclick="pnToggleMenu('options', event)">\u25be Options: <b>${optionsLabel}</b></button>
+          ${pnOpenMenu==='options' ? renderPnOptionsMenu() : ''}
+        </div>
+      </div>
     </div>
-    <div class="card">
-      <h3 style="margin:0 0 10px;">Transactions</h3>
-      ${list.length===0?`<div class="empty">No ${plPartnerType}s yet</div>`:
-      lines.length===0?'<div class="empty">No transactions for this partner</div>':
-      `<div class="ls-scroll" style="overflow-x:auto;"><table style="table-layout:fixed;"><colgroup><col style="width:10%;"><col style="width:11%;"><col style="width:23%;"><col style="width:18%;"><col style="width:18%;"><col style="width:20%;"></colgroup><thead><tr><th>Date</th><th>Entry</th><th>Description</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>
-      ${lines.map(l=>`<tr><td>${l.date}</td><td class="mono">${l.id}</td><td style="white-space:normal; word-break:break-word;">${l.desc}${l.reversed?' <span class="badge reversal">Reversed</span>':''}</td><td class="num">${fmt(l.debit)}</td><td class="num">${fmt(l.credit)}</td><td class="num">${fmt(l.balance)}</td></tr>`).join('')}
-      </tbody></table></div>
-      <div class="total-line"><span>Balance Due</span><span class="amt">${state.currency}${fmt(ending)}</span></div>`}
+    <div class="card" style="padding:22px 26px;">
+      ${d.rows.length===0 ? (pnSearch.trim() ? '<div class="empty">No results for "'+escHtml(pnSearch.trim())+'"</div>' : '<div class="empty">No partner activity in this period</div>') :
+      `<div class="ls-scroll" style="overflow-x:auto;"><table class="bs-table">
+        <thead><tr>${th('Partner / Entry', true)}${th('Date', true)}${th('Journal', true)}${th('Account', true)}${th('Communication', true)}${th('Debit')}${th('Credit')}${th('Balance')}</tr></thead>
+        <tbody>${body}</tbody>
+        <tfoot><tr class="gl-total"><td colspan="5">Total</td><td class="bs-val">${fmt(d.totals.debit)}</td><td class="bs-val">${fmt(d.totals.credit)}</td><td class="${glBalCls(d.totals.balance)}">${fmt(d.totals.balance)}</td></tr></tfoot>
+      </table></div>`}
     </div>
   `;
 }
@@ -17210,6 +18132,8 @@ function importJSONFile(input){
       const imported = JSON.parse(e.target.result);
       if(!imported.accounts || !imported.journal){ throw new Error('This file is not a valid backup'); }
       state = imported;
+      applyBackwardCompatAndRender(); // backups made before newer modules (Assets, ...) existed lack their fields
+      auditResetBaseline();
       saveState();
       toast('Backup restored successfully');
       goTo('dashboard');
@@ -17222,25 +18146,13 @@ function importJSONFile(input){
 }
 
 function exportExcel(){
-  if(typeof XLSX !== 'undefined'){ buildAndDownloadExcel(); return; }
-  toast('Loading export tool...');
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  script.onload = function(){ buildAndDownloadExcel(); };
-  script.onerror = function(){ toast('Could not load the export tool — check your internet connection'); };
-  document.head.appendChild(script);
+  loadXlsxThen('Loading export tool...', 'Could not load the export tool — check your internet connection', function(){ buildAndDownloadExcel(); });
 }
 /* Generic single-sheet exporter used by the "Export Excel" button on individual
    list pages (Chart of Accounts, Journals, Users, ...) — reuses the same
    lazy-loaded XLSX library as the full multi-sheet backup export below. */
 function exportRowsToExcel(rows, sheetName, filename, moneyCols, dataStartRow){
-  if(typeof XLSX !== 'undefined'){ downloadExcelRows(rows, sheetName, filename, moneyCols, dataStartRow); return; }
-  toast('Loading export tool...');
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  script.onload = function(){ downloadExcelRows(rows, sheetName, filename, moneyCols, dataStartRow); };
-  script.onerror = function(){ toast('Could not load the export tool — check your internet connection'); };
-  document.head.appendChild(script);
+  loadXlsxThen('Loading export tool...', 'Could not load the export tool — check your internet connection', function(){ downloadExcelRows(rows, sheetName, filename, moneyCols, dataStartRow); });
 }
 function downloadExcelRows(rows, sheetName, filename, moneyCols, dataStartRow){
   const wb = XLSX.utils.book_new();
