@@ -2335,6 +2335,16 @@ function attachFirestoreListener(onFirstLoad){
     }
     clearTimeout(window.__cacheMissTimer);
     (function(){ const b = document.getElementById('fatal-error-box'); if(b && /No answer from the server yet/.test(b.textContent)) b.remove(); })();
+    if(v2 && v2.active){
+      // Already on storage v2. If the marker was wiped, or a stale single-document copy was written back (an old tab / old copy of the app), put the marker back and say so.
+      if(snap.exists && v2RepairMarker(snap.data() || {})) toast('Someone is still using an old version of the app — ask them to reload the page (their changes would not be saved).');
+      return;
+    }
+    if(snap.exists && snap.data() && snap.data().storageVersion===2){
+      // Upgraded company: every record has its own document (see STORAGE V2). This document only carries storageVersion / allowedUids / adminUids.
+      if(!v2 || !v2.active){ const cb = firstLoad ? onFirstLoad : null; firstLoad = false; v2Start(cb || function(){}); v2RepairMarker(snap.data()); }
+      return;
+    }
     /* The server-confirmed copy of a write WE made (its serverTimestamp resolving is enough to trigger a second
        snapshot) is identical to what's already on screen. Re-parsing it and calling render() rebuilt the whole
        page, faded it out and jumped to the top after EVERY save — and wiped any row being edited. Ignore it. */
@@ -2376,6 +2386,338 @@ function attachFirestoreListener(onFirstLoad){
   });
 }
 
+/* ===== STORAGE V2 — one small Firestore document per record (opt-in: sidebar "Upgrade storage") =====
+   Legacy storage keeps the WHOLE company in one document (hard ~1 MiB cap ≈ 2,000 journal entries) and the last writer silently
+   overwrites everyone else. In V2 every journal entry / invoice / customer / ... is its own small document, so there is no size
+   ceiling and two people editing DIFFERENT records never overwrite each other. Everything that is not a list of records
+   (settings, flags, locQty ...) lives in meta/main, the number sequences in meta/counters.
+   Layout:  companies/{id}/d_<list>/{recordId}  = {k:key, o:order, j:'<record as JSON>'}    companies/{id}/meta/{main|counters} = {j:'...'}
+   The company document itself keeps {storageVersion:2, allowedUids, adminUids} so Firestore security rules can read them. */
+const V2_SPEC = {
+  journal:['id'], accounts:['code'], journalsConfig:['id'], paymentMethods:['id'], paymentTerms:['id'], taxes:['id'],
+  bankAccounts:['id'], bankRecs:['id'], assets:['id'], assetModels:['id'], analyticAccounts:['id'],
+  accountingPeriods:['id','ymKey'], closedFiscalYears:['@'], currencies:['code'],
+  products:['id'], parentCategories:['id'], productCategories:['id'], customers:['id'], suppliers:['id'],
+  sales:['id'], invoices:['id'], purchases:['id'], purchaseQuotes:['id'], deliveries:['id'], goodsReceipts:['id'],
+  creditDrafts:['id'], debitDrafts:['id'], warehouses:['id'], stockLocations:['id'], stockTransfers:['id'],
+  stockAdjustments:['id'], scraps:['id'], users:['id'], auditTrail:['id']
+};
+let v2 = null;
+function v2Key(col, rec){
+  const f = V2_SPEC[col];
+  if(f[0]==='@') return (rec===null || rec===undefined) ? '' : String(rec);
+  if(!rec || typeof rec!=='object') return '';
+  for(const k of f){ if(rec[k]!==undefined && rec[k]!==null && rec[k]!=='') return String(rec[k]); }
+  return '';
+}
+function v2DocId(key){ return 'k' + encodeURIComponent(key).replace(/\./g,'%2E'); }
+function v2ColRef(col){ return companyDocRef().collection('d_'+col); }
+function v2MetaRef(name){ return companyDocRef().collection('meta').doc(name); }
+function v2Stable(v){
+  if(Array.isArray(v)) return '[' + v.map(x=>v2Stable(x)).join(',') + ']';
+  if(v && typeof v==='object') return '{' + Object.keys(v).sort().filter(k=>v[k]!==undefined && typeof v[k]!=='function').map(k=>JSON.stringify(k)+':'+v2Stable(v[k])).join(',') + '}';
+  const s = JSON.stringify(v); return s===undefined ? 'null' : s;
+}
+function v2MetaObj(st){ const o = {}; Object.keys(st).forEach(k=>{ if(k==='counters' || V2_SPEC[k]) return; o[k] = st[k]; }); return o; }
+function v2Validate(st){
+  const problems = [];
+  Object.keys(V2_SPEC).forEach(col=>{
+    const arr = st[col]; if(arr===undefined) return;
+    if(!Array.isArray(arr)){ problems.push(col+' is not a list'); return; }
+    const seen = new Set();
+    arr.forEach((rec,i)=>{
+      const k = v2Key(col, rec);
+      if(k===''){ problems.push(col+': record #'+(i+1)+' has no '+V2_SPEC[col].join('/')); return; }
+      if(seen.has(k)) problems.push(col+': duplicate '+k); else seen.add(k);
+    });
+  });
+  return problems;
+}
+function v2Index(col, key){ const arr = state[col]; if(!Array.isArray(arr)) return -1; for(let i=0;i<arr.length;i++){ if(v2Key(col, arr[i])===key) return i; } return -1; }
+
+function v2Start(onFirstLoad){
+  if(v2 && v2.active) return;
+  const me = v2 = { active:true, unsubs:[], last:{}, ord:{}, maxO:{}, metaLast:null, cntLast:null, mirrorLast:null, blocked:false, ready:false, rerenderTimer:null, mine:{} };
+  Object.keys(V2_SPEC).forEach(col=>{ me.last[col] = new Map(); me.ord[col] = new Map(); me.maxO[col] = 0; me.mine[col] = new Map(); });
+  const names = Object.keys(V2_SPEC);
+  const total = names.length + 2;
+  const first = {}, latest = {};
+  let finished = false, cacheTimer = null, deadTimer = null;
+  const fail = function(msg){ me.blocked = true; showFatalError(msg); if(!finished){ finished = true; if(onFirstLoad) onFirstLoad(); } };
+  const finish = function(){
+    clearTimeout(cacheTimer); clearTimeout(deadTimer);
+    try{
+      const mainSnap = latest['meta:main'];
+      if(!mainSnap || !mainSnap.exists) return fail('This company is marked as upgraded but its settings document is missing. Saving is DISABLED. Contact support before changing anything.');
+      const st = newState();
+      const meta = JSON.parse(mainSnap.data().j);
+      Object.keys(meta).forEach(k=>{ st[k] = meta[k]; });
+      me.metaLast = mainSnap.data().j;
+      const cntSnap = latest['meta:counters'];
+      if(cntSnap && cntSnap.exists){ st.counters = Object.assign({}, st.counters, JSON.parse(cntSnap.data().j)); me.cntLast = cntSnap.data().j; }
+      names.forEach(col=>{
+        const docs = latest['c:'+col].docs.map(d=>d.data()).sort((a,b)=>(a.o||0)-(b.o||0));
+        const arr = [], last = me.last[col], ord = me.ord[col]; let maxO = 0;
+        docs.forEach(d=>{ arr.push(JSON.parse(d.j)); last.set(d.k, d.j); ord.set(d.k, d.o||0); if((d.o||0) > maxO) maxO = d.o||0; });
+        st[col] = arr; me.maxO[col] = maxO;
+      });
+      state = st; syncBlocked = false;
+      me.mirrorLast = v2MirrorJson();
+      me.ready = true; finished = true;
+      window.__syncQuietRender = false;
+      applyBackwardCompatAndRender();
+      auditResetBaseline();
+      try{ renderAccountFoot(); }catch(e){}
+      if(onFirstLoad) onFirstLoad();
+    }catch(e){
+      console.error('Storage v2 load failed', e);
+      fail('The saved company data could not be read, so saving is DISABLED to protect it. Reload the page; if this repeats, contact support before changing anything.');
+    }
+  };
+  const tryFinish = function(force){
+    if(finished || me.blocked) return;
+    if(Object.keys(first).length < total) return;
+    const allServer = Object.keys(first).every(n=>!first[n].fromCache);
+    if(!allServer){ if(!force) return; if(!first['meta:main'].exists) return; } // a cached copy is only trusted after a few seconds, and only if the settings document is in it
+    finish();
+  };
+  const onErr = function(err){
+    if(me.blocked) return; console.error('Storage v2 listener error', err);
+    fail('Firestore sync error: ' + (err && err.message || err));
+  };
+  names.forEach(col=>{
+    me.unsubs.push(v2ColRef(col).onSnapshot(function(snap){
+      if(!finished){ latest['c:'+col] = snap; first['c:'+col] = {fromCache:!!snap.metadata.fromCache}; tryFinish(false); return; }
+      v2OnCol(col, snap);
+    }, onErr));
+  });
+  ['main','counters'].forEach(name=>{
+    me.unsubs.push(v2MetaRef(name).onSnapshot(function(snap){
+      if(!finished){ latest['meta:'+name] = snap; first['meta:'+name] = {fromCache:!!snap.metadata.fromCache, exists:snap.exists}; tryFinish(false); return; }
+      v2OnMeta(name, snap);
+    }, onErr));
+  });
+  cacheTimer = setTimeout(function(){ tryFinish(true); }, 6000);
+  deadTimer = setTimeout(function(){ if(!finished) fail('No answer from the server yet — check your internet connection, then reload. Nothing was changed or overwritten.'); }, 25000);
+  const prevUnsub = unsubscribeSnapshot;
+  unsubscribeSnapshot = function(){
+    try{ if(prevUnsub) prevUnsub(); }catch(e){}
+    me.unsubs.forEach(function(u){ try{ u(); }catch(e){} });
+    clearTimeout(cacheTimer); clearTimeout(deadTimer); clearTimeout(me.rerenderTimer);
+    me.active = false; if(v2===me) v2 = null;
+  };
+}
+/* The marker an upgraded company document must always carry. An old copy of the app that still writes the old single document would otherwise bring the company back to the old format. */
+function v2RepairMarker(d){
+  if(d && d.storageVersion===2 && d.json==='MIGRATED_TO_V2') return false;
+  const fix = {storageVersion:2, json:'MIGRATED_TO_V2', updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  if(v2 && v2.ready && state){ const pair = JSON.parse(v2MirrorJson()); fix.allowedUids = pair[0]; fix.adminUids = pair[1]; } // an old app also wipes these; the security rules read them
+  companyDocRef().set(fix, {merge:true}).catch(function(e){ console.error(e); });
+  return true;
+}
+function v2MirrorJson(){
+  const allowed = Array.isArray(state.allowedUids) ? state.allowedUids.slice() : [];
+  const admins = (state.users||[]).filter(u=>u && u.role==='Administrator' && u.uid).map(u=>u.uid);
+  return JSON.stringify([allowed, admins]);
+}
+function v2Rerender(){
+  const me = v2; if(!me) return;
+  clearTimeout(me.rerenderTimer);
+  me.rerenderTimer = setTimeout(function(){
+    if(!v2 || v2!==me) return;
+    window.__syncQuietRender = true;
+    try{ applyBackwardCompatAndRender(); auditResetBaseline(); }finally{ window.__syncQuietRender = false; }
+  }, 40);
+}
+/* A change to a list of records made by someone else (or confirmed by the server). */
+function v2OnCol(col, snap){
+  const me = v2; let changed = false;
+  snap.docChanges().forEach(function(ch){
+    const d = ch.doc; if(d.metadata && d.metadata.hasPendingWrites) return; // our own write, already on screen
+    const data = d.data(); if(!data || data.k===undefined) return;
+    const key = String(data.k), last = me.last[col], arr = state[col] || (state[col] = []);
+    if(ch.type==='removed'){
+      const i = v2Index(col, key);
+      // untouched here -> follow the removal; edited here since the last sync -> keep our version (the next save puts it back)
+      if(i>=0 && JSON.stringify(arr[i])===last.get(key)){ arr.splice(i,1); changed = true; }
+      last.delete(key); me.ord[col].delete(key); return;
+    }
+    if(last.get(key)===data.j) return; // the server just confirmed what we already have
+    const rec = JSON.parse(data.j), i = v2Index(col, key), wasSynced = last.get(key);
+    me.ord[col].set(key, data.o||0); if((data.o||0) > me.maxO[col]) me.maxO[col] = data.o||0;
+    if(i>=0){
+      if(wasSynced===undefined) toast('Another user created '+key+' at the same moment — your version was kept. Please check it.');
+      else if(JSON.stringify(arr[i])===wasSynced){
+        const born = me.mine[col].get(key);
+        // somebody saved a DIFFERENT record under the number we created a moment ago -> one of the two is lost; say so instead of swapping silently
+        if(born && Date.now()-born < 8000) toast('Another user saved "'+key+'" at the same moment — their version replaced yours. Please re-create yours with a new number.');
+        arr[i] = rec; changed = true; // not edited here -> take theirs
+      }
+      // else: edited here since the last sync -> ours wins (it is saved next)
+    } else {
+      let pos = arr.length; while(pos>0 && (me.ord[col].get(v2Key(col, arr[pos-1]))||0) > (data.o||0)) pos--;
+      arr.splice(pos, 0, rec); changed = true;
+    }
+    last.set(key, data.j);
+  });
+  if(changed) v2Rerender();
+}
+function v2OnMeta(name, snap){
+  const me = v2; if(!snap.exists || (snap.metadata && snap.metadata.hasPendingWrites)) return;
+  const j = snap.data().j;
+  if(name==='main'){
+    if(j===me.metaLast) return;
+    const mine = v2Stable(v2MetaObj(state));
+    if(mine===me.metaLast){ // nothing edited here -> adopt theirs
+      const obj = JSON.parse(j);
+      Object.keys(v2MetaObj(state)).forEach(k=>{ if(!(k in obj)) delete state[k]; });
+      Object.keys(obj).forEach(k=>{ state[k] = obj[k]; });
+      v2Rerender();
+    }
+    me.metaLast = j;
+  } else {
+    if(j===me.cntLast) return;
+    const remote = JSON.parse(j); if(!state.counters) state.counters = {};
+    Object.keys(remote).forEach(k=>{ if(!(typeof state.counters[k]==='number') || remote[k] > state.counters[k]) state.counters[k] = remote[k]; }); // sequences only ever move forward
+    me.cntLast = j;
+  }
+}
+function v2Plan(){
+  const me = v2, ops = [], problems = []; let delBig = null;
+  Object.keys(V2_SPEC).forEach(function(col){
+    const arr = state[col]; if(!Array.isArray(arr)) return;
+    const last = me.last[col], cur = new Map();
+    for(let i=0;i<arr.length;i++){
+      const key = v2Key(col, arr[i]);
+      if(key===''){ problems.push(col+': record #'+(i+1)+' has no '+V2_SPEC[col].join('/')); continue; }
+      if(cur.has(key)){ problems.push(col+': duplicate '+key); continue; }
+      cur.set(key, JSON.stringify(arr[i]));
+    }
+    let dels = 0;
+    cur.forEach(function(json,key){ if(last.get(key)!==json) ops.push({t:'set', col, key, json, old:last.get(key)}); });
+    last.forEach(function(json,key){ if(!cur.has(key)){ ops.push({t:'del', col, key, old:json}); dels++; } });
+    if(dels>=200 && dels>=0.6*last.size) delBig = {col, dels, total:last.size};
+  });
+  const metaJ = v2Stable(v2MetaObj(state)); if(metaJ!==me.metaLast) ops.push({t:'meta', name:'main', json:metaJ, old:me.metaLast});
+  const cntJ = v2Stable(state.counters||{}); if(cntJ!==me.cntLast) ops.push({t:'meta', name:'counters', json:cntJ, old:me.cntLast});
+  return {ops, problems, delBig};
+}
+let __v2FailToastAt = 0;
+function v2CommitFailed(group, err){
+  const me = v2; console.error('Storage v2 write failed', err);
+  if(me) group.forEach(function(op){
+    if(op.t==='set'){ if(op.old===undefined) me.last[op.col].delete(op.key); else me.last[op.col].set(op.key, op.old); }
+    else if(op.t==='del') me.last[op.col].set(op.key, op.old);
+    else if(op.name==='main') me.metaLast = op.old; else me.cntLast = op.old;
+  });
+  if(Date.now()-__v2FailToastAt > 8000){ __v2FailToastAt = Date.now(); toast('Could not sync to the server' + (err && err.code==='permission-denied' ? ' (permission denied)' : '') + ' — will retry on the next change'); }
+}
+function v2Flush(){
+  const me = v2; if(!me || !me.active || !me.ready || !state || me.blocked) return;
+  const plan = v2Plan();
+  if(plan.problems.length){ me.blocked = true; showFatalError('Saving stopped to protect your data: ' + plan.problems.slice(0,3).join('; ') + '. Reload the page and contact support.'); return; }
+  if(plan.delBig && !confirm('This change deletes ' + plan.delBig.dels + ' of ' + plan.delBig.total + ' records in "' + plan.delBig.col + '" on the server. Continue?\n\nChoose Cancel if you did not intend this (the page must then be reloaded).')){
+    me.blocked = true; toast('Saving paused — reload the page to discard those changes'); return;
+  }
+  let batch = db.batch(), n = 0, bytes = 0, group = [];
+  const flushBatch = function(){ if(!n) return; const g = group; batch.commit().catch(function(err){ v2CommitFailed(g, err); }); batch = db.batch(); n = 0; bytes = 0; group = []; };
+  plan.ops.forEach(function(op){
+    if(op.t==='set'){
+      if(op.json.length>300000 && __utf8Len(op.json)>900000){ toast('"' + op.key + '" (' + op.col + ') is too large to save (over 900 KB)'); return; }
+      let o = me.ord[op.col].get(op.key); if(o===undefined){ o = ++me.maxO[op.col]; me.ord[op.col].set(op.key, o); }
+      batch.set(v2ColRef(op.col).doc(v2DocId(op.key)), {k:op.key, o, j:op.json}); if(op.old===undefined) me.mine[op.col].set(op.key, Date.now()); me.last[op.col].set(op.key, op.json);
+    } else if(op.t==='del'){
+      batch.delete(v2ColRef(op.col).doc(v2DocId(op.key))); me.last[op.col].delete(op.key); me.ord[op.col].delete(op.key);
+    } else {
+      if(op.json.length>300000 && __utf8Len(op.json)>900000){ toast('Company settings are too large to save'); return; }
+      batch.set(v2MetaRef(op.name), {j:op.json}); if(op.name==='main') me.metaLast = op.json; else me.cntLast = op.json;
+    }
+    n++; bytes += (op.json ? op.json.length : 60); group.push(op);
+    if(n>=400 || bytes>4000000) flushBatch();
+  });
+  flushBatch();
+  const mj = v2MirrorJson();
+  if(mj!==me.mirrorLast){
+    me.mirrorLast = mj; const pair = JSON.parse(mj);
+    companyDocRef().set({allowedUids:pair[0], adminUids:pair[1], updatedAt:firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}).catch(function(err){ me.mirrorLast = null; console.error(err); });
+  }
+}
+/* ---- Upgrade: legacy single document -> V2 (owner / administrator, explicit, with backup and verification) ---- */
+async function v2Migrate(){
+  if(!isCompanyAdmin()){ toast('Only an Administrator can upgrade the storage.'); return; }
+  if(v2 && v2.active){ toast('Storage is already upgraded.'); return; }
+  if(syncBlocked || !state || !currentUid){ toast('The upgrade cannot start: your data is not loaded safely. Reload the page and try again.'); return; }
+  const problems = v2Validate(state);
+  if(problems.length){ alert('The upgrade was NOT started — these records need fixing first:\n\n• ' + problems.slice(0,8).join('\n• ') + (problems.length>8 ? '\n• … and ' + (problems.length-8) + ' more' : '')); return; }
+  const legacyBytes = __utf8Len(JSON.stringify(state));
+  let records = 0; Object.keys(V2_SPEC).forEach(c=>{ if(Array.isArray(state[c])) records += state[c].length; });
+  if(!confirm('Upgrade the storage of this company?\n\n• Today all data lives in ONE server document (' + Math.round(legacyBytes/1024) + ' KB of ~1000 KB allowed). After the upgrade every record is stored separately: no size ceiling, and people editing different records no longer overwrite each other.\n• ' + records + ' records will be copied. A backup file is downloaded first, and the copy is verified before anything is switched.\n• ALL users must be signed out of the app during the upgrade, and must reload the page afterwards.\n\nContinue?')) return;
+  const __wasBlocked = syncBlocked; syncBlocked = true; let __switched = false; // this tab must not save in the old format while (or after) the upgrade runs
+  const step = function(m){ toast('Storage upgrade: ' + m); };
+  const withTimeout = function(p, label){ return Promise.race([p, new Promise(function(_,rej){ setTimeout(function(){ rej(new Error(label + ' timed out — check your connection')); }, 90000); })]); };
+  try{
+    step('1/6 reading the server copy…');
+    const before = await withTimeout(companyDocRef().get({source:'server'}), 'Reading the company');
+    if(!before.exists || !before.data().json) throw new Error('The company document has no data to upgrade (already upgraded?)');
+    const legacyJson = before.data().json;
+    step('2/6 downloading a backup…');
+    try{
+      const blob = new Blob([JSON.stringify(state)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'company-backup-' + todayISO() + '.json';
+      document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    }catch(e){ if(!confirm('The backup file could not be created. Continue anyway? (The original server copy is kept untouched.)')) return; }
+    // expected content
+    const exp = {};
+    Object.keys(V2_SPEC).forEach(function(col){ const m = new Map(); (state[col]||[]).forEach(function(r){ m.set(v2Key(col, r), JSON.stringify(r)); }); exp[col] = m; });
+    const metaJ = v2Stable(v2MetaObj(state)), cntJ = v2Stable(state.counters||{});
+    step('3/6 clearing any earlier attempt…');
+    for(const col of Object.keys(V2_SPEC)){
+      const old = await withTimeout(v2ColRef(col).get({source:'server'}), 'Reading ' + col);
+      let b = db.batch(), c = 0;
+      for(const d of old.docs){ b.delete(d.ref); if(++c>=400){ await withTimeout(b.commit(), 'Clearing'); b = db.batch(); c = 0; } }
+      if(c) await withTimeout(b.commit(), 'Clearing');
+    }
+    step('4/6 copying ' + records + ' records…');
+    let b = db.batch(), c = 0, done = 0;
+    const commit = async function(){ if(c){ await withTimeout(b.commit(), 'Writing'); b = db.batch(); c = 0; } };
+    for(const col of Object.keys(V2_SPEC)){
+      let o = 0;
+      for(const rec of (state[col]||[])){
+        const key = v2Key(col, rec), json = JSON.stringify(rec);
+        if(json.length>300000 && __utf8Len(json)>900000) throw new Error('"' + key + '" (' + col + ') is larger than 900 KB and cannot be stored as a record');
+        b.set(v2ColRef(col).doc(v2DocId(key)), {k:key, o:++o, j:json});
+        if(++c>=400){ await commit(); done += 400; }
+      }
+    }
+    b.set(v2MetaRef('main'), {j:metaJ}); b.set(v2MetaRef('counters'), {j:cntJ}); c += 2; await commit();
+    step('5/6 verifying the copy…');
+    for(const col of Object.keys(V2_SPEC)){
+      const snap = await withTimeout(v2ColRef(col).get({source:'server'}), 'Verifying ' + col);
+      if(snap.size !== exp[col].size) throw new Error('Verification failed in "' + col + '": expected ' + exp[col].size + ' records, server has ' + snap.size);
+      snap.docs.forEach(function(d){ const x = d.data(); if(exp[col].get(String(x.k)) !== x.j) throw new Error('Verification failed: record "' + x.k + '" in "' + col + '" differs from the original'); });
+    }
+    const vm = await withTimeout(v2MetaRef('main').get({source:'server'}), 'Verifying settings'), vc = await withTimeout(v2MetaRef('counters').get({source:'server'}), 'Verifying counters');
+    if(!vm.exists || vm.data().j !== metaJ || !vc.exists || vc.data().j !== cntJ) throw new Error('Verification failed: settings / counters differ from the original');
+    const after = await withTimeout(companyDocRef().get({source:'server'}), 'Re-reading the company');
+    if(!after.exists || after.data().json !== legacyJson) throw new Error('Someone changed the company data while the upgrade was running. Nothing was switched — ask everyone to leave the app and try again.');
+    step('6/6 switching…');
+    const admins = (state.users||[]).filter(u=>u && u.role==='Administrator' && u.uid).map(u=>u.uid);
+    try{ // server-side safety copy of the old single document, in pieces (a big company does not fit one document); the downloaded backup file is still the main safety net
+      const CH = 200000, parts = Math.max(1, Math.ceil(legacyJson.length / CH));
+      for(let i = 0; i < parts; i++) await withTimeout(v2MetaRef('legacy_' + i).set({i, n:parts, j:legacyJson.slice(i*CH, (i+1)*CH)}), 'Saving the legacy copy');
+      await withTimeout(v2MetaRef('legacy').set({n:parts, chars:legacyJson.length, savedAt:new Date().toISOString()}), 'Saving the legacy copy');
+    }catch(e){ console.warn('legacy copy not stored', e); }
+    await withTimeout(companyDocRef().set({storageVersion:2, json:'MIGRATED_TO_V2', allowedUids:(Array.isArray(state.allowedUids)?state.allowedUids:[]), adminUids:admins, migratedAt:firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}), 'Switching');
+    syncBlocked = true; clearTimeout(saveDebounceTimer); // from this moment the legacy single-document save must never run again in this tab
+    __switched = true;
+    toast('Storage upgraded. Reloading… (everyone must reload the page)');
+    setTimeout(function(){ if(!window.__noReload) location.reload(); }, 1800);
+  }catch(err){
+    console.error('Storage upgrade failed', err);
+    alert('The storage upgrade was NOT completed and nothing was switched — your data is exactly as before.\n\n' + (err && err.message || err));
+  }finally{ if(!__switched) syncBlocked = __wasBlocked; }
+}
+
 /* ---- Save safety (added): saving is switched off when the server copy could not be read, and a company that
    outgrows Firestore's ~1 MiB document limit is no longer silently failing — the user is told. ---- */
 let syncBlocked = false;
@@ -2386,15 +2728,16 @@ function __docSizeOk(json){
   if(json.length < 350000) return true; // cannot reach the limit (max 3 bytes / char) — skip the exact count
   const bytes = __utf8Len(json);
   if(bytes > FS_DOC_HARD_LIMIT){
-    if(Date.now() - __sizeToastAt > 15000){ __sizeToastAt = Date.now(); toast('Company data is too large for the server (' + Math.round(bytes/1024) + ' KB, limit ~1000 KB). NEW CHANGES ARE NOT BEING SAVED ONLINE. Remove attached images / old data and contact support.'); }
+    if(Date.now() - __sizeToastAt > 15000){ __sizeToastAt = Date.now(); toast('Company data is too large for the server (' + Math.round(bytes/1024) + ' KB, limit ~1000 KB). NEW CHANGES ARE NOT BEING SAVED ONLINE. An Administrator can lift this limit with "Upgrade storage" in the sidebar.'); }
     return false;
   }
-  if(bytes > FS_DOC_SOFT_LIMIT && !__sizeWarned){ __sizeWarned = true; toast('Warning: company data is ' + Math.round(bytes/1024) + ' KB — close to the server limit (~1000 KB).'); }
+  if(bytes > FS_DOC_SOFT_LIMIT && !__sizeWarned){ __sizeWarned = true; toast('Warning: company data is ' + Math.round(bytes/1024) + ' KB — close to the server limit (~1000 KB). An Administrator can lift it with "Upgrade storage" in the sidebar.'); }
   return true;
 }
 function saveState(){
   if(syncBlocked){ toast('Saving is disabled: the server copy could not be loaded safely. Reload the page.'); return; }
   auditCapture(); // Audit Log: record tracked changes made since the previous save (see AUDIT LOG section)
+  if(v2 && v2.active){ clearTimeout(saveDebounceTimer); saveDebounceTimer = setTimeout(v2Flush, 400); return; } // STORAGE V2: only the changed records are written
   // Kept as a fast local cache too — harmless, and means the very last known
   // state is still on this device even before the Firestore write confirms.
   const savedRef = state;
@@ -2404,7 +2747,7 @@ function saveState(){
   storageMode = 'firebase';
   clearTimeout(saveDebounceTimer);
   saveDebounceTimer = setTimeout(function(){
-    if(syncBlocked) return;
+    if(syncBlocked || (v2 && v2.active)) return;
     const payload = (state === savedRef) ? localJson : JSON.stringify(state); // re-serialize only if the state object was replaced meanwhile
     if(!__docSizeOk(payload)) return;
     companyDocRef().set({
@@ -2413,7 +2756,7 @@ function saveState(){
       // security rules can check it directly — rules can't parse JSON strings.
       allowedUids: Array.isArray(state.allowedUids) ? state.allowedUids : [],
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(function(err){
+    }, {merge:true}).catch(function(err){ // merge: a stale tab can no longer erase the storageVersion marker of an upgraded company
       console.error('Firestore save error', err);
       toast('Could not sync to the server — will retry once online');
     });
@@ -2639,12 +2982,19 @@ function companyLoginEmailToName(email){
   if(email.endsWith(COMPANY_LOGIN_DOMAIN)) return email.replace(COMPANY_LOGIN_DOMAIN, '').replace(/-/g,' ');
   return email; // a real email from an account created before this update
 }
+function storageFootHtml(){
+  try{
+    if(v2 && v2.active) return '<div class="acct-email" style="font-size:11px; opacity:.7;">Storage: v2 (one document per record)</div>';
+    if(currentUid && state && isCompanyAdmin()) return '<button onclick="v2Migrate()" title="Lift the ~1000 KB company-size limit and stop people overwriting each other">Upgrade storage</button>';
+  }catch(e){}
+  return '';
+}
 function renderAccountFoot(){
   const el = document.getElementById('sidebar-account-foot');
   if(!el) return;
   const user = auth.currentUser;
   el.innerHTML = user
-    ? '<div class="acct-email">' + companyLoginEmailToName(user.email) + '</div><button onclick="authSignOut()">Sign out</button>'
+    ? '<div class="acct-email">' + companyLoginEmailToName(user.email) + '</div>' + storageFootHtml() + '<button onclick="authSignOut()">Sign out</button>'
     : '';
 }
 
