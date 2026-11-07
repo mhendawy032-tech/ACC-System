@@ -9029,14 +9029,14 @@ function clampLocFilters(){
 }
 
 /* ---------- page hints (hide create/delete buttons, read-only banner) ---------- */
-var decorating=false;
+var decorating=false,lastRoTab=null;
 function decorate(){
  if(decorating||!state)return;
  var v=document.getElementById('view');if(!v)return;
  decorating=true;
  try{
   var area=areaOf(currentTab);
-  var old=v.querySelector('.pm-ro');if(old)old.remove();
+  var old=v.querySelector('.pm-ro');if(old)old.remove();if(!area||curRole()===FULL)lastRoTab=null;
   if(area&&area!=='users'&&curRole()!==FULL){
    var c=can(area,'create'),e=can(area,'edit'),d=can(area,'delete'),p=can(area,'post');
    v.querySelectorAll('button').forEach(function(b){
@@ -9046,11 +9046,8 @@ function decorate(){
    });
    var def=AREA_BY[area];
    if(def&&def.a.length>1&&!c&&!e&&!d&&!p){
-    var n=document.createElement('div');n.className='pm-ro';
-    n.style.cssText='margin:0 0 10px;padding:8px 12px;border-radius:8px;background:#FFF4E5;color:#8A5300;border:1px solid #F5D49B;font-size:13px;font-weight:600;';
-    n.textContent='🔒 View only — your role can’t change anything on this page.';
-    v.insertBefore(n,v.firstChild);
-   }
+    if(lastRoTab!==currentTab){lastRoTab=currentTab;toast('\ud83d\udd12 View only \u2014 your role can\u2019t change anything on this page.');}
+   }else lastRoTab=null;
   }
  }catch(e){}
  decorating=false;
